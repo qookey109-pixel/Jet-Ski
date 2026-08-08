@@ -22,11 +22,14 @@
 - [x] V0.8 slope / curvature driven breaking-foam mask
 - [x] V0.8 desktop 64² / mobile 32² adaptive FFT visual grid
 - [x] V0.8 FFT numerical tests
+- [x] V0.8.1 choppy crest shaping / sharper wave silhouette
+- [x] V0.8.1 breaking-foam streaks aligned with dominant wave direction
+- [x] V0.8.1 swim-ring disturbance / V-shaped dynamic wake / re-entry rings
+- [x] V0.8.1 disturbance numerical tests + mobile 10 Hz tuning
 
 ## 下一階段
-- [ ] V0.8.1 Safari / mobile 實機 FPS 與白沫門檻調校
-- [ ] V0.8.1 游泳圈壓水面 disturbance / dynamic wake interaction
 - [ ] V0.8.2 FFT spectrum 與 V0.7 physics wave 的低頻/高頻分帶校準
+- [ ] V0.8.2 Safari / iPhone 實機 FPS、泡沫門檻與 choppiness 實機調校
 - [ ] CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
 - [ ] Copernicus point-extraction pipeline（NetCDF / API -> normalized JSON）
