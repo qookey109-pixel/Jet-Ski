@@ -1,5 +1,16 @@
 # Changelog
 
+## V0.8.1
+- Added horizontal choppy crest displacement derived from FFT surface slopes for sharper near-field wave silhouettes.
+- Added mild crest/trough asymmetry that scales with sea roughness without changing gameplay collision water.
+- Reworked breaking foam into dominant-wave-aligned streaks using crest, slope and negative-curvature masks.
+- Added `src/ocean-disturbance.js` with a fixed event pool for rendering-only swim-ring pressure depressions, spreading rings and V-shaped wake arms.
+- Added rendering-only re-entry rings after airborne landings, complementing the existing V0.5 splash particles.
+- Hard-capped local disturbance height so wake visuals cannot destabilize the near-field patch.
+- Reduced mobile FFT visual update rate to 10 Hz while retaining the 32² grid.
+- Added `tests/ocean-disturbance.test.js` for wake/re-entry finite output, lifetime and amplitude bounds.
+- Preserved `src/main.js`, `src/hydrodynamics.js`, RealSeaState adapters and V0.7/V0.6 gameplay water authority.
+
 ## V0.8
 - Added `src/fft-ocean.js` with a browser-safe 2D inverse FFT ocean-detail model.
 - Added a JONSWAP + Phillips directional hybrid spectrum driven by Hs, Tp and wave direction.
