@@ -4,7 +4,7 @@
 Swim Ring Racing（Repository: Jet-Ski）是獨立 3D Web 水上競速遊戲，手機橫向優先；方向為「盡可能真實，但仍能在瀏覽器 / 手機即時運行」。
 
 ## Current baseline
-- Version: V0.8
+- Version: V0.8.1
 - 玩家載具為可駕駛的程序化 3D 游泳圈，不使用外部模型。
 - V0.4.1 classic-script Safari `file://` 啟動修正必須保留。
 - V0.5 水花 / 尾浪 / 落水 Splash FX 位於 `src/fx.js`。
@@ -16,8 +16,9 @@ Swim Ring Racing（Repository: Jet-Ski）是獨立 3D Web 水上競速遊戲，�
 - V0.7 `src/ocean.js` 可直接使用外部 `stokesDriftX / stokesDriftZ`，沒有資料時才回退 spectrum-derived approximation。
 - V0.7.1 新增 `src/ocean-visuals.js` rendering overlay：Fresnel、sun specular、micro-ripples、crest foam、sky/horizon haze。
 - V0.8 新增 `src/fft-ocean.js`：browser-safe 2D IFFT ocean detail spectrum。
-- V0.8 新增 `src/v08-ocean-visuals.js`：近場 dense FFT patch、Hs-normalized displacement、slope/curvature foam。
-- V0.8 FFT visual detail 為高頻視覺層；V0.7/V0.6 gameplay ocean 仍是 authoritative water surface。
+- V0.8.1 的 `src/v08-ocean-visuals.js` 加入 choppy crest shaping、breaking-foam streaks、mobile 10 Hz tuning。
+- V0.8.1 新增 `src/ocean-disturbance.js`：固定事件池的 rendering-only wake / re-entry ripple。
+- V0.8/V0.8.1 FFT visual detail 為高頻視覺層；V0.7/V0.6 gameplay ocean 仍是 authoritative water surface。
 - 重力基準為 9.81 m/s²。
 
 ## RealSeaState contract
@@ -32,8 +33,9 @@ Swim Ring Racing（Repository: Jet-Ski）是獨立 3D Web 水上競速遊戲，�
 
 ## Development rules
 - 不宣稱 reduced-order model 等同 CFD / SPH；高精度結果必須經 DualSPHysics / OpenFOAM 或可信資料校準。
-- gameplay 水面幾何與物理 sampling 仍以 V0.7/V0.6 ocean model 為準；V0.8 FFT 細節不得在未校準前直接取代物理碰撞面。
+- gameplay 水面幾何與物理 sampling 仍以 V0.7/V0.6 ocean model 為準；FFT/choppy/disturbance 視覺細節不得在未校準前直接取代物理碰撞面。
 - FFT visual layer 的振幅必須依 Hs 正規化並於近場 patch 邊緣淡出，避免視覺浪高失控與遠場接縫。
+- rendering-only disturbance 必須有固定事件池、生命週期與高度上限，禁止每 frame 無限配置物件。
 - 桌面與手機需採不同 FFT grid / update rate，避免為視覺升級犧牲 mobile FPS。
 - 外部來源的 direction convention 必須在 adapter 明確轉成 game travel-to convention，不可隱含假設。
 - CWA / Copernicus / NVIDIA API key、token、secret 不得 commit 到 Repository。
