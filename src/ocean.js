@@ -1,4 +1,4 @@
-// V0.6 directional spectral ocean foundation.
+// V0.7 directional spectral ocean foundation.
 // Compact deterministic JONSWAP-like components approximate a directional
 // sea spectrum in real time without running a full CFD solver in the browser.
 (function () {
@@ -42,6 +42,8 @@
       dirZ: new Float64Array(ratios.length),
       currentX: 0,
       currentZ: 0,
+      derivedStokesX: 0,
+      derivedStokesZ: 0,
       stokesX: 0,
       stokesZ: 0
     };
@@ -68,8 +70,8 @@
         cache.direction = direction;
         cache.spread = spread;
         cache.stokesScale = stokesScale;
-        cache.stokesX = 0;
-        cache.stokesZ = 0;
+        cache.derivedStokesX = 0;
+        cache.derivedStokesZ = 0;
 
         for (let i = 0; i < ratios.length; i++) {
           const frequency = ratios[i] / tp;
@@ -86,10 +88,20 @@
           cache.amplitude[i] = amplitude;
 
           const stokes = omega * k * amplitude * amplitude * stokesScale;
-          cache.stokesX += stokes * dirX;
-          cache.stokesZ += stokes * dirZ;
+          cache.derivedStokesX += stokes * dirX;
+          cache.derivedStokesZ += stokes * dirZ;
         }
       }
+
+      // When a real data source publishes Stokes drift vector components
+      // (e.g. Copernicus VSDX/VSDY), use those directly. Otherwise fall back
+      // to the spectrum-derived approximation from V0.6.
+      cache.stokesX = Number.isFinite(profile.stokesDriftX)
+        ? profile.stokesDriftX
+        : cache.derivedStokesX;
+      cache.stokesZ = Number.isFinite(profile.stokesDriftZ)
+        ? profile.stokesDriftZ
+        : cache.derivedStokesZ;
 
       if (!Number.isFinite(cache.currentSpeed)
           || Math.abs(currentSpeed - cache.currentSpeed) > 1e-4

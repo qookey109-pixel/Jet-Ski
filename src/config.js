@@ -1,7 +1,7 @@
 const freeze = Object.freeze;
 
 window.GAME_CONFIG = freeze({
-  version: 'V0.6',
+  version: 'V0.7',
   physics: freeze({
     maxSpeed: 36.0,                // m/s ~= 130 km/h (arcade top speed)
     launchAcceleration: 20.0,
@@ -142,6 +142,26 @@ window.GAME_CONFIG = freeze({
     currentAdvectionScale: 1.0,
     slammingLossPerMps: 0.018,
     maxSlammingExtraLoss: 0.16
+  }),
+  realSeaData: freeze({
+    enabled: true,
+    autoLoad: true,
+    transitionResponse: 1.35,
+    staleAfterMinutes: 180,
+    defaultDirectionalSpreadDeg: 28,
+    cwa: freeze({
+      dataId: 'O-B0075-001',
+      directionConvention: 'to',
+      currentDirectionConvention: 'to',
+      apiKeyStorageKey: 'swimRing.cwaApiKey'
+    }),
+    noaa: freeze({
+      stationId: null,
+      directionConvention: 'from'
+    }),
+    copernicus: freeze({
+      waveDirectionConvention: 'from'
+    })
   }),
   effects: freeze({
     wake: freeze({

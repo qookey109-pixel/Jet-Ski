@@ -1,5 +1,16 @@
 # Changelog
 
+## V0.7
+- Added `src/real-sea-data.js` with one normalized RealSeaState contract for CWA, NOAA NDBC and Copernicus Marine.
+- Added CWA observation fetch adapter using a locally supplied Authorization token; no credentials are stored in the repository.
+- Added NOAA NDBC realtime standard-met parser using WVHT / DPD / MWD and explicit from-direction conversion.
+- Added Copernicus point mapping for VHM0 / VTPK / VMDR / VSDX / VSDY plus optional current u/v components.
+- Added `src/v07-runtime.js` to blend real sea states into the existing V0.6 sea profile without rewriting V0.6 hydrodynamics.
+- Added data-source / stale-state HUD feedback and preset fallback via keys 1 / 2 / 3.
+- Updated `src/ocean.js` so external Stokes drift vector components override the spectrum-derived approximation when available.
+- Added Node tests for direction conversion, CWA / NOAA / Copernicus normalization, profile application and explicit Stokes-vector ingestion.
+- Preserved the validated V0.5 `src/main.js`, V0.6 hydrodynamics and Safari classic-script startup path.
+
 ## V0.6
 - Replaced the primary wave surface with a deterministic directional JONSWAP-like spectrum driven by Hs, Tp, mean direction and directional spread.
 - Added deep-water dispersion, orbital surface velocity, Stokes drift and background current.
