@@ -28,11 +28,24 @@
     const amplitudeFactor = 1 / (2 * Math.sqrt(2));
 
     const cache = {
-      hs: NaN, tp: NaN, direction: NaN, spread: NaN,
-      currentSpeed: NaN, currentDirection: NaN, stokesScale: NaN,
-      amplitude: new Float64Array(ratios.length), omega: new Float64Array(ratios.length),
-      k: new Float64Array(ratios.length), dirX: new Float64Array(ratios.length), dirZ: new Float64Array(ratios.length),
-      currentX: 0, currentZ: 0, derivedStokesX: 0, derivedStokesZ: 0, stokesX: 0, stokesZ: 0
+      hs: NaN,
+      tp: NaN,
+      direction: NaN,
+      spread: NaN,
+      currentSpeed: NaN,
+      currentDirection: NaN,
+      stokesScale: NaN,
+      amplitude: new Float64Array(ratios.length),
+      omega: new Float64Array(ratios.length),
+      k: new Float64Array(ratios.length),
+      dirX: new Float64Array(ratios.length),
+      dirZ: new Float64Array(ratios.length),
+      currentX: 0,
+      currentZ: 0,
+      derivedStokesX: 0,
+      derivedStokesZ: 0,
+      stokesX: 0,
+      stokesZ: 0
     };
 
     function updateCache(profile) {
@@ -45,35 +58,56 @@
       const stokesScale = profile.stokesDriftScale == null ? 1 : profile.stokesDriftScale;
 
       const spectrumChanged = !Number.isFinite(cache.hs)
-        || Math.abs(hs - cache.hs) > 1e-4 || Math.abs(tp - cache.tp) > 1e-4
-        || Math.abs(direction - cache.direction) > 1e-4 || Math.abs(spread - cache.spread) > 1e-4
+        || Math.abs(hs - cache.hs) > 1e-4
+        || Math.abs(tp - cache.tp) > 1e-4
+        || Math.abs(direction - cache.direction) > 1e-4
+        || Math.abs(spread - cache.spread) > 1e-4
         || Math.abs(stokesScale - cache.stokesScale) > 1e-4;
 
       if (spectrumChanged) {
-        cache.hs = hs; cache.tp = tp; cache.direction = direction; cache.spread = spread; cache.stokesScale = stokesScale;
-        cache.derivedStokesX = 0; cache.derivedStokesZ = 0;
+        cache.hs = hs;
+        cache.tp = tp;
+        cache.direction = direction;
+        cache.spread = spread;
+        cache.stokesScale = stokesScale;
+        cache.derivedStokesX = 0;
+        cache.derivedStokesZ = 0;
+
         for (let i = 0; i < ratios.length; i++) {
           const frequency = ratios[i] / tp;
           const omega = TWO_PI * frequency;
-          const k = (omega * omega) / gravity;
+          const k = (omega * omega) / gravity; // deep-water dispersion: omega^2 = g k
           const angle = (direction + offsets[i] * spread) * DEG;
-          const dirX = Math.sin(angle), dirZ = Math.cos(angle);
+          const dirX = Math.sin(angle);
+          const dirZ = Math.cos(angle);
           const amplitude = hs * amplitudeFactor * sqrtWeights[i];
-          cache.omega[i] = omega; cache.k[i] = k; cache.dirX[i] = dirX; cache.dirZ[i] = dirZ; cache.amplitude[i] = amplitude;
+          cache.omega[i] = omega;
+          cache.k[i] = k;
+          cache.dirX[i] = dirX;
+          cache.dirZ[i] = dirZ;
+          cache.amplitude[i] = amplitude;
+
           const stokes = omega * k * amplitude * amplitude * stokesScale;
           cache.derivedStokesX += stokes * dirX;
           cache.derivedStokesZ += stokes * dirZ;
         }
       }
 
-      // Prefer externally supplied Stokes drift vectors when present (e.g. Copernicus VSDX/VSDY).
-      cache.stokesX = Number.isFinite(profile.stokesDriftX) ? profile.stokesDriftX : cache.derivedStokesX;
-      cache.stokesZ = Number.isFinite(profile.stokesDriftZ) ? profile.stokesDriftZ : cache.derivedStokesZ;
+      // When a real data source publishes Stokes drift vector components
+      // (e.g. Copernicus VSDX/VSDY), use those directly. Otherwise fall back
+      // to the spectrum-derived approximation from V0.6.
+      cache.stokesX = Number.isFinite(profile.stokesDriftX)
+        ? profile.stokesDriftX
+        : cache.derivedStokesX;
+      cache.stokesZ = Number.isFinite(profile.stokesDriftZ)
+        ? profile.stokesDriftZ
+        : cache.derivedStokesZ;
 
       if (!Number.isFinite(cache.currentSpeed)
           || Math.abs(currentSpeed - cache.currentSpeed) > 1e-4
           || Math.abs(currentDirection - cache.currentDirection) > 1e-4) {
-        cache.currentSpeed = currentSpeed; cache.currentDirection = currentDirection;
+        cache.currentSpeed = currentSpeed;
+        cache.currentDirection = currentDirection;
         const currentAngle = currentDirection * DEG;
         cache.currentX = Math.sin(currentAngle) * currentSpeed;
         cache.currentZ = Math.cos(currentAngle) * currentSpeed;
@@ -84,7 +118,8 @@
       updateCache(profile);
       let height = config.baseHeight || 0;
       for (let i = 0; i < ratios.length; i++) {
-        const phase = cache.k[i] * (cache.dirX[i] * x + cache.dirZ[i] * z) - cache.omega[i] * t + phases[i];
+        const phase = cache.k[i] * (cache.dirX[i] * x + cache.dirZ[i] * z)
+          - cache.omega[i] * t + phases[i];
         height += cache.amplitude[i] * Math.cos(phase);
       }
       return height;
@@ -92,25 +127,52 @@
 
     function sample(x, z, t, profile) {
       updateCache(profile);
-      let height = config.baseHeight || 0, slopeX = 0, slopeZ = 0, orbitalX = 0, orbitalZ = 0, orbitalY = 0;
+      let height = config.baseHeight || 0;
+      let slopeX = 0;
+      let slopeZ = 0;
+      let orbitalX = 0;
+      let orbitalZ = 0;
+      let orbitalY = 0;
+
       for (let i = 0; i < ratios.length; i++) {
-        const phase = cache.k[i] * (cache.dirX[i] * x + cache.dirZ[i] * z) - cache.omega[i] * t + phases[i];
-        const cos = Math.cos(phase), sin = Math.sin(phase), amplitude = cache.amplitude[i], ak = amplitude * cache.k[i];
+        const phase = cache.k[i] * (cache.dirX[i] * x + cache.dirZ[i] * z)
+          - cache.omega[i] * t + phases[i];
+        const cos = Math.cos(phase);
+        const sin = Math.sin(phase);
+        const amplitude = cache.amplitude[i];
+        const ak = amplitude * cache.k[i];
+
         height += amplitude * cos;
-        slopeX += -ak * sin * cache.dirX[i]; slopeZ += -ak * sin * cache.dirZ[i];
+        slopeX += -ak * sin * cache.dirX[i];
+        slopeZ += -ak * sin * cache.dirZ[i];
+
+        // Linear deep-water orbital velocity at the free surface.
         const horizontalOrbital = amplitude * cache.omega[i] * cos;
-        orbitalX += horizontalOrbital * cache.dirX[i]; orbitalZ += horizontalOrbital * cache.dirZ[i];
+        orbitalX += horizontalOrbital * cache.dirX[i];
+        orbitalZ += horizontalOrbital * cache.dirZ[i];
         orbitalY += amplitude * cache.omega[i] * sin;
       }
+
       const orbitalScale = config.orbitalVelocityInfluence == null ? 0.16 : config.orbitalVelocityInfluence;
       return {
-        height, slopeX, slopeZ, orbitalY,
-        currentX: cache.currentX, currentZ: cache.currentZ, stokesX: cache.stokesX, stokesZ: cache.stokesZ,
+        height,
+        slopeX,
+        slopeZ,
+        orbitalY,
+        currentX: cache.currentX,
+        currentZ: cache.currentZ,
+        stokesX: cache.stokesX,
+        stokesZ: cache.stokesZ,
         waterVelocityX: cache.currentX + cache.stokesX + orbitalX * orbitalScale,
         waterVelocityZ: cache.currentZ + cache.stokesZ + orbitalZ * orbitalScale
       };
     }
 
-    return { getHeight, sample, componentCount: ratios.length, modelName: 'Directional JONSWAP-like spectrum' };
+    return {
+      getHeight,
+      sample,
+      componentCount: ratios.length,
+      modelName: 'Directional JONSWAP-like spectrum'
+    };
   };
 })();
