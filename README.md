@@ -1,35 +1,36 @@
-# Swim Ring Racing — V0.8.1
+# Swim Ring Racing — V0.9
 
 3D Web 水上競速 Prototype，手機橫向優先、桌面支援。玩家駕駛程序化 3D 游泳圈。
 
-## V0.8.1 — Choppy Crests + Breaking Foam + Dynamic Wake
+## V0.9 — VirtOcean-inspired GPU Ocean Rebuild
 
-V0.8.1 專門精修 V0.8 的近場 FFT 海面，讓肉眼看到的浪更接近真正風浪，而不改 V0.7/V0.6 gameplay 水面。
+V0.9 把海浪視覺方向直接改成更接近 VirtOcean 的「大片、厚重、連續滾動、海天反光明顯」風格，但使用本專案自己的 clean-room Three.js Shader 實作，不複製 VirtOcean 網站程式或素材。
 
-- FFT slope 驅動 horizontal choppy displacement：浪峰會被壓縮、輪廓更尖，不再只有上下起伏。
-- 正浪峰會有輕度 crest asymmetry，Rough 海況更明顯。
-- breaking foam 改為同時看 crest / slope / crest curvature，再沿主波峰方向拉成不連續白沫 streak。
-- 新增 `src/ocean-disturbance.js`：固定大小事件池，模擬游泳圈高速壓水造成的局部凹陷、擴散波與 V-shaped wake arms。
-- 騰空落水會產生 rendering-only re-entry ring，與 V0.5 splash 粒子互補。
-- disturbance 高度有硬上限，不會反向污染 gameplay 物理或把視覺網格推到失控。
-- 手機 FFT 更新頻率由 12 Hz 調整為 10 Hz，保留 32² grid，降低新增互動水波的 CPU 成本。
-- `src/main.js`、`src/hydrodynamics.js`、RealSeaState adapter 均未重寫。
+### 視覺重點
 
-> V0.8.1 的 choppy crest / wake disturbance 仍屬視覺層。正式把它接進碰撞與浮力前，必須先做 V0.8.2 的低頻/高頻分帶與 CFD/SPH 校準。
+- 6 組 GPU Gerstner / spectral-style waves，主要浪長由 `Tp` 推導。
+- `Hs` 直接控制視覺浪幅與 Rough 海況強度。
+- 水平 Gerstner displacement 讓浪峰更集中、更有厚度。
+- 近場高解析 GPU ocean patch，桌面 128 segments、手機 72 segments。
+- Fresnel 海天反射、藍綠深水層次、亮浪峰。
+- Broken sun glitter：太陽反光由大量碎亮點構成，不再像塑膠亮面。
+- Rough 海況增加 capillary normal detail 與 crest foam。
+- GPU V-shaped craft wake，取代 V0.8.1 每個頂點掃 wake event 的 CPU 路徑。
 
-## V0.8 — FFT Ocean Visual Foundation
+### V0.9 Performance Rebuild
 
-V0.8 參考 PeriDyno `OceanPatch` 的 FFT height-field 思路，把「看得到的近場海浪」從單純 shader 微波紋升級成真正的 2D IFFT 頻譜高度場。V0.7/V0.6 的真實海況與水動力仍是 gameplay authority，FFT 目前先作視覺高頻細節層。
+V0.8/V0.8.1 的 CPU FFT 是重要研究原型，但在 Safari / Retina 上會造成週期性卡頓。V0.9 執行時：
 
-- `src/fft-ocean.js`：browser-safe 2D inverse FFT。
-- 頻譜使用 JONSWAP + Phillips directional hybrid，受 `Hs / Tp / meanDirectionDeg` 驅動。
-- FFT 高度振幅每次更新都按 Hs 正規化，避免視覺浪高失控。
-- 桌面採 64×64 FFT grid；手機採 32×32。
-- 112 m（手機 84 m）近場高解析 patch 跟著玩家移動。
-- FFT detail 往 patch 邊緣淡出，遠場由 V0.7.1 ocean shader 接手。
-- 保留 Fresnel、sun glitter、天空、horizon haze 與 V0.5 wake/spray FX。
+- 移除 V0.8.1 CPU FFT patch 的 render/update 路徑。
+- 不再每 frame 修改 8k+ 遠海頂點。
+- 不再每 frame `computeVertexNormals()`。
+- 海浪 displacement / normals / foam / wake 主要交給 GPU shader。
+- Retina pixel ratio 上限：桌面 `1.5`、mobile `1.25`。
+- V0.8 FFT 與 disturbance 程式保留在 repo 作研究/比較，但 V0.9 視覺 runtime 不使用它們。
 
-## V0.7 — Real Sea Data Adapter
+> Gameplay 水面仍以 V0.7/V0.6 `getWaveHeight()` / 9-point hydrodynamics 為 authority。V0.9 是高品質 rendering layer；正式讓 GPU 視覺浪與浮力完全一致前，仍需後續低頻校準。
+
+## Real Sea Data
 
 所有外部海況先統一成：
 
@@ -48,8 +49,8 @@ source / stationId      provenance
 已支援：
 
 - **CWA**：`O-B0075-001` / `O-B0075-002`
-- **NOAA NDBC**：Realtime standard meteorological `.txt`，使用 `WVHT / DPD / MWD`
-- **Copernicus Marine**：`VHM0 / VTPK / VMDR / VSDX / VSDY` 與可選 surface current `u/v`
+- **NOAA NDBC**：`WVHT / DPD / MWD`
+- **Copernicus Marine**：`VHM0 / VTPK / VMDR / VSDX / VSDY`，可選 surface current `u/v`
 
 CWA API key 不會寫入 Repository：
 
@@ -64,47 +65,27 @@ NOAA：
 REAL_SEA_RUNTIME.loadNoaa('51002')
 ```
 
-Copernicus point record：
-
-```js
-REAL_SEA_RUNTIME.applyCopernicusPoint({
-  VHM0: 1.2,
-  VTPK: 7.5,
-  VMDR: 90,
-  VSDX: 0.12,
-  VSDY: -0.04,
-  u0: 0.20,
-  v0: 0.00
-})
-```
-
 ## 操作
 
 - `W` / `↑`：加速
 - `S` / `↓`：煞車
 - `A D` / `← →`：轉向
-- `1`：Calm preset
-- `2`：Normal preset
-- `3`：Rough preset
+- `1`：Calm
+- `2`：Normal
+- `3`：Rough
 
 ## 執行
 
-Safari / macOS 保留 classic-script direct launch。Three.js 需要網路。若遠端資料來源被瀏覽器 CORS / 認證策略阻擋，正式 real-data ingest 建議走同源 backend / cached JSON feed。
+Safari / macOS 保留 classic-script direct launch。Three.js 仍由 CDN 載入，因此需要網路。
 
 ## 主要檔案
 
-- `src/fft-ocean.js`：2D IFFT + directional hybrid spectrum。
-- `src/ocean-disturbance.js`：V0.8.1 dynamic wake / re-entry ripple event pool。
-- `src/v08-ocean-visuals.js`：V0.8.1 near-field FFT patch、choppy crests、breaking foam streak、wake interaction。
-- `src/ocean-visuals.js`：遠場海面 Shader、天空、太陽與 horizon haze。
-- `src/real-sea-data.js`：CWA / NOAA / Copernicus normalization + fetch/parser。
-- `src/v07-runtime.js`：normalized real sea state → V0.6 seaProfile。
+- `src/v09-virtocean-ocean.js`：V0.9 GPU ocean、reflection、foam、GPU wake、performance bypass。
+- `src/ocean-visuals.js`：天空 / horizon 基礎層。
+- `src/fft-ocean.js`：V0.8 CPU 2D IFFT 研究原型，V0.9 runtime 不使用。
+- `src/ocean-disturbance.js`：V0.8.1 CPU disturbance 研究原型，V0.9 GPU wake 已取代主要路徑。
+- `src/real-sea-data.js`：CWA / NOAA / Copernicus normalization。
 - `src/ocean.js`：方向性 JONSWAP-like gameplay ocean。
 - `src/hydrodynamics.js`：9-point reduced-order hydrodynamics。
 - `src/physics-surrogate.js`：NVIDIA PhysicsNeMo / ONNX / WebGPU surrogate contract。
-- `src/v06-runtime.js`：V0.6 水動力 overlay。
-- `src/main.js`：V0.5 已驗證 gameplay baseline。
-- `tests/fft-ocean.test.js`：FFT 數值與 Hs normalization。
-- `tests/ocean-disturbance.test.js`：wake / re-entry disturbance 數值測試。
-- `docs/REAL_SEA_DATA.md`：資料來源、欄位映射與安全規則。
-- `docs/REALISTIC_WATER_PHYSICS.md`：整體校準路線。
+- `src/main.js`：已驗證 gameplay baseline。
