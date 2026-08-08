@@ -12,24 +12,20 @@
 - [x] V0.6 current / orbital velocity / Stokes drift
 - [x] V0.6 NVIDIA PhysicsNeMo surrogate adapter contract
 - [x] V0.7 CWA / NOAA NDBC / Copernicus Real Sea Data normalization
-- [x] V0.7 wave-direction convention conversion + explicit Stokes vector support
-- [x] V0.7 real-data runtime overlay + source/stale HUD
-- [x] V0.7.1 Visual Ocean Pass：Fresnel / sun glint / micro-ripples / crest foam
-- [x] V0.7.1 gradient sky / sun glow / horizon haze / ACES tone mapping
-- [x] V0.8 browser-safe 2D IFFT ocean detail spectrum
-- [x] V0.8 JONSWAP + Phillips directional hybrid visual spectrum
-- [x] V0.8 dense near-field ocean patch + Hs-normalized visual displacement
-- [x] V0.8 slope / curvature driven breaking-foam mask
-- [x] V0.8 desktop 64² / mobile 32² adaptive FFT visual grid
-- [x] V0.8 FFT numerical tests
-- [x] V0.8.1 choppy crest shaping / sharper wave silhouette
-- [x] V0.8.1 breaking-foam streaks aligned with dominant wave direction
-- [x] V0.8.1 swim-ring disturbance / V-shaped dynamic wake / re-entry rings
-- [x] V0.8.1 disturbance numerical tests + mobile 10 Hz tuning
+- [x] V0.7 real-data runtime overlay
+- [x] V0.7.1 Visual Ocean Pass
+- [x] V0.8 browser-safe 2D IFFT ocean visual prototype
+- [x] V0.8.1 choppy crest / breaking foam / CPU wake prototype
+- [x] V0.9 VirtOcean-inspired GPU ocean rebuild
+- [x] V0.9 GPU Gerstner waves driven by Hs / Tp / direction
+- [x] V0.9 GPU Fresnel / sun glitter / crest foam / V-shaped wake
+- [x] V0.9 disable active CPU FFT visual path + remove per-frame CPU normals
+- [x] V0.9 Retina/mobile pixel-ratio performance cap
 
 ## 下一階段
-- [ ] V0.8.2 FFT spectrum 與 V0.7 physics wave 的低頻/高頻分帶校準
-- [ ] V0.8.2 Safari / iPhone 實機 FPS、泡沫門檻與 choppiness 實機調校
+- [ ] V0.9.1 Safari / mobile 實機 FPS 與波浪尺度調校
+- [ ] V0.9.1 VirtOcean feel tuning：鏡頭高度、海面顏色、sun path、foam density
+- [ ] V0.9.2 GPU visual wave 與 gameplay wave 的低頻相位/高度校準
 - [ ] CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
 - [ ] Copernicus point-extraction pipeline（NetCDF / API -> normalized JSON）
