@@ -16,15 +16,18 @@
 - [x] V0.7.1 Visual Ocean Pass
 - [x] V0.8 browser-safe 2D IFFT ocean visual prototype
 - [x] V0.8.1 choppy crest / breaking foam / CPU wake prototype
-- [x] V0.9 VirtOcean-inspired GPU ocean rebuild
-- [x] V0.9 GPU Gerstner waves driven by Hs / Tp / direction
-- [x] V0.9 GPU Fresnel / sun glitter / crest foam / V-shaped wake
-- [x] V0.9 disable active CPU FFT visual path + remove per-frame CPU normals
-- [x] V0.9 Retina/mobile pixel-ratio performance cap
+- [x] V0.9 VirtOcean-inspired GPU Gerstner rebuild
+- [x] V0.9 performance rebuild / disable active CPU FFT path
+- [x] V0.9.1 verify VirtOcean open-source lineage: XORXOR `2050` MIT
+- [x] V0.9.1 port mirror-camera reflective-water strategy
+- [x] V0.9.1 Three.js water-normal detail / distortionScale 15 / VirtOcean tint
+- [x] V0.9.1 remove V0.9 dense stripe field from active runtime
+- [x] V0.9.1 broad rolling waves + softer GPU V wake
+- [x] V0.9.1 attribution documentation
 
 ## 下一階段
-- [ ] V0.9.1 Safari / mobile 實機 FPS 與波浪尺度調校
-- [ ] V0.9.1 VirtOcean feel tuning：鏡頭高度、海面顏色、sun path、foam density
+- [ ] V0.9.1 Safari 實機畫面驗收：reflection / water normal 是否正常載入
+- [ ] V0.9.2 依使用者截圖做第二輪 feel tuning：水色、波高、反射強度、鏡頭高度
 - [ ] V0.9.2 GPU visual wave 與 gameplay wave 的低頻相位/高度校準
 - [ ] CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
