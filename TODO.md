@@ -19,16 +19,17 @@
 - [x] V0.9 VirtOcean-inspired GPU Gerstner rebuild
 - [x] V0.9 performance rebuild / disable active CPU FFT path
 - [x] V0.9.1 verify VirtOcean open-source lineage: XORXOR `2050` MIT
-- [x] V0.9.1 port mirror-camera reflective-water strategy
-- [x] V0.9.1 Three.js water-normal detail / distortionScale 15 / VirtOcean tint
-- [x] V0.9.1 remove V0.9 dense stripe field from active runtime
+- [x] V0.9.1 mirror-camera reflective water + water normals
 - [x] V0.9.1 broad rolling waves + softer GPU V wake
-- [x] V0.9.1 attribution documentation
+- [x] V0.9.2 XORXOR atmosphere / sun / horizon composition pass
+- [x] V0.9.2 lower/farther ocean camera composition
+- [x] V0.9.2 sea-state water color / distortion tuning
+- [x] V0.9.2 tone down legacy long wake particles
 
 ## 下一階段
-- [ ] V0.9.1 Safari 實機畫面驗收：reflection / water normal 是否正常載入
-- [ ] V0.9.2 依使用者截圖做第二輪 feel tuning：水色、波高、反射強度、鏡頭高度
-- [ ] V0.9.2 GPU visual wave 與 gameplay wave 的低頻相位/高度校準
+- [ ] V0.9.2 Safari 實機畫面驗收：水色 / horizon / reflection / camera composition
+- [ ] V0.9.3 依實機截圖微調太陽高度、反射強度、rolling-wave amplitude
+- [ ] GPU visual wave 與 gameplay wave 的低頻相位/高度校準
 - [ ] CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
 - [ ] Copernicus point-extraction pipeline（NetCDF / API -> normalized JSON）

@@ -1,5 +1,23 @@
 # Changelog
 
+## V0.9.2
+- Added `src/v092-xorxor-atmosphere.js` as a composition overlay on top of V0.9.1 reflective water.
+- Replaced the old V0.7.1 visible sky/haze with one GPU atmosphere dome so the reflection target sees a single coherent sky.
+- Added a warmer lower sun disk/glow and a thin low-contrast horizon veil.
+- Tuned water palette toward softer cyan/grey tones across Calm / Normal / Rough.
+- Made `distortionScale` and water-normal scale sea-state dependent so Calm does not look overly noisy.
+- Lowered and pulled back the follow camera slightly to emphasize large rolling wave volume.
+- Reduced the V0.5 long wake particle size/opacity while preserving spray and landing splash.
+- Preserved V0.9.1 mirror reflection performance budgets and all V0.7/V0.6 gameplay physics.
+
+## V0.9.1
+- Replaced the V0.9 stripe-heavy active renderer with a reflective Water-style surface based on the MIT-licensed `2050` / Three.js Water lineage credited by VirtOcean.
+- Added mirror-camera render target reflection and multi-layer water-normal texture distortion.
+- Tuned the base water style around `waterColor 0x5b899b` and `distortionScale 15`.
+- Added broad rolling waves, a softer GPU V wake, 512² desktop / 256² mobile reflection targets and mobile reflection throttling.
+- Added `docs/VIRTOCEAN_ATTRIBUTION.md`.
+- Preserved `src/main.js`, `src/ocean.js`, `src/hydrodynamics.js` and RealSeaState adapters unchanged.
+
 ## V0.9
 - Rebuilt the visible ocean as a clean-room VirtOcean-inspired GPU rendering layer in `src/v09-virtocean-ocean.js`.
 - Added six GPU Gerstner / spectral-style wave bands driven by `Hs`, `Tp` and dominant wave direction.
