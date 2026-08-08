@@ -1,6 +1,22 @@
-# Swim Ring Racing — V0.7
+# Swim Ring Racing — V0.7.1
 
 3D Web 水上競速 Prototype，手機橫向優先、桌面支援。玩家駕駛程序化 3D 游泳圈。
+
+## V0.7.1 — Visual Ocean Pass
+
+V0.7.1 不改 V0.7 真實海況資料層與 V0.6 水動力核心，專門把「看得到的海」升級，讓底層 Hs / Tp / Roughness 真的反映在畫面上。
+
+- 新增 custom ocean shader，取代舊的可視 `MeshPhongMaterial`。
+- Fresnel sky reflection：低視角時海面反射更強。
+- Sun glint：依水面法線與視線產生動態太陽高光。
+- Micro-ripples：在不改碰撞面的前提下加入細波紋法線細節。
+- Hs-driven roughness：顯著波高越高，海面越碎、越粗糙。
+- Procedural crest foam：浪峰與高斜率區域會出現白沫。
+- Gradient sky dome + sun glow + horizon haze：海天分界與遠景層次更明顯。
+- 支援時啟用 sRGB output + ACES filmic tone mapping。
+- `src/main.js`、`src/hydrodynamics.js`、RealSeaState contract 均未重寫。
+
+> V0.7.1 的微波紋與白沫是 rendering detail；真正的波面高度仍由 V0.7/V0.6 ocean model 驅動，避免視覺與物理變成兩套不同的海。
 
 ## V0.7 — Real Sea Data Adapter
 
@@ -94,8 +110,9 @@ REAL_SEA_RUNTIME.applyCopernicusPoint({
 
 Safari / macOS 仍保留 classic-script direct launch。Three.js 需要網路。若遠端資料來源被瀏覽器 CORS / 認證策略阻擋，正式 real-data ingest 建議走同源 backend / cached JSON feed。
 
-## 主要物理檔案
+## 主要檔案
 
+- `src/ocean-visuals.js`：V0.7.1 海面 Shader、天空、太陽與 horizon haze。
 - `src/real-sea-data.js`：CWA / NOAA / Copernicus normalization + fetch/parser。
 - `src/v07-runtime.js`：把 normalized real sea state 平滑接入 V0.6 `seaProfile`。
 - `src/ocean.js`：方向性 JONSWAP-like ocean；V0.7 可直接使用外部 Stokes drift vector。
