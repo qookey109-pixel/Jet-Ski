@@ -1,16 +1,23 @@
-# Swim Ring Racing — V0.5
+# Swim Ring Racing — V0.6
 
-3D Web 水上競速 Prototype，手機橫向優先、桌面支援。玩家駕駛的是程序化 3D 游泳圈。
+3D Web 水上競速 Prototype，手機橫向優先、桌面支援。玩家駕駛程序化 3D 游泳圈。
 
-## V0.5 重點
+## V0.6 — Realistic Water Physics Foundation
 
-- 保留 V0.2 Water Handling 2.0、V0.3 Sea Conditions、V0.4 jump/airborne/landing 與 V0.4.1 Safari direct-launch 修正。
-- 新增高速行駛的雙股白色尾浪。
-- 新增後方水花噴濺，速度越快、轉向越大時越明顯。
-- Rough 海況會增加水花密度。
-- 新增落水 Splash Burst；重落水會產生更大的濺水與泡沫圈。
-- FX 使用固定大小 particle pool，避免遊戲進行中持續建立大量物件。
-- V0.5 FX 獨立在 `src/fx.js`，不重寫已驗證的 V0.4.1 駕駛核心。
+V0.6 把海面從「幾條正弦波」升級為可校準的即時海洋物理基礎，同時保留 V0.5 的游泳圈、跳浪、落水與水花 FX。
+
+- 方向性 JONSWAP-like 波譜：以 `Hs / Tp / mean direction / spread` 描述海況。
+- 使用深水色散關係計算每個波浪分量的波數與角頻率。
+- 加入表面 orbital velocity、Stokes drift 與海流平移。
+- 游泳圈改用 9 點水面取樣，計算 heave / pitch / roll 的低階水動力反應。
+- heave、pitch、roll 使用二階彈簧阻尼系統，不再直接貼住單一水面高度。
+- 加入速度造成的 planing lift 與非線性橫向水阻。
+- 落水加入 slamming 額外速度損失。
+- 重力改為 `9.81 m/s²`。
+- HUD 顯示 `Hs`（顯著波高）與 `Tp`（峰值週期）。
+- 新增 NVIDIA PhysicsNeMo surrogate adapter 介面；目前預設關閉，不會把任何 API key 寫入 Repository。
+
+> V0.6 是 browser-safe reduced-order hydrodynamics，不宣稱等同 CFD。下一階段會用真實海況資料與 SPH / CFD 結果校準參數。
 
 ## 操作
 
@@ -21,16 +28,15 @@
 - `2`：Normal
 - `3`：Rough
 
-高速迎上較陡的浪面時，游泳圈會自動離水跳躍。
-
 ## 執行
 
-V0.5 保留 V0.4.1 的 classic-script 啟動方式。在 Safari / macOS 可直接雙擊 `index.html`；仍需要網路載入 Three.js。
+Safari / macOS 可直接雙擊 `index.html`；需要網路載入 Three.js。若直接開啟失敗，可雙擊 `start.command`。
 
-若直接雙擊無法載入，可雙擊 `start.command`，或在資料夾執行：
+## 物理檔案
 
-```bash
-python3 -m http.server 8080
-```
-
-再開啟 `http://localhost:8080`。
+- `src/ocean.js`：方向性波譜、海流、orbital velocity、Stokes drift。
+- `src/hydrodynamics.js`：9 點浮體取樣、heave / pitch / roll、planing、drag、slamming。
+- `src/physics-surrogate.js`：未來 NVIDIA PhysicsNeMo / ONNX / WebGPU surrogate 接口。
+- `src/v06-runtime.js`：在不重寫 V0.5 `main.js` 的前提下，把新海洋 / 水動力模型接進既有遊戲迴圈。
+- `src/config.js`：海況與物理調校參數。
+- `docs/REALISTIC_WATER_PHYSICS.md`：校準路線與資料介面。

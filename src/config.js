@@ -1,7 +1,7 @@
 const freeze = Object.freeze;
 
 window.GAME_CONFIG = freeze({
-  version: 'V0.5',
+  version: 'V0.6',
   physics: freeze({
     maxSpeed: 36.0,                // m/s ~= 130 km/h (arcade top speed)
     launchAcceleration: 20.0,
@@ -27,7 +27,7 @@ window.GAME_CONFIG = freeze({
     wavePitchScale: 0.72,
     bobBase: 0.035,
     bobAtSpeed: 0.085,
-    gravity: 18.5,
+    gravity: 9.81,
     jumpSlopeThreshold: 0.105,
     jumpMinSpeedRatio: 0.36,
     jumpImpulseMin: 2.4,
@@ -59,6 +59,13 @@ window.GAME_CONFIG = freeze({
         speedInfluence: 0.14,
         directionInfluence: 0.07,
         lateralInfluence: 0.10,
+        significantWaveHeight: 0.28,
+        peakPeriod: 3.8,
+        meanDirectionDeg: 205,
+        directionalSpreadDeg: 38,
+        currentSpeed: 0.08,
+        currentDirectionDeg: 150,
+        stokesDriftScale: 0.75,
         color: 0x118aae
       }),
       normal: freeze({
@@ -70,6 +77,13 @@ window.GAME_CONFIG = freeze({
         speedInfluence: 0.34,
         directionInfluence: 0.16,
         lateralInfluence: 0.23,
+        significantWaveHeight: 0.85,
+        peakPeriod: 6.2,
+        meanDirectionDeg: 205,
+        directionalSpreadDeg: 30,
+        currentSpeed: 0.22,
+        currentDirectionDeg: 150,
+        stokesDriftScale: 1.00,
         color: 0x087da3
       }),
       rough: freeze({
@@ -81,9 +95,53 @@ window.GAME_CONFIG = freeze({
         speedInfluence: 0.70,
         directionInfluence: 0.36,
         lateralInfluence: 0.48,
+        significantWaveHeight: 1.80,
+        peakPeriod: 7.8,
+        meanDirectionDeg: 200,
+        directionalSpreadDeg: 24,
+        currentSpeed: 0.45,
+        currentDirectionDeg: 145,
+        stokesDriftScale: 1.20,
         color: 0x066987
       })
     })
+  }),
+  ocean: freeze({
+    model: 'directional-jonswap-like',
+    gravity: 9.81,
+    baseHeight: 0,
+    jonswapGamma: 3.3,
+    orbitalVelocityInfluence: 0.16,
+    frequencyRatios: freeze([0.62, 0.76, 0.88, 0.97, 1.05, 1.17, 1.34, 1.58]),
+    directionOffsets: freeze([-0.82, 0.48, -0.28, 0.05, 0.73, -0.55, 0.31, -0.12]),
+    phases: freeze([0.21, 1.76, 3.34, 5.13, 2.55, 4.42, 0.96, 5.87])
+  }),
+  hydrodynamics: freeze({
+    enabled: true,
+    waterDensity: 1025,
+    craftMassKg: 118,
+    footprint: freeze({ longitudinalRadius: 1.32, lateralRadius: 1.28, diagonalScale: 0.72 }),
+    heaveFrequencyHz: 1.35,
+    heaveDampingRatio: 0.78,
+    maxHeaveAcceleration: 16.0,
+    pitchFrequencyHz: 1.65,
+    pitchDampingRatio: 0.80,
+    maxPitchAngularAcceleration: 5.8,
+    rollFrequencyHz: 1.90,
+    rollDampingRatio: 0.84,
+    maxRollAngularAcceleration: 7.4,
+    wavePitchGain: 0.92,
+    waveRollGain: 0.96,
+    maxPitch: 0.38,
+    maxRoll: 0.46,
+    planingStartRatio: 0.20,
+    planingLiftMax: 0.20,
+    lateralDampingLowSpeed: 2.8,
+    lateralDampingHighSpeed: 1.25,
+    lateralQuadraticDamping: 0.18,
+    currentAdvectionScale: 1.0,
+    slammingLossPerMps: 0.018,
+    maxSlammingExtraLoss: 0.16
   }),
   effects: freeze({
     wake: freeze({

@@ -1,5 +1,16 @@
 # Changelog
 
+## V0.6
+- Replaced the primary wave surface with a deterministic directional JONSWAP-like spectrum driven by Hs, Tp, mean direction and directional spread.
+- Added deep-water dispersion, orbital surface velocity, Stokes drift and background current.
+- Added 9-point reduced-order hydrodynamics for heave, pitch and roll.
+- Added planing lift, nonlinear lateral damping and slamming-dependent landing loss.
+- Changed airborne gravity baseline to 9.81 m/s².
+- Added `src/ocean.js`, `src/hydrodynamics.js`, `src/physics-surrogate.js` and `src/v06-runtime.js`.
+- Added a PhysicsNeMo-compatible surrogate adapter contract without storing credentials.
+- Preserved the validated V0.5 `src/main.js`, wake / spray / landing FX and Safari classic-script direct launch.
+- Added Hs / Tp live HUD readout and physics calibration documentation.
+
 ## V0.5
 - Added pooled white-water wake trails behind the swim ring.
 - Added continuous rear spray that scales with speed, steering and sea roughness.
