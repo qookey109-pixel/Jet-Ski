@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Jet Ski Game V0.4</title>
+  <link rel="stylesheet" href="./styles.css" />
+
+</head>
+<body>
+  <div id="game"></div>
+  <div id="boot-error" class="boot-error" hidden>3D 引擎沒有載入。請確認網路連線，或雙擊資料夾內的 start.command 啟動。</div>
+
+  <div class="hud">
+    <div><strong>SWIM RING RACING</strong> <span id="version">V0.4.1</span></div>
+    <div>速度 <span id="speed">0</span> km/h</div>
+    <div>海況 <span id="sea-state">一般 Normal</span></div>
+    <div>狀態 <span id="air-state">水面 WATER</span></div>
+  </div>
+
+  <div class="help">方向鍵 / WASD 控制｜1 / 2 / 3 切換海況｜高速迎浪可跳躍</div>
+
+  <div class="sea-controls" aria-label="sea condition controls">
+    <button data-sea="calm">1 Calm</button>
+    <button data-sea="normal" class="active">2 Normal</button>
+    <button data-sea="rough">3 Rough</button>
+  </div>
+
+  <div class="mobile-controls" aria-label="mobile controls">
+    <div class="steer-group">
+      <button id="left" aria-label="左轉">◀</button>
+      <button id="right" aria-label="右轉">▶</button>
+    </div>
+    <div class="throttle-group">
+      <button id="brake" aria-label="煞車">BRAKE</button>
+      <button id="gas" class="gas" aria-label="加速">GAS</button>
+    </div>
+  </div>
+
+  <!-- Classic scripts intentionally used so Safari can run the game directly from file:// -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script>
+    if (!window.THREE) document.getElementById('boot-error').hidden = false;
+  </script>
+  <script src="./src/config.js"></script>
+  <script src="./src/main.js"></script>
+</body>
+</html>

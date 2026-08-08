@@ -1,0 +1,135 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #fff;
+  background: #07131d;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; }
+body { background: linear-gradient(#87d7ff, #0c5c7d); }
+#game, canvas { width: 100%; height: 100%; display: block; }
+
+.hud {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 20, 32, .54);
+  backdrop-filter: blur(8px);
+  line-height: 1.55;
+  user-select: none;
+}
+
+.help {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: rgba(0, 20, 32, .42);
+  font-size: 13px;
+  user-select: none;
+}
+
+.sea-controls {
+  position: fixed;
+  left: 50%;
+  bottom: 92px;
+  z-index: 9;
+  display: flex;
+  gap: 7px;
+  transform: translateX(-50%);
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(0, 20, 32, .42);
+  backdrop-filter: blur(8px);
+  user-select: none;
+}
+
+.sea-controls button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 10px;
+  background: rgba(0, 27, 43, .55);
+  color: #fff;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.sea-controls button.active {
+  background: rgba(255,255,255,.26);
+  border-color: rgba(255,255,255,.72);
+}
+
+.mobile-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 18px;
+  pointer-events: none;
+}
+
+.steer-group, .throttle-group { display: flex; gap: 10px; pointer-events: auto; }
+.mobile-controls button {
+  min-width: 68px;
+  min-height: 58px;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 18px;
+  background: rgba(0, 27, 43, .58);
+  color: white;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  backdrop-filter: blur(10px);
+}
+.mobile-controls button:active, .mobile-controls button.active {
+  transform: translateY(2px) scale(.98);
+  background: rgba(255,255,255,.28);
+}
+.mobile-controls .gas { min-width: 82px; }
+
+@media (min-width: 900px) {
+  .mobile-controls { opacity: .55; }
+}
+
+@media (max-width: 620px) {
+  .help { display: none; }
+  .hud { font-size: 13px; }
+  .mobile-controls button { min-width: 62px; min-height: 54px; font-size: 15px; }
+  .sea-controls { bottom: 82px; }
+  .sea-controls button { padding: 0 8px; font-size: 12px; }
+}
+
+@media (max-height: 480px) {
+  .hud { top: 8px; left: 8px; padding: 7px 9px; font-size: 12px; }
+  .help { top: 8px; right: 8px; padding: 7px 9px; }
+  .mobile-controls { bottom: 10px; padding: 0 10px; }
+  .mobile-controls button { min-height: 48px; }
+  .sea-controls { bottom: 65px; }
+  .sea-controls button { min-height: 30px; }
+}
+
+.boot-error {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  max-width: min(680px, 88vw);
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: rgba(80, 15, 15, 0.9);
+  color: white;
+  font: 700 16px/1.5 system-ui, sans-serif;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,.28);
+}
