@@ -1,7 +1,7 @@
 const freeze = Object.freeze;
 
 window.GAME_CONFIG = freeze({
-  version: 'V0.4.1',
+  version: 'V0.5',
   physics: freeze({
     maxSpeed: 36.0,                // m/s ~= 130 km/h (arcade top speed)
     launchAcceleration: 20.0,
@@ -83,6 +83,45 @@ window.GAME_CONFIG = freeze({
         lateralInfluence: 0.48,
         color: 0x066987
       })
+    })
+  }),
+  effects: freeze({
+    wake: freeze({
+      maxParticles: 160,
+      size: 0.52,
+      minSpeedRatio: 0.12,
+      pairsPerSecond: 22,
+      width: 0.82,
+      rearOffset: 1.55,
+      lifeMin: 0.75,
+      lifeMax: 1.35
+    }),
+    spray: freeze({
+      maxParticles: 220,
+      size: 0.24,
+      minSpeedRatio: 0.24,
+      particlesPerSecond: 46,
+      rearOffset: 1.35,
+      lifeMin: 0.32,
+      lifeMax: 0.68,
+      backwardSpeed: 2.6,
+      speedScale: 0.16,
+      verticalMin: 1.8,
+      verticalMax: 4.6,
+      lateralSpread: 2.0,
+      gravity: 9.8,
+      drag: 0.8
+    }),
+    landing: freeze({
+      softCount: 28,
+      hardCount: 52,
+      radius: 1.15,
+      horizontalMin: 2.8,
+      horizontalMax: 7.5,
+      verticalMin: 3.2,
+      verticalMax: 8.5,
+      lifeMin: 0.45,
+      lifeMax: 0.95
     })
   }),
   camera: freeze({

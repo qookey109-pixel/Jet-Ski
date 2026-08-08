@@ -1,5 +1,14 @@
 # Changelog
 
+## V0.5
+- Added pooled white-water wake trails behind the swim ring.
+- Added continuous rear spray that scales with speed, steering and sea roughness.
+- Added landing splash bursts with a larger hard-landing effect.
+- Added a short landing foam ring for clearer impact feedback.
+- Added centralized VFX tuning under `effects` in `src/config.js`.
+- Added V0.5 FX as `src/fx.js` so the validated V0.4.1 gameplay loop remains untouched.
+- Preserved V0.4.1 classic-script Safari `file://` startup behavior.
+
 ## V0.4.1
 - Fixed blank 3D scene when opening `index.html` directly with `file://` in Safari.
 - Replaced ES-module startup with classic browser scripts.
