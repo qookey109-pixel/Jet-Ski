@@ -1,5 +1,13 @@
 # Changelog
 
+## V0.7.1
+- Added `src/ocean-visuals.js` as a rendering-only ocean upgrade over the V0.7 physics baseline.
+- Replaced the visible legacy MeshPhong ocean with a custom shader while preserving the original `waterMat` for sea-state transitions and FX compatibility.
+- Added Fresnel sky reflection, sun glints, micro-ripple normal detail, Hs-driven roughness and procedural crest foam.
+- Added a gradient sky dome, sun glow and horizon haze for clearer sea/sky separation.
+- Enabled sRGB output and ACES filmic tone mapping when supported by the current Three.js renderer.
+- Preserved `src/main.js`, `src/hydrodynamics.js`, RealSeaState normalization and V0.7 ocean physics unchanged.
+
 ## V0.7
 - Added `src/real-sea-data.js` with one normalized RealSeaState contract for CWA, NOAA NDBC and Copernicus Marine.
 - Added CWA observation fetch adapter using a locally supplied Authorization token; no credentials are stored in the repository.
