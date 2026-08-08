@@ -69,10 +69,12 @@
   updateJetSki = function v0924UpdateJetSki(dt, t) {
     legacyUpdateJetSki(dt, t);
 
-    const surface = sampleGiantSurface(ski.position.x, ski.position.z, t);
-    const minimumY = surface.height + physics.floatClearance;
+    // Deliberately call the active global sampler here. Later ocean overlays can replace
+    // getWaveHeight() and this guard will automatically follow the new authoritative surface.
+    const activeSurfaceHeight = getWaveHeight(ski.position.x, ski.position.z, t);
+    const minimumY = activeSurfaceHeight + physics.floatClearance;
 
-    // Hydrodynamics normally follows the giant surface now. This guard handles any transient lag
+    // Hydrodynamics normally follows the active surface. This guard handles any transient lag
     // on a fast-rising crest and converts accidental penetration into immediate water contact.
     if (ski.position.y < minimumY) {
       ski.position.y = minimumY;
@@ -95,6 +97,7 @@
     sampleSurface: sampleGiantSurface,
     gameplaySurfaceSynced: true,
     antiPenetrationGuard: true,
+    activeGuardUsesGlobalSampler: true,
     previousSurfaceSampler: legacyGetWaveHeight
   };
 })();
