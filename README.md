@@ -1,6 +1,22 @@
-# Swim Ring Racing — V0.7.1
+# Swim Ring Racing — V0.8
 
 3D Web 水上競速 Prototype，手機橫向優先、桌面支援。玩家駕駛程序化 3D 游泳圈。
+
+## V0.8 — FFT Ocean Visual Foundation
+
+V0.8 參考 PeriDyno `OceanPatch` 的 FFT height-field 思路，把「看得到的近場海浪」從單純 shader 微波紋升級成真正的 2D IFFT 頻譜高度場。V0.7/V0.6 的真實海況與水動力仍是 gameplay authority，FFT 目前先作視覺高頻細節層。
+
+- 新增 `src/fft-ocean.js`：browser-safe 2D inverse FFT。
+- 頻譜使用 JONSWAP + Phillips directional hybrid，受 `Hs / Tp / meanDirectionDeg` 驅動。
+- FFT 高度振幅每次更新都按 Hs 正規化，避免視覺浪高失控。
+- 桌面採 64×64 FFT grid；手機採 32×32，降低 CPU / Safari 壓力。
+- 新增 `src/v08-ocean-visuals.js`：112 m（手機 84 m）近場高解析 patch，跟著玩家移動。
+- FFT detail 往 patch 邊緣淡出，遠場仍由 V0.7.1 ocean shader 接手。
+- 以 FFT slope / curvature / crest 生成 breaking-foam mask，不再只依固定 shader noise。
+- 保留 Fresnel、sun glitter、天空、horizon haze 與 V0.5 wake/spray FX。
+- `src/main.js`、`src/hydrodynamics.js`、RealSeaState adapter 均未重寫。
+
+> V0.8 的 FFT layer 目前是「視覺頻譜細節」，不是第二套 gameplay 水面。低頻主要波高仍由 V0.7/V0.6 ocean model 決定，避免游泳圈與海面嚴重脫離。下一步 V0.8.2 會做低頻/高頻分帶校準。
 
 ## V0.7.1 — Visual Ocean Pass
 
@@ -15,8 +31,6 @@ V0.7.1 不改 V0.7 真實海況資料層與 V0.6 水動力核心，專門把「�
 - Gradient sky dome + sun glow + horizon haze：海天分界與遠景層次更明顯。
 - 支援時啟用 sRGB output + ACES filmic tone mapping。
 - `src/main.js`、`src/hydrodynamics.js`、RealSeaState contract 均未重寫。
-
-> V0.7.1 的微波紋與白沫是 rendering detail；真正的波面高度仍由 V0.7/V0.6 ocean model 驅動，避免視覺與物理變成兩套不同的海。
 
 ## V0.7 — Real Sea Data Adapter
 
@@ -46,7 +60,7 @@ source / stationId      provenance
 - **NOAA NDBC**：Realtime standard meteorological `.txt` 解析；使用 `WVHT / DPD / MWD`。
 - **Copernicus Marine**：point record mapping，支援 `VHM0 / VTPK / VMDR / VSDX / VSDY`，以及可選的 surface current `u/v`。
 - NOAA / Copernicus 的 wave **from** direction 會明確轉成遊戲的 travel-to direction。
-- Copernicus 若提供 `VSDX / VSDY`，V0.7 ocean model 會優先使用外部 Stokes drift vector，而不是 V0.6 的內部估算。
+- Copernicus 若提供 `VSDX / VSDY`，ocean model 會優先使用外部 Stokes drift vector。
 
 > V0.7 仍是 browser-safe reduced-order hydrodynamics，不宣稱等同 CFD。外部海況資料提高的是 sea-state fidelity；船體受力仍需要後續 SPH / CFD 校準。
 
@@ -112,13 +126,16 @@ Safari / macOS 仍保留 classic-script direct launch。Three.js 需要網路。
 
 ## 主要檔案
 
-- `src/ocean-visuals.js`：V0.7.1 海面 Shader、天空、太陽與 horizon haze。
+- `src/fft-ocean.js`：V0.8 2D IFFT + directional hybrid spectrum。
+- `src/v08-ocean-visuals.js`：V0.8 near-field FFT patch、breaking foam、sun glitter。
+- `src/ocean-visuals.js`：V0.7.1 遠場海面 Shader、天空、太陽與 horizon haze。
 - `src/real-sea-data.js`：CWA / NOAA / Copernicus normalization + fetch/parser。
 - `src/v07-runtime.js`：把 normalized real sea state 平滑接入 V0.6 `seaProfile`。
-- `src/ocean.js`：方向性 JONSWAP-like ocean；V0.7 可直接使用外部 Stokes drift vector。
+- `src/ocean.js`：方向性 JONSWAP-like gameplay ocean。
 - `src/hydrodynamics.js`：9-point reduced-order hydrodynamics。
 - `src/physics-surrogate.js`：NVIDIA PhysicsNeMo / ONNX / WebGPU surrogate contract。
-- `src/v06-runtime.js`：V0.6 水動力 overlay，保留。
+- `src/v06-runtime.js`：V0.6 水動力 overlay。
 - `src/main.js`：V0.5 已驗證 gameplay baseline，未重寫。
+- `tests/fft-ocean.test.js`：FFT 數值與 Hs normalization 測試。
 - `docs/REAL_SEA_DATA.md`：資料來源、欄位映射與安全規則。
 - `docs/REALISTIC_WATER_PHYSICS.md`：整體校準路線。

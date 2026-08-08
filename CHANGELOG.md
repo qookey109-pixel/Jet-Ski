@@ -1,5 +1,17 @@
 # Changelog
 
+## V0.8
+- Added `src/fft-ocean.js` with a browser-safe 2D inverse FFT ocean-detail model.
+- Added a JONSWAP + Phillips directional hybrid spectrum driven by Hs, Tp and wave direction.
+- Added deterministic Gaussian spectral initialization and deep-water dispersion for FFT components.
+- Added per-update Hs RMS normalization so visual spectral displacement cannot drift to unrealistic amplitudes.
+- Added `src/v08-ocean-visuals.js` with a dense near-field spectral patch around the player.
+- Added adaptive 64² desktop / 32² mobile FFT grids and reduced mobile update rate.
+- Added FFT slope / curvature / crest based breaking-foam masks and sun-glitter detail.
+- Added edge fading so the FFT detail layer blends into the V0.7.1 far-field ocean shader.
+- Added `tests/fft-ocean.test.js` for FFT finite output, periodicity and Hs normalization.
+- Preserved `src/main.js`, `src/hydrodynamics.js`, RealSeaState adapters and V0.7/V0.6 gameplay ocean authority.
+
 ## V0.7.1
 - Added `src/ocean-visuals.js` as a rendering-only ocean upgrade over the V0.7 physics baseline.
 - Replaced the visible legacy MeshPhong ocean with a custom shader while preserving the original `waterMat` for sea-state transitions and FX compatibility.
