@@ -1,11 +1,11 @@
-// V0.8 near-field FFT ocean visual layer.
-// Adds a dense local spectral patch around the craft while keeping V0.7/V0.6
-// water physics authoritative. FFT detail fades to zero toward the patch edge.
+// V0.8.1 refined near-field FFT ocean visual layer.
+// Adds choppy crest shaping, breaking-foam streaks, and rendering-only wake disturbances
+// while keeping V0.7/V0.6 gameplay water authoritative.
 (function () {
   'use strict';
   if (!window.THREE || !window.createFFTOceanVisualModel || typeof scene === 'undefined') return;
 
-  const visualVersion = 'V0.8';
+  const visualVersion = 'V0.8.1';
   const versionNode = document.querySelector('#version');
   if (versionNode) versionNode.textContent = visualVersion;
   document.title = `Swim Ring Racing ${visualVersion}`;
@@ -13,7 +13,7 @@
   const mobileLike = Math.min(innerWidth, innerHeight) < 560 || /iPhone|iPad|Android/i.test(navigator.userAgent || '');
   const gridSize = mobileLike ? 32 : 64;
   const patchSize = mobileLike ? 84 : 112;
-  const updateHz = mobileLike ? 12 : 18;
+  const updateHz = mobileLike ? 10 : 18;
   const model = window.createFFTOceanVisualModel({
     size: gridSize,
     patchSize,
@@ -26,6 +26,14 @@
     backwardWaveFactor: 0.16
   });
 
+  const disturbance = window.createOceanDisturbanceModel
+    ? window.createOceanDisturbanceModel({
+      maxEvents: mobileLike ? 12 : 18,
+      wakeLife: mobileLike ? 2.2 : 2.8,
+      landingLife: 2.4
+    })
+    : null;
+
   const geometry = new THREE.PlaneGeometry(patchSize, patchSize, gridSize - 1, gridSize - 1);
   geometry.rotateX(-Math.PI / 2);
   const basePositions = geometry.attributes.position.array.slice();
@@ -36,6 +44,7 @@
     uTime: { value: 0 },
     uHs: { value: 0.85 },
     uRough: { value: 0.35 },
+    uWaveDir: { value: new THREE.Vector2(0, 1) },
     uDeep: { value: new THREE.Color(0x012f49) },
     uMid: { value: new THREE.Color(0x087a9e) },
     uBright: { value: new THREE.Color(0x3ac7d6) },
@@ -67,6 +76,7 @@
       uniform float uTime;
       uniform float uHs;
       uniform float uRough;
+      uniform vec2 uWaveDir;
       uniform vec3 uDeep;
       uniform vec3 uMid;
       uniform vec3 uBright;
@@ -97,16 +107,25 @@
 
         float heightTint = sat(0.45 + vWorldPosition.y / max(0.18, uHs) * 0.55);
         vec3 waterColor = mix(uDeep, uMid, heightTint);
-        waterColor = mix(waterColor, uBright, sat(slope * 4.0) * 0.42);
+        waterColor = mix(waterColor, uBright, sat(slope * 4.2) * 0.45);
         waterColor = mix(waterColor, uSky, 0.18 + fresnel * 0.58);
 
         vec3 R = reflect(-uSunDir, N);
         float spec = pow(sat(dot(R, V)), mix(210.0, 62.0, uRough));
         float glitterNoise = step(0.66 - uRough * 0.18, hash21(floor(vWorldPosition.xz * 6.0) + floor(uTime * 18.0)));
-        waterColor += uSun * spec * (0.8 + glitterNoise * 1.6);
+        waterColor += uSun * spec * (0.8 + glitterNoise * 1.65);
 
-        float streak = 0.62 + 0.38 * sin(vWorldPosition.x * 0.72 + vWorldPosition.z * 1.06 + uTime * 1.15);
-        float foam = sat(vFoam * mix(0.72, 1.32, streak));
+        vec2 waveDir = normalize(uWaveDir);
+        vec2 crestDir = vec2(waveDir.y, -waveDir.x);
+        float alongWave = dot(vWorldPosition.xz, waveDir);
+        float alongCrest = dot(vWorldPosition.xz, crestDir);
+        float crestWarp = sin(alongWave * 0.13 - uTime * 0.58) * 1.55;
+        float streakWide = 0.5 + 0.5 * sin(alongCrest * 0.58 + crestWarp);
+        float streakFine = 0.5 + 0.5 * sin(alongCrest * 1.72 + sin(alongWave * 0.21) * 1.1 + uTime * 0.18);
+        float breakup = hash21(floor(vec2(alongCrest * 0.62, alongWave * 0.20 - uTime * 0.55)));
+        float foamPattern = sat(streakWide * 0.64 + streakFine * 0.36);
+        foamPattern *= mix(0.62, 1.18, smoothstep(0.20, 0.82, breakup));
+        float foam = sat(vFoam * mix(0.72, 1.45, foamPattern));
         waterColor = mix(waterColor, uFoam, foam);
 
         vec2 edgeCoord = abs(vUv - 0.5) * 2.0;
@@ -130,6 +149,7 @@
 
   const legacyUpdateWater = updateWater;
   const legacyUpdateCamera = updateCamera;
+  const legacyUpdateJetSki = updateJetSki;
   const pos = geometry.attributes.position;
   let accumulator = 1 / updateHz;
   let lastWaterTime = NaN;
@@ -137,6 +157,8 @@
   let lastCenterZ = NaN;
   let patchCenterX = 0;
   let patchCenterZ = 0;
+  let lastWakeEmit = -Infinity;
+  let preLandingVerticalSpeed = 0;
 
   function edgeFade(localX, localZ) {
     const edge = Math.max(Math.abs(localX), Math.abs(localZ)) / (patchSize * 0.5);
@@ -155,16 +177,36 @@
     }
   }
 
+  function maybeEmitWake(t) {
+    if (!disturbance || airborne || !(speed > physics.minimumSteerSpeed)) return;
+    const ratio = THREE.MathUtils.clamp(speed / physics.maxSpeed, 0, 1);
+    if (ratio < 0.08) return;
+    const interval = THREE.MathUtils.lerp(mobileLike ? 0.17 : 0.12, mobileLike ? 0.10 : 0.065, ratio);
+    if (t - lastWakeEmit < interval) return;
+    lastWakeEmit = t;
+    const fx = Math.sin(yaw);
+    const fz = Math.cos(yaw);
+    const rearX = ski.position.x - fx * 1.55;
+    const rearZ = ski.position.z - fz * 1.55;
+    const steeringBoost = 1 + Math.abs(steeringValue) * 0.35;
+    disturbance.emitWake(rearX, rearZ, yaw, ratio * steeringBoost, t);
+  }
+
   function refreshPatch(t) {
     model.update(t, seaProfile);
     recenter();
     const hs = Number.isFinite(seaProfile.significantWaveHeight) ? seaProfile.significantWaveHeight : 0.85;
     const rough = THREE.MathUtils.clamp(hs / 2.2, 0.05, 1.0);
+    const directionRad = THREE.MathUtils.degToRad(Number(seaProfile.meanDirectionDeg) || 0);
     uniforms.uTime.value = t;
     uniforms.uHs.value = hs;
     uniforms.uRough.value = rough;
+    uniforms.uWaveDir.value.set(Math.sin(directionRad), Math.cos(directionRad));
 
+    const chopGain = THREE.MathUtils.lerp(1.05, 2.65, rough)
+      * THREE.MathUtils.clamp(0.72 + hs * 0.24, 0.75, 1.35);
     let foamMax = 0;
+
     for (let i = 0; i < pos.count; i++) {
       const idx = i * 3;
       const localX = basePositions[idx];
@@ -174,14 +216,27 @@
       const spectral = model.sample(worldX, worldZ);
       const fade = edgeFade(localX, localZ);
       const baseHeight = getWaveHeight(worldX, worldZ, t);
-      const detail = spectral.height * fade;
-      pos.setY(i, baseHeight + detail + 0.018);
+      const rawDetail = spectral.height * fade;
+      const shapedDetail = rawDetail >= 0
+        ? rawDetail * (1 + rough * 0.22)
+        : rawDetail * (1 - rough * 0.05);
+
+      const shiftX = THREE.MathUtils.clamp(-spectral.slopeX * chopGain * fade, -0.58, 0.58);
+      const shiftZ = THREE.MathUtils.clamp(-spectral.slopeZ * chopGain * fade, -0.58, 0.58);
+      const wake = disturbance ? disturbance.sample(worldX, worldZ, t) : { height: 0, foam: 0 };
+      pos.setX(i, localX + shiftX);
+      pos.setZ(i, localZ + shiftZ);
+      pos.setY(i, baseHeight + shapedDetail + wake.height * fade + 0.022);
 
       const slope = Math.hypot(spectral.slopeX, spectral.slopeZ);
-      const crest = THREE.MathUtils.smoothstep(detail / Math.max(0.05, hs), 0.02, 0.22);
-      const slopeMask = THREE.MathUtils.smoothstep(slope, 0.055, 0.28);
-      const curvatureMask = THREE.MathUtils.smoothstep(Math.abs(spectral.curvature), 0.0025, 0.025);
-      const foam = THREE.MathUtils.clamp((crest * 0.52 + slopeMask * 0.63 + curvatureMask * 0.35) * fade * rough, 0, 1);
+      const crestRatio = shapedDetail / Math.max(0.08, hs);
+      const crestMask = THREE.MathUtils.smoothstep(crestRatio, 0.008, 0.16);
+      const slopeMask = THREE.MathUtils.smoothstep(slope, 0.045, 0.24);
+      const crestCurvature = Math.max(0, -spectral.curvature);
+      const curvatureMask = THREE.MathUtils.smoothstep(crestCurvature, 0.0018, 0.022);
+      const breaking = (crestMask * 0.34 + slopeMask * 0.42 + curvatureMask * 0.56)
+        * THREE.MathUtils.lerp(0.58, 1.15, rough);
+      const foam = THREE.MathUtils.clamp((breaking + wake.foam * 0.96) * fade, 0, 1);
       foamArray[i] = foam;
       foamMax = Math.max(foamMax, foam);
     }
@@ -192,8 +247,9 @@
     window.FFT_OCEAN_VISUALS.lastFoamMax = foamMax;
   }
 
-  updateWater = function v08UpdateWater(t) {
+  updateWater = function v081UpdateWater(t) {
     legacyUpdateWater(t);
+    maybeEmitWake(t);
     const frameDt = Number.isFinite(lastWaterTime)
       ? THREE.MathUtils.clamp(t - lastWaterTime, 0, 0.05)
       : 1 / updateHz;
@@ -208,7 +264,17 @@
     }
   };
 
-  updateCamera = function v08UpdateCamera(dt) {
+  updateJetSki = function v081UpdateJetSki(dt, t) {
+    const wasAirborne = airborne;
+    if (airborne) preLandingVerticalSpeed = Math.abs(verticalVelocity);
+    legacyUpdateJetSki(dt, t);
+    if (disturbance && wasAirborne && !airborne) {
+      const strength = THREE.MathUtils.clamp(preLandingVerticalSpeed / 7.5, 0.35, 1.55);
+      disturbance.emitLanding(ski.position.x, ski.position.z, strength, t);
+    }
+  };
+
+  updateCamera = function v081UpdateCamera(dt) {
     legacyUpdateCamera(dt);
     patch.visible = camera.position.y > -2;
   };
@@ -216,12 +282,16 @@
   window.FFT_OCEAN_VISUALS = {
     version: visualVersion,
     model,
+    disturbance,
     patch,
     material,
     gridSize,
     patchSize,
     updateHz,
-    lastFoamMax: 0
+    lastFoamMax: 0,
+    get activeDisturbances() {
+      return disturbance ? disturbance.activeCount(clock.elapsedTime) : 0;
+    }
   };
 
   refreshPatch(0);
