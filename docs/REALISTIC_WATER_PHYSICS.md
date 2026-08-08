@@ -1,12 +1,12 @@
 # Realistic Water Physics Roadmap
 
-## 1. Runtime model in V0.6
+## 1. Runtime model in V0.7
 
-The browser does not run full CFD. V0.6 uses a reduced-order model designed to be calibrated later.
+The browser does not run full CFD. V0.6 introduced a reduced-order hydrodynamics model; V0.7 adds real sea-state ingestion without changing that validated physical core.
 
 ### Ocean state contract
 
-All real-world datasets should be normalized into this contract:
+All real-world datasets are normalized into:
 
 ```text
 significantWaveHeight   Hs, metres
@@ -15,16 +15,17 @@ meanDirectionDeg        wave travel-to direction in game convention
 directionalSpreadDeg    directional spread
 currentSpeed            m/s
 currentDirectionDeg     current travel-to direction
-stokesDriftScale        dimensionless calibration factor
+stokesDriftX/Z          optional external vector, m/s
+stokesDriftScale        fallback calibration factor
 ```
 
-For external oceanographic feeds that publish wave direction as a meteorological/oceanographic **from** direction, adapters must explicitly convert it to the game's travel-to convention.
+Provider direction conventions are converted in `src/real-sea-data.js`. The physics engine never guesses a provider convention.
 
 ### Spectral ocean
 
-`src/ocean.js` uses eight deterministic JONSWAP-like components. Component frequency is derived from Tp; deep-water dispersion uses `omega² = g k`. Component amplitudes are normalized so total variance tracks Hs.
+`src/ocean.js` uses deterministic JONSWAP-like components. Component frequency is derived from Tp; deep-water dispersion uses `omega² = g k`. Component amplitudes are normalized so total variance tracks Hs.
 
-The same `getWaveHeight()` source drives both water mesh rendering and gameplay sampling. V0.6 injects this through `src/v06-runtime.js`, leaving the validated V0.5 `src/main.js` unchanged.
+The same ocean source drives both water rendering and gameplay sampling. When an external source supplies Stokes drift vector components, V0.7 uses those directly; otherwise it retains the V0.6 spectrum-derived fallback.
 
 ### Inflatable craft hydrodynamics
 
@@ -43,7 +44,20 @@ This is a real-time approximation, not a validated naval-architecture solver.
 ## 2. Calibration path
 
 ### Stage A — real sea states
-Import CWA / Copernicus / NOAA observations or forecasts and compare generated Hs, Tp, direction and drift against the source state.
+**V0.7 adapter foundation implemented.**
+
+Current adapters:
+
+- CWA observations
+- NOAA NDBC realtime standard meteorological records
+- Copernicus Marine point records
+
+Next Stage A work:
+
+- real CWA station selection / ingest validation
+- cached same-origin normalized JSON feed
+- Copernicus NetCDF / API point extraction pipeline
+- compare generated Hs/Tp/direction/drift against source values over time
 
 ### Stage B — SPH / CFD truth cases
 Create a compact matrix of offline cases for the swim-ring craft:
@@ -89,4 +103,6 @@ Before calling the water physics calibrated, test at minimum:
 - jump trajectory under 9.81 m/s²
 - soft vs hard re-entry
 - rough-sea stability at max speed
+- external Hs/Tp/direction fidelity
+- stale/missing real-data fallback
 - mobile frame time / particle + ocean cost
