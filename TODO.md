@@ -14,14 +14,16 @@
 - [x] V0.7 CWA / NOAA NDBC / Copernicus Real Sea Data normalization
 - [x] V0.7 wave-direction convention conversion + explicit Stokes vector support
 - [x] V0.7 real-data runtime overlay + source/stale HUD
+- [x] V0.7.1 Visual Ocean Pass：Fresnel / sun glint / micro-ripples / crest foam
+- [x] V0.7.1 gradient sky / sun glow / horizon haze / ACES tone mapping
 
 ## 下一階段
-- [ ] V0.7.1 CWA 實站整合測試 + station selector
+- [ ] V0.7.2 CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
-- [ ] V0.7.2 Copernicus point-extraction pipeline（NetCDF / API -> normalized JSON）
+- [ ] V0.7.3 Copernicus point-extraction pipeline（NetCDF / API -> normalized JSON）
 - [ ] V0.8 CFD/SPH calibration cases（DualSPHysics / OpenFOAM）
 - [ ] PhysicsNeMo surrogate dataset schema + offline training pipeline
-- [ ] V0.6.1/V0.7 實機手感 / 穩定性調校（桌面 + 手機）
+- [ ] V0.7.1 實機畫面 / FPS / Safari shader 相容性調校
 - [ ] Nitro / Boost（延後，避免先破壞物理基準）
 - [ ] 圈數 / Checkpoint / 排名
 - [ ] AI 對手
