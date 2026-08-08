@@ -1,5 +1,17 @@
 # Changelog
 
+## V0.9
+- Rebuilt the visible ocean as a clean-room VirtOcean-inspired GPU rendering layer in `src/v09-virtocean-ocean.js`.
+- Added six GPU Gerstner / spectral-style wave bands driven by `Hs`, `Tp` and dominant wave direction.
+- Added horizontal Gerstner displacement for thicker, sharper rolling crests without CPU mesh rewriting.
+- Added near-field high-tessellation GPU ocean patch plus the existing far ocean mesh for scale and silhouette quality.
+- Added Fresnel-like sky reflection, broken sun glitter, crest lighting, capillary normal detail and Hs-driven whitecaps.
+- Replaced the expensive CPU per-vertex wake-event scan with a GPU V-shaped craft wake mask.
+- Disabled the V0.8/V0.8.1 CPU FFT visual patch at V0.9 runtime while preserving the research code in the repository.
+- Stopped per-frame legacy far-ocean vertex mutation and per-frame `computeVertexNormals()` work in the active V0.9 visual path.
+- Capped renderer pixel ratio at 1.5 desktop / 1.25 mobile to reduce Retina fill-rate pressure.
+- Preserved `src/main.js`, `src/ocean.js`, `src/hydrodynamics.js` and RealSeaState adapters unchanged.
+
 ## V0.8.1
 - Added horizontal choppy crest displacement derived from FFT surface slopes for sharper near-field wave silhouettes.
 - Added mild crest/trough asymmetry that scales with sea roughness without changing gameplay collision water.
