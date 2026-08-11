@@ -1,6 +1,6 @@
-// V0.10.3 reduced-order horizontal-plane marine dynamics for 9-Point Plus only.
-// Surge (u), Sway (v), and Yaw-rate (r) stay bounded. V0.10.3 keeps the accepted
-// Yaw equations unchanged but reads the migrated Yaw parameters from Calibration Contract.
+// V0.10.3.1 reduced-order horizontal-plane marine dynamics for 9-Point Plus only.
+// V0.10.3 keeps the accepted Yaw source-of-truth. V0.10.3.1 removes repeated
+// calibration config allocation from the frame hot path by caching on contract identity.
 (function (root) {
   'use strict';
 
@@ -18,8 +18,6 @@
     return Number.isFinite(value) ? Number(value) : fallback;
   }
 
-  // V0.10.3 keeps these as exact legacy fallbacks for direct-file / partial-load safety.
-  // Runtime Yaw authority prefers V0101_CALIBRATION.contract when available.
   const DEFAULTS = Object.freeze({
     addedMassSurgeRatio: 0.12,
     addedMassSwayRatio: 0.55,
@@ -66,6 +64,24 @@
     });
 
     return { config, source: 'V0101_CALIBRATION.contract.yaw' };
+  }
+
+  function createIdentityConfigCache(resolver) {
+    let initialized = false;
+    let lastIdentity = null;
+    let lastValue = null;
+    let resolutions = 0;
+    return {
+      resolve(identity) {
+        if (initialized && identity === lastIdentity) return lastValue;
+        lastIdentity = identity;
+        initialized = true;
+        lastValue = resolver();
+        resolutions += 1;
+        return lastValue;
+      },
+      get resolutions() { return resolutions; }
+    };
   }
 
   function stepPlanarState(state, input, dt, options) {
@@ -146,6 +162,7 @@
     module.exports = {
       DEFAULTS,
       resolveYawDynamicsConfig,
+      createIdentityConfigCache,
       stepPlanarState,
       normalizeAngle,
       smoothstepRange
@@ -155,6 +172,13 @@
   if (typeof window === 'undefined' || typeof updateJetSki !== 'function') return;
 
   const previousUpdateJetSki = updateJetSki;
+  const yawConfigCache = createIdentityConfigCache(() => resolveYawDynamicsConfig(root, DEFAULTS));
+  function getRuntimeYawConfig() {
+    const calibration = root.V0101_CALIBRATION;
+    const contractIdentity = calibration && calibration.contract ? calibration.contract : null;
+    return yawConfigCache.resolve(contractIdentity);
+  }
+
   const state = {
     initialized: false,
     u: 0,
@@ -170,6 +194,7 @@
     momentAuthority: false,
     externalYawMomentNm: 0,
     yawConfigSource: 'legacy-defaults',
+    yawConfigResolutions: 0,
     legacySteeringDelta: 0,
     disturbanceYawDelta: 0,
     activeFrames: 0,
@@ -193,7 +218,7 @@
     state.resets += 1;
   }
 
-  updateJetSki = function v0103PlanarDynamics(dt, t) {
+  updateJetSki = function v01031PlanarDynamics(dt, t) {
     const yawBefore = yaw;
     previousUpdateJetSki(dt, t);
 
@@ -226,12 +251,10 @@
         const steerScale = airborne ? physics.airborneSteerScale : 1;
         legacySteeringDelta = steeringValue * getSteerRate(ratio) * waterAuthority * steerScale * safeDt;
       }
-      // Preserve the non-player yaw disturbance (mostly cross-wave influence) while
-      // removing the old direct steering-angle contribution.
       disturbanceYawDelta = normalizeAngle(legacyYawAfter - yawBefore - legacySteeringDelta);
     }
 
-    const resolvedYaw = resolveYawDynamicsConfig(root, DEFAULTS);
+    const resolvedYaw = getRuntimeYawConfig();
     const next = stepPlanarState(state, {
       commandSurge: speed,
       commandSway: lateralSlip,
@@ -244,8 +267,6 @@
     }, dt, resolvedYaw.config);
 
     if (momentAuthority) {
-      // Steering no longer owns yaw angle directly. The integrated body yaw-rate owns the
-      // player's steering contribution; legacy cross-wave disturbance is kept separately.
       yaw = yawBefore + disturbanceYawDelta + next.r * safeDt;
       state.momentFrames += 1;
     } else {
@@ -270,6 +291,7 @@
     state.momentAuthority = next.momentAuthority;
     state.externalYawMomentNm = next.externalYawMomentNm;
     state.yawConfigSource = resolvedYaw.source;
+    state.yawConfigResolutions = yawConfigCache.resolutions;
     state.legacySteeringDelta = legacySteeringDelta;
     state.disturbanceYawDelta = disturbanceYawDelta;
     state.activeFrames += 1;
@@ -286,10 +308,12 @@
   };
 
   root.V0992_PLANAR_3DOF = {
-    version: 'V0.10.3',
+    version: 'V0.10.3.1',
     state,
     config: DEFAULTS,
     resolveYawDynamicsConfig,
+    createIdentityConfigCache,
+    getRuntimeYawConfig,
     stepPlanarState,
     plusOnly: true,
     baseUntouched: true,
@@ -299,6 +323,8 @@
     reducedOrder3DOF: true,
     steeringMomentReady: true,
     calibrationYawSourceReady: true,
-    legacyDefaultsAreFallbackOnly: true
+    legacyDefaultsAreFallbackOnly: true,
+    configResolutionCached: true,
+    get configCacheResolutions() { return yawConfigCache.resolutions; }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
