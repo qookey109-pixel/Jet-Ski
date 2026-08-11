@@ -32,8 +32,18 @@
 - [x] V0.9.7 Open Sea / Taiwan / Hawaii / Sun Moon Lake four-world snapshots
 - [x] V0.9.7 Hawaii coastline Overpass + localStorage fallback
 - [x] V0.9.7 negative-longitude / Hawaii bbox coordinate regression test
+- [x] V0.9.8 Marine Physics Lab：9-Point / Voxel A/B selector
+- [x] V0.9.8 24-cell reduced voxel buoyancy / per-cell water sampling / heave-pitch-roll torque
+- [x] V0.9.8 mode switch pose sync + 9-Point default fallback
+- [x] V0.9.8 marine physics Node regression：flat-water neutral buoyancy / wave slope response / selector contract
+- [x] V0.9.8 three-sails MIT attribution；BoatPhysics3D 僅行為參考
 
 ## 下一階段
+- [ ] V0.9.8 Safari A/B 實機驗收：9-Point vs Voxel，Calm / Normal / Rough 全測
+- [ ] Voxel 巨浪穩定性：檢查 heave / pitch / roll 是否發散或 clamp 過度
+- [ ] Voxel FPS / mobile CPU cost；必要時 24 cells → 16 cells adaptive quality
+- [ ] 若 Voxel 通過，再加入 water-relative per-cell drag / slamming impulse
+- [ ] 若需要真正船舶，再做完整 6DOF rigid-body marine model；Ammo.js 先不導入
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
 - [ ] repository 內建 Waikīkī / 七星潭 OSM snapshots，避免首次啟動完全依賴 Overpass
 - [ ] Issue #12 Phase 2B：coastline chunk/tile streaming + 前方預載 + 遠方卸載
