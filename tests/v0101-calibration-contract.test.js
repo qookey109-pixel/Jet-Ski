@@ -1,9 +1,12 @@
 const assert = require('assert');
 const {
+  YAW_BASELINE_V0102,
   createCalibrationContract,
   readRuntimeInputs
 } = require('../src/v0101-calibration-contract.js');
 
+// Deliberately corrupt legacy Yaw values in the fake runtime. V0.10.3 must ignore
+// these migrated fields and preserve the canonical accepted V0.10.2 baseline.
 const fakeRoot = {
   GAME_CONFIG: {
     hydrodynamics: {
@@ -17,25 +20,25 @@ const fakeRoot = {
     config: {
       addedMassSurgeRatio: 0.12,
       addedMassSwayRatio: 0.55,
-      addedMassYawRatio: 0.38,
+      addedMassYawRatio: 9.99,
       nonlinearSwayDamping: 0.34,
-      yawLinearDamping: 0.88,
-      nonlinearYawDamping: 0.16,
-      yawInertiaKgM2: 165,
+      yawLinearDamping: 9.99,
+      nonlinearYawDamping: 9.99,
+      yawInertiaKgM2: 9999,
       maxSurgeAcceleration: 12.5,
       maxBrakeAcceleration: 20,
       maxSwayAcceleration: 5.2,
-      maxYawAcceleration: 3.2,
-      maxYawRate: 1.55
+      maxYawAcceleration: 99,
+      maxYawRate: 99
     }
   },
   V0993_STEERING_YAW: {
     config: {
-      sternLeverArmM: 1.45,
-      hydroForceCoeff: 1.05,
-      lowSpeedJetForceN: 82,
-      maxSteeringForceN: 360,
-      maxYawMomentNm: 520
+      sternLeverArmM: 99,
+      hydroForceCoeff: 99,
+      lowSpeedJetForceN: 9999,
+      maxSteeringForceN: 9999,
+      maxYawMomentNm: 9999
     }
   },
   JETSKI_PHYSICS: {
@@ -50,22 +53,27 @@ const fakeRoot = {
 const inputs = readRuntimeInputs(fakeRoot);
 const contract = createCalibrationContract(inputs);
 
-assert.equal(contract.version, 'V0.10.1');
+assert.equal(contract.version, 'V0.10.3');
 assert.equal(contract.contract, 'marine-calibration-v1');
-assert.equal(contract.status, 'PARTIAL_REDUCED_ORDER');
-assert.equal(contract.authority.catalogOnly, true);
+assert.equal(contract.status, 'PARTIAL_REDUCED_ORDER_YAW_SOURCE');
+assert.equal(contract.authority.catalogOnly, false);
 assert.equal(contract.authority.changesPhysics, false);
+assert.equal(contract.authority.changesPhysicsValues, false);
+assert.equal(contract.authority.changesParameterSource, true);
+assert.equal(contract.authority.yawSourceOfTruth, true);
 assert.equal(contract.authority.safeForAcceptedV010Baseline, true);
+assert.equal(contract.sourceOfTruth.yaw.numericalBaseline, 'V0.10.2');
+assert.equal(contract.sourceOfTruth.yaw.noNewValues, true);
 
 assert.equal(contract.rigidBody.massKg, 118);
 assert.equal(contract.rigidBody.cgVerticalM, -0.18);
-assert.equal(contract.rigidBody.inertiaKgM2.yaw, 165);
+assert.equal(contract.rigidBody.inertiaKgM2.yaw, YAW_BASELINE_V0102.yawInertiaKgM2);
 assert.equal(contract.rigidBody.inertiaKgM2.roll, null);
 assert.equal(contract.rigidBody.inertiaKgM2.pitch, null);
 
 assert.equal(contract.addedMassRatio.surge, 0.12);
 assert.equal(contract.addedMassRatio.sway, 0.55);
-assert.equal(contract.addedMassRatio.yaw, 0.38);
+assert.equal(contract.addedMassRatio.yaw, YAW_BASELINE_V0102.addedMassYawRatio);
 assert.equal(contract.addedMassRatio.heave, null);
 assert.equal(contract.addedMassRatio.roll, null);
 assert.equal(contract.addedMassRatio.pitch, null);
@@ -74,15 +82,21 @@ assert.equal(contract.damping.heavePerSecond, 4.7);
 assert.equal(contract.damping.pitchDampingRatio, 0.70);
 assert.equal(contract.damping.rollDampingRatio, 0.74);
 assert.equal(contract.damping.swayNonlinear, 0.34);
-assert.equal(contract.damping.yawLinear, 0.88);
-assert.equal(contract.damping.yawNonlinear, 0.16);
+assert.equal(contract.damping.yawLinear, YAW_BASELINE_V0102.yawLinearDamping);
+assert.equal(contract.damping.yawNonlinear, YAW_BASELINE_V0102.yawNonlinearDamping);
+assert.equal(contract.responseTuning.yawResponse, YAW_BASELINE_V0102.yawResponse);
 
-assert.equal(contract.steering.leverArmM, 1.45);
-assert.equal(contract.steering.hydroForceCoeff, 1.05);
-assert.equal(contract.steering.lowSpeedJetForceN, 82);
-assert.equal(contract.steering.maxSteeringForceN, 360);
-assert.equal(contract.steering.maxYawMomentNm, 520);
+assert.equal(contract.steering.leverArmM, YAW_BASELINE_V0102.steering.sternLeverArmM);
+assert.equal(contract.steering.hydroForceCoeff, YAW_BASELINE_V0102.steering.hydroForceCoeff);
+assert.equal(contract.steering.lowSpeedJetForceN, YAW_BASELINE_V0102.steering.lowSpeedJetForceN);
+assert.equal(contract.steering.maxSteeringForceN, YAW_BASELINE_V0102.steering.maxSteeringForceN);
+assert.equal(contract.steering.maxYawMomentNm, YAW_BASELINE_V0102.steering.maxYawMomentNm);
+assert.equal(contract.steering.hydroAuthorityStartMps, YAW_BASELINE_V0102.steering.hydroAuthorityStartMps);
+assert.equal(contract.steering.hydroAuthorityFullMps, YAW_BASELINE_V0102.steering.hydroAuthorityFullMps);
+assert.equal(contract.steering.landingAuthorityLoss, YAW_BASELINE_V0102.steering.landingAuthorityLoss);
 
+assert.equal(contract.responseLimits.maxYawAcceleration, YAW_BASELINE_V0102.maxYawAcceleration);
+assert.equal(contract.responseLimits.maxYawRate, YAW_BASELINE_V0102.maxYawRate);
 assert.ok(Math.abs(contract.derived.effectiveYawInertiaKgM2 - 227.7) < 1e-9);
 assert.ok(contract.uncalibrated.includes('inertia.roll'));
 assert.ok(contract.uncalibrated.includes('inertia.pitch'));
@@ -93,6 +107,6 @@ const empty = createCalibrationContract({});
 assert.equal(empty.rigidBody.massKg, null);
 assert.equal(empty.rigidBody.inertiaKgM2.yaw, null);
 assert.equal(empty.derived.effectiveYawInertiaKgM2, null);
-assert.equal(empty.authority.changesPhysics, false);
+assert.equal(empty.authority.changesPhysicsValues, false);
 
-console.log('V0.10.1 calibration contract regression PASS');
+console.log('V0.10.3 calibration contract regression PASS');
