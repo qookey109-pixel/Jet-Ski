@@ -1,26 +1,28 @@
-// V0.9.8.3 Marine Physics Lab UI/runtime. The validated 9-point model remains default;
-// Voxel mode can be enabled live without changing ocean/world-mode code.
+// V0.9.9 Marine Physics Lab UI/runtime.
+// 9-Point Plus is mainline; Base remains the trusted A/B reference; Voxel is experimental.
 (function () {
   'use strict';
 
   const physicsApi = window.JETSKI_PHYSICS && window.JETSKI_PHYSICS.hydroModel;
   if (!physicsApi || typeof physicsApi.setMode !== 'function') return;
 
-  const version = 'V0.9.8.3';
+  const version = 'V0.9.9';
   const buttons = [...document.querySelectorAll('[data-hydro-mode]')];
   const hud = document.querySelector('.hud');
   const row = document.createElement('div');
-  row.innerHTML = '船體物理 <span id="marine-physics-state">9-Point</span>';
+  row.innerHTML = '船體物理 <span id="marine-physics-state">9-Point+</span>';
   if (hud) hud.appendChild(row);
   const stateEl = row.querySelector('#marine-physics-state');
   let lastDiagUpdate = 0;
 
   function labelFor(mode) {
-    return mode === 'voxel' ? 'Voxel 24-cell' : '9-Point';
+    if (mode === 'nine-point-plus') return '9-Point+';
+    if (mode === 'voxel') return 'Voxel EXP';
+    return '9-Point Base';
   }
 
   function updateUi() {
-    const mode = physicsApi.mode || 'nine-point';
+    const mode = physicsApi.mode || 'nine-point-plus';
     for (const button of buttons) {
       button.classList.toggle('active', button.dataset.hydroMode === mode);
     }
@@ -35,13 +37,14 @@
   for (const button of buttons) button.addEventListener('click', () => setMode(button.dataset.hydroMode));
   window.addEventListener('keydown', event => {
     if (event.repeat || event.code !== 'KeyP') return;
+    // Safe keyboard A/B is Plus <-> Base only. Voxel requires the explicit EXP button.
     physicsApi.toggleMode();
     updateUi();
   });
 
   if (typeof updateWater === 'function') {
     const previousUpdateWater = updateWater;
-    updateWater = function v098MarinePhysicsHud(t) {
+    updateWater = function v099MarinePhysicsHud(t) {
       previousUpdateWater(t);
       if (!stateEl || t - lastDiagUpdate < 0.25) return;
       lastDiagUpdate = t;
@@ -50,9 +53,14 @@
         const submerged = Number.isFinite(d.submergedFraction) ? `${Math.round(d.submergedFraction * 100)}%` : '--';
         const ay = Number.isFinite(d.heaveAcceleration) ? `${d.heaveAcceleration >= 0 ? '+' : ''}${d.heaveAcceleration.toFixed(1)}` : '--';
         const slam = Number.isFinite(d.slamLoad) ? `${Math.round(d.slamLoad * 100)}%` : '--';
-        stateEl.textContent = `Voxel ${d.activeCells || 0}/${d.voxelCount || 24} · ${submerged} · aY ${ay} · slam ${slam}`;
+        stateEl.textContent = `Voxel EXP · ${submerged} · aY ${ay} · slam ${slam}`;
+      } else if (d && d.mode === 'nine-point-plus') {
+        const ay = Number.isFinite(d.heaveAcceleration) ? `${d.heaveAcceleration >= 0 ? '+' : ''}${d.heaveAcceleration.toFixed(1)}` : '--';
+        const inertia = window.V099_NINE_POINT_PLUS_RUNTIME && window.V099_NINE_POINT_PLUS_RUNTIME.state;
+        const yawRate = inertia && Number.isFinite(inertia.yawRate) ? inertia.yawRate.toFixed(2) : '--';
+        stateEl.textContent = `9-Point+ · aY ${ay} · yaw ${yawRate}`;
       } else {
-        stateEl.textContent = '9-Point';
+        stateEl.textContent = '9-Point Base';
       }
     };
   }
@@ -69,6 +77,7 @@
     get diagnostics() { return physicsApi.diagnostics ? physicsApi.diagnostics() : null; },
     get smoothing() { return window.V0982_MARINE_SMOOTHING || null; },
     get fastOceanSampler() { return window.V0982_FAST_OCEAN_SAMPLER || null; },
-    get waterContactForces() { return window.V0983_WATER_CONTACT_FORCES || null; }
+    get waterContactForces() { return window.V0983_WATER_CONTACT_FORCES || null; },
+    get ninePointPlus() { return window.V099_NINE_POINT_PLUS_RUNTIME || null; }
   };
 })();
