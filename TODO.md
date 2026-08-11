@@ -30,11 +30,10 @@
 - [x] V0.10.0 未校準 force / moment slots 不捏造；僅接入既有 V0.9.9.3 `Mz`
 - [x] V0.10.0 Base / Voxel inactive boundary；observer 不寫 pose/velocity/load authority
 - [x] V0.10.0 20,000-step contract finite stress regression
+- [x] **V0.10.0 Safari acceptance PASS**：實機回報正常，observer layer 未造成可感知手感 regression
+- [x] V0.10.0 保留 V0.9.9.3.2 Safari GPU performance baseline；未回報新的卡頓 regression
 
 ## 下一階段
-- [ ] **V0.10.0 Safari acceptance**：確認 observer layer 沒有改變 9-Point+ / Base 手感，且 V0.9.9.3.2 的卡頓改善仍保留
-- [ ] Normal / Rough 各做 9-Point+ vs Base；BRAKE / reverse / shoreline 不可退步
-- [ ] 記錄 V0.10.0 HUD FPS / p95 / >25ms，與 V0.9.9.3.2 baseline 比較
 - [ ] 建立 calibration contract：mass / CG / Ixx-Iyy-Izz / added mass / damping / steering lever arm
 - [ ] 公開或正式映射 9-Point+ pitch/roll internal rate，讓 `p/q` 從 observer finite-difference 升級成內部 state source
 - [ ] 校準後逐軸建立可追溯 `Fx/Fy/Fz/Mx/My/Mz`，不要一次把六軸 authority 全換掉

@@ -14,6 +14,7 @@
 - **V0.9.9.3 Steering Force + Yaw Moment**：A/D 轉向由 steering force / stern yaw moment `Mz` 驅動，不再以 direct yaw-angle change 作 Plus 最終操舵。
 - **V0.9.9.3.1–.2 Safari Performance**：frame telemetry、Safari desktop reflection throttle、GPU budget；實機回報卡頓有改善。
 - **V0.10.0 Unified 6DOF Contract**：observer-first，把現有已驗證的六自由度狀態收斂到同一 browser-safe contract，不改變既有 authority。
+- **V0.10.0 Safari Acceptance：PASS**：實機回報正常，未觀察到 observer layer 造成可感知手感 regression；V0.9.9.3.2 的效能改善亦保留。
 - `src/main.js`、`src/ocean.js`、`src/hydrodynamics.js` validated baseline 不重寫。
 
 ## V0.10.0 — Unified Browser-Safe 6DOF State Contract
@@ -76,7 +77,7 @@ V0.9.9.3.2 保留為 Safari baseline：
 - gameplay / physics 仍維持完整 `requestAnimationFrame` cadence
 - HUD 顯示 FPS / p95 frame time / long-frame count
 
-實機回報：相較 V0.9.9.3 原版，卡頓**有改善**。目前不再盲目降低畫質；後續 6DOF 每一步都沿用 telemetry 監控 regression。
+實機回報：相較 V0.9.9.3 原版，卡頓**有改善**；V0.10.0 observer acceptance 後仍正常。後續每一步都沿用 telemetry 監控 regression，不再盲目降低畫質。
 
 ## 物理切換
 
@@ -130,6 +131,6 @@ V0.10.0 regression 鎖定：6DOF field mapping、floating-origin world position�
 
 ## Next
 
-1. Safari / GitHub Pages 驗證 V0.10.0 observer layer 不改變 9-Point+ / Base 手感與目前已改善的 frame-time baseline。
-2. 建立正式 calibration contract：`mass / CG / Ixx-Iyy-Izz / added mass / damping / steering lever arm`。
-3. 校準完成後，才逐步把 `Fx/Fy/Fz/Mx/My/Mz` 從 observer slots 轉成可追溯的 force/moment authority；每次只遷移一個軸並保留 A/B fallback。
+1. 建立正式 calibration contract：`mass / CG / Ixx-Iyy-Izz / added mass / damping / steering lever arm`。
+2. 正式公開或映射 9-Point+ pitch/roll internal rates，讓 `p/q` 從 observer finite-difference 升級成內部 state source。
+3. 校準完成後，才逐軸把 `Fx/Fy/Fz/Mx/My/Mz` 從 observer slots 轉成可追溯的 force/moment authority；每次只遷移一個軸並保留 9-Point Base A/B fallback 與 Safari telemetry。
