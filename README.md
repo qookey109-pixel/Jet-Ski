@@ -1,4 +1,4 @@
-# Swim Ring Racing — V0.9.9.1
+# Swim Ring Racing — V0.9.9.2
 
 3D Web 水上遊戲 Prototype。手機橫向優先、桌面支援；玩家駕駛程序化 3D 游泳圈。
 
@@ -10,30 +10,31 @@
 - **V0.9.4–0.9.7 Real World Water / Coast**：日月潭、七星潭→外海、Waikīkī→Pacific。
 - **V0.9.9 9-Point Plus**：以實機手感較好的 9-point footprint 為主線；Base 保留 A/B；Voxel 降為 EXP。
 - **V0.9.9.1 Lateral + COM**：Plus-only 水相對側向力、側滑收斂、低重心 roll torque。
+- **V0.9.9.2 Planar 3DOF**：把 Plus 的前進 / 側移 / 轉向整合成 Surge `u`、Sway `v`、Yaw-rate `r` 狀態。
 - `src/main.js`、`src/ocean.js`、`src/hydrodynamics.js` validated baseline 不重寫。
 
-## V0.9.9.1 — Lateral Force + Center of Mass
+## V0.9.9.2 — Surge + Sway + Yaw
 
-9-Point+ 仍使用原本 9 個 footprint samples 作水面 authority，不增加 cell 數量。
+這版不是完整 6DOF rigid-body，而是 browser-safe 的水平面 reduced-order 3DOF state layer。
 
-新增：
+- 原 GAS / BRAKE / steering / wave interaction 繼續產生控制命令。
+- `u` = Surge，實際前進速度狀態；加入約 12% added-mass proxy。
+- `v` = Sway，實際側移速度狀態；加入約 55% added-mass proxy、非線性側向 damping、輕量 `u × r` turn coupling。
+- `r` = Yaw rate，轉向角速度狀態；加入約 38% rotational added-mass proxy 與非線性 yaw damping。
+- 所有 acceleration / yaw-rate 都有限幅，不允許單幀 lateral/yaw impulse。
+- BRAKE 使用更高的 surge response / deceleration cap，避免 added-mass 讓船煞不住。
+- 騰空與倒車仍交給原本 controller；3DOF 會同步狀態後退讓，不搶 authority。
+- 3DOF runtime 位於 shoreline/world collision 之前，因此海岸碰撞仍可在最外層覆蓋速度與位置。
+- Plus COM roll layer會讀取整合後的 `r`，讓 roll torque 與實際船體 yaw-rate 對齊。
 
-- 使用既有 spectral-ocean 的 current / Stokes / orbital velocity，估算 craft 右向水速。
-- `relative lateral = lateralSlip - waterRight`。
-- Plus-only 連續側向水力把 side-slip 漸進拉回；力量有速度依賴與 acceleration cap，不做 lateral impulse。
-- Yaw-rate × forward speed 產生 bounded turn lateral acceleration，供重心 torque 使用。
-- CG reference 維持約 `-0.18 m`，搭配 virtual metacentric height 約 `0.58 m`。
-- COM roll target 以 reduced-order moment 估算並限制在約 ±0.15 rad；加入原 9-point water/dynamic roll target，而不是覆蓋它。
-- Base 9-Point 與 Voxel EXP 完全不套用這層。
-
-HUD 在 Plus 模式顯示：`aY`、water-relative `slip`、`CG` roll target。
+HUD 在 9-Point+ 顯示：`u` / `v` / `r`。
 
 ## 物理切換
 
-- `⚓ 9-Point+` — 預設主線
-- `⚓ Base` — 原 9-Point 可信基準
-- `🧊 Voxel EXP` — 24-cell 實驗
-- `P` — 只在 9-Point+ / Base 間 A/B
+- `⚓ 9-Point+` — 預設主線，包含 V0.9.9.2 planar 3DOF。
+- `⚓ Base` — 原 9-Point 可信基準。
+- `🧊 Voxel EXP` — 24-cell 實驗。
+- `P` — 只在 9-Point+ / Base 間 A/B。
 
 ## 世界模式
 
@@ -55,6 +56,7 @@ HUD 在 Plus 模式顯示：`aY`、water-relative `slip`、`CG` roll target。
 ```bash
 node tests/nine-point-plus.test.js
 node tests/v0991-lateral-com.test.js
+node tests/v0992-planar-3dof.test.js
 node tests/real-world-water.test.js
 node tests/real-world-coast.test.js
 node tests/hawaii-coast.test.js
@@ -65,7 +67,7 @@ node tests/v0982-marine-smoothing.test.js
 node tests/v0983-water-contact-forces.test.js
 ```
 
-`v0991-lateral-com.test.js` 鎖定側向力方向、速度依賴、turn acceleration 方向與最大 acceleration cap。
+`v0992-planar-3dof.test.js` 鎖定：Surge 漸進追速、BRAKE authority、Sway/yaw coupling 方向、Yaw acceleration cap、Sway decay，以及 20,000-step finite/stability stress。
 
 ## Attribution
 
@@ -75,4 +77,4 @@ node tests/v0983-water-contact-forces.test.js
 
 ## Next
 
-Safari 實機 A/B：Normal / Rough 下比較 9-Point+ 與 Base。V0.9.9.1 目標不是更靈敏，而是高速轉彎時 side-slip 更有水阻、Yaw/roll 有連續質量感，同時維持 Base 的順暢度。通過後再做 longitudinal COM / surge-sway-yaw 統一狀態，逐步往 5DOF/6DOF 推進。
+先做 Safari **9-Point+ vs Base** A/B，Normal / Rough 觀察 `u/v/r` 是否有質量感但不拖泥帶水。若 V0.9.9.2 通過，下一層把 steering input 改成 **water-authority / yaw moment command**，不再把直接 yaw-angle change 當成最終操舵；之後再擴成 Heave/Pitch/Roll + planar 3DOF 的 browser-safe 6DOF 架構。
