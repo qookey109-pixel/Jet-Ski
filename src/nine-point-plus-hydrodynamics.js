@@ -1,6 +1,7 @@
-// V0.9.9.1 9-Point Plus hydrodynamics.
+// V0.10.2 9-Point Plus hydrodynamics.
 // Keeps the validated 9-point footprint as the water-surface authority, then adds
 // explicit gravity/heave inertia, inertial pitch/roll, and a bounded external COM roll torque.
+// V0.10.2 only exposes the already-existing pitchRate / rollRate as diagnostics; integration is unchanged.
 (function (root) {
   'use strict';
 
@@ -143,6 +144,8 @@
         y: state.y,
         pitch: state.pitch,
         roll: state.roll,
+        pitchRate: state.pitchRate,
+        rollRate: state.rollRate,
         heaveVelocity: state.heaveVelocity,
         heaveAcceleration: state.heaveAcceleration,
         immersionVariance: base.immersionVariance,
@@ -160,6 +163,8 @@
       return Object.assign({}, baseDiagnostics, {
         heaveVelocity: state.heaveVelocity,
         heaveAcceleration: state.heaveAcceleration,
+        pitchRate: state.pitchRate,
+        rollRate: state.rollRate,
         immersionProxy: state.immersionProxy,
         targetY: state.targetY,
         centerOfMassVerticalM,
@@ -171,7 +176,8 @@
         comRollTarget: state.comRollTarget,
         explicitGravity: true,
         ninePointAuthority: true,
-        externalComTorque: true
+        externalComTorque: true,
+        internalPitchRollRatesExposed: true
       });
     }
 
