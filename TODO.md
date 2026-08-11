@@ -25,23 +25,25 @@
 - [x] V0.9.4 日月潭 OSM Real World Water + shoreline collision
 - [x] V0.9.4.1 reverse drive + shoreline slope + OSM cache
 - [x] V0.9.5 Open Sea / Sun Moon Lake world modes
-- [x] V0.9.6 Phase 2A：花蓮七星潭 OSM `natural=coastline` prototype
-- [x] V0.9.6 coastline direction-preserving sea/land side detection + Node regression test
-- [x] V0.9.6 land-side shoreline shelf + coast collision
-- [x] V0.9.6 近岸 → 離岸 → V0.9.3 infinite ocean 連續座標
-- [x] V0.9.6 Open Sea / Taiwan Coast / Sun Moon Lake 三世界位置 snapshot
-- [x] V0.9.6 coastline floating-origin sync + Overpass/localStorage fallback
+- [x] V0.9.6 花蓮七星潭 OSM coastline + continuous nearshore → open sea
+- [x] V0.9.6 coastline direction / sea-land side regression + 1.2km nearshore guard
+- [x] V0.9.7 Hawaii Waikīkī / Oʻahu OSM coastline prototype
+- [x] V0.9.7 Waikīkī → Pacific Open Sea continuous coordinates
+- [x] V0.9.7 Open Sea / Taiwan / Hawaii / Sun Moon Lake four-world snapshots
+- [x] V0.9.7 Hawaii coastline Overpass + localStorage fallback
+- [x] V0.9.7 negative-longitude / Hawaii bbox coordinate regression test
 
 ## 下一階段
-- [ ] V0.9.6 Safari 實機驗收：七星潭岸線方向、靠岸碰撞、一路離岸長距離航行
-- [ ] repository 內建七星潭 OSM snapshot，避免首次啟動完全依賴 Overpass
+- [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
+- [ ] repository 內建 Waikīkī / 七星潭 OSM snapshots，避免首次啟動完全依賴 Overpass
 - [ ] Issue #12 Phase 2B：coastline chunk/tile streaming + 前方預載 + 遠方卸載
-- [ ] 沿台灣東岸加入第二個相鄰 coastline chunk，驗證跨 tile 不斷線
+- [ ] Oʻahu 加入相鄰 coastline chunk，驗證沿島長距離航行不中斷
+- [ ] 台灣東岸加入第二個相鄰 coastline chunk
 - [ ] DEM 高程資料 + 真實海岸地形
 - [ ] 近岸 wave shoaling / breaking / attenuation（需保持 visual/gameplay sync）
-- [ ] 海岸 vegetation / rock material pass（低成本優先）
+- [ ] Hawaii sand / vegetation / rock / skyline material pass（低成本優先）
 - [ ] GPU visual wave 與 gameplay wave 的低頻相位/高度校準
-- [ ] CWA 實站整合測試 + station selector
+- [ ] CWA / NOAA 實站整合測試 + location selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
 - [ ] Copernicus point-extraction pipeline（NetCDF / API -> normalized JSON）
 - [ ] CFD/SPH calibration cases（DualSPHysics / OpenFOAM）
