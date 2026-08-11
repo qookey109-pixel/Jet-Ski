@@ -1,4 +1,4 @@
-# Swim Ring Racing — V0.10.3.1
+# Swim Ring Racing — V0.10.4
 
 3D Web 水上遊戲 Prototype。手機橫向優先、桌面支援；玩家駕駛程序化 3D 游泳圈。
 
@@ -16,9 +16,66 @@
 - **V0.10.0 Unified 6DOF Contract**：observer-first 六自由度 state contract；Safari acceptance PASS。
 - **V0.10.1 Calibration Contract**：建立 mass / CG / inertia proxy / added-mass proxy / damping / steering catalog。
 - **V0.10.2 Internal Roll/Pitch Rates**：6DOF `p/q` 改用 9-Point+ 內部 `rollRate / pitchRate`。
-- **V0.10.3 Yaw Source-of-Truth**：把已驗證的 Yaw baseline 從 Planar / Steering 分散 defaults 收斂到 Calibration Contract；numerical equivalence PASS，但 Safari 實機曾出現卡頓 regression。
-- **V0.10.3.1 Safari Yaw Config Cache Hotfix**：migrated Yaw config 改為依 Calibration Contract identity 快取；Safari 實機回報「很正常了」，acceptance PASS。
+- **V0.10.3 Yaw Source-of-Truth**：Yaw baseline 收斂到 Calibration Contract；numerical equivalence PASS，但初版 Safari 有卡頓 regression。
+- **V0.10.3.1 Safari Yaw Config Cache Hotfix**：migrated config 依 Calibration Contract identity 快取；Safari acceptance PASS。
+- **V0.10.4 Surge Source-of-Truth**：Surge baseline 收斂到同一 Calibration Contract，Surge + Yaw 共用 identity-cached Planar config；20,000-step `maxDiff = 0`，Safari 實機回報「正常」，acceptance PASS。
 - `src/main.js`、`src/ocean.js`、`src/hydrodynamics.js` validated baseline 不重寫。
+
+因此目前正式 physics / performance baseline 為 **V0.10.4**。
+
+## V0.10.4 — Surge Source-of-Truth Consolidation
+
+V0.10.4 是第二個 horizontal-axis parameter source migration，仍然採 **numerical-equivalence-first / no-feel-change**。
+
+### Canonical accepted Surge baseline
+
+| 項目 | Source value |
+|---|---:|
+| Surge added mass | `12%` |
+| Surge response | `5.4` |
+| BRAKE surge response | `10.2` |
+| Max surge acceleration | `12.5` |
+| Max brake acceleration | `20.0` |
+
+上述全部沿用 V0.10.3.1 已使用數值，沒有重新調參。
+
+### Runtime source rule
+
+```text
+Calibration Contract
+       ↓
+identity resolve once
+       ↓
+cached Planar config
+  ├─ Surge
+  └─ Yaw
+       ↓
+per-frame direct reuse
+```
+
+- Surge 與 Yaw 共用同一個 Planar identity cache。
+- 不新增第二條 per-frame resolver。
+- stable Calibration Contract identity 下不重建 immutable config。
+- Legacy Planar defaults 只保留 direct-file / partial-load fallback。
+- Base / Voxel / reverse / airborne / shoreline / world authority 不變。
+
+### Numerical equivalence gate
+
+- 20,000-step deterministic Planar equivalence：`maxDiff = 0`。
+- 覆蓋 GAS / coast / BRAKE，其中包含 2,774 個 BRAKE frames。
+- 同時覆蓋 sway coupling、Yaw moment authority 與 command-yaw fallback。
+- `u / v / r` 全程 finite / bounded。
+- 沒有修改 Surge / Yaw 方程。
+
+目前 sandbox 無法直接 clone GitHub，因此這是等價 Node regression，不宣稱完整 repository 原檔 test suite 已在本環境執行。
+
+### Safari acceptance
+
+- V0.10.4 GitHub Pages / Safari 實機回報：**PASS —「正常」**。
+- GAS / coast / BRAKE / REV / steering 未回報可感知手感 regression。
+- frame-time 未回報重新變卡。
+
+因此 **V0.10.4 成為新的 accepted baseline**。
 
 ## V0.10.3.1 — Safari Yaw Config Cache Hotfix
 
@@ -46,8 +103,6 @@ per-frame direct reuse
 - contract identity 改變時才新增 1 次 resolution。
 - Yaw source-of-truth、Yaw 參數與方程全部保留。
 - Safari 實機重新驗收：**PASS —「很正常了」**。
-
-因此目前正式 performance / physics baseline 為 **V0.10.3.1**。
 
 ## V0.10.3 — Yaw Source-of-Truth Consolidation
 
@@ -95,8 +150,6 @@ V0.10.3 將上述既有原值固定成 `V0101_CALIBRATION.YAW_BASELINE_V0102`，
 | Hydro authority | `1.2 → 12.0 m/s` |
 | Landing steering loss | `14% max` |
 
-這些全部都是 V0.10.2 已使用的數字；V0.10.3 / V0.10.3.1 都沒有加入新的 calibration value。
-
 ### Numerical equivalence gate
 
 - steering deterministic grid：legacy source 與 calibration source 完全一致。
@@ -104,8 +157,6 @@ V0.10.3 將上述既有原值固定成 `V0101_CALIBRATION.YAW_BASELINE_V0102`，
 - 等價 harness：`maxDiff = 0`。
 - `max |r| = 1.55 rad/s`。
 - effective `Izz = 227.7 kg·m²`。
-
-目前 sandbox 無法直接 clone GitHub，因此這是等價 Node regression，不宣稱完整 repository 原檔 test suite 已在本環境執行。
 
 ## V0.10.2 — Internal Roll/Pitch Rates
 
@@ -158,7 +209,7 @@ Mx / My / Mz
 - HUD：FPS / p95 / long-frame count
 - immutable migrated config：identity cache / pre-resolve，避免 per-frame allocation
 
-V0.10.3.1 Safari acceptance 已 PASS。
+V0.10.4 Safari acceptance 已 PASS。
 
 ## 物理切換
 
@@ -196,6 +247,7 @@ node tests/v0101-calibration-contract.test.js
 node tests/v0102-internal-pq-rates.test.js
 node tests/v0103-yaw-source-of-truth.test.js
 node tests/v01031-yaw-config-cache.test.js
+node tests/v0104-surge-source-of-truth.test.js
 node tests/real-world-water.test.js
 node tests/real-world-coast.test.js
 node tests/hawaii-coast.test.js
@@ -214,7 +266,8 @@ node tests/v0983-water-contact-forces.test.js
 
 ## Next
 
-1. 下一個單軸 authority migration 繼續採 **numerical-equivalence-first / no-feel-change**。
-2. immutable runtime config 必須 cache / pre-resolve，不再放進 per-frame allocation hot path。
-3. 每次 migration 都保留 Base A/B fallback 與 Safari FPS / p95 / long-frame telemetry。
-4. Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口繼續等 CFD/SPH / system-identification evidence，不先猜值。
+1. **V0.10.5 Sway Source-of-Truth**：維持 numerical-equivalence-first / no-feel-change。
+2. Sway migration 收斂目前已驗證的 added mass / sway response / nonlinear damping / max sway acceleration / turn coupling，不先改數值。
+3. Sway 必須與 Surge / Yaw 共用既有 identity-cached Planar config，不新增 per-frame immutable allocation。
+4. 工程驗證後仍需 Safari / GitHub Pages A/B acceptance 才能繼續下一軸。
+5. Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口繼續等 CFD/SPH / system-identification evidence，不先猜值。
