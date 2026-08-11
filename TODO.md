@@ -23,16 +23,20 @@
 - [x] V0.9.2.4 giant visual/gameplay surface sync + anti-penetration guard
 - [x] V0.9.3 12-band irregular giant ocean + floating-origin infinite travel
 - [x] Issue #12 Phase 1 foundation: WGS84 → local game coordinates / OSM polygon parser
-- [x] V0.9.4 日月潭 OSM runtime：Overpass 載入 / 真實岸線 bank mesh / shoreline collision
+- [x] V0.9.4 日月潭 OSM runtime：Overpass 載入 / 真實岸線 / shoreline collision
 - [x] V0.9.4 OSM attribution + primary/fallback Overpass endpoints
 - [x] V0.9.4 real-world geometry Node regression test
+- [x] V0.9.4.1 S / ↓：前進時煞車、停止後倒車；mobile BRAKE / REV
+- [x] V0.9.4.1 reverse-controller Node regression test
+- [x] V0.9.4.1 shoreline wall → wet-bank + land slope ribbon
+- [x] V0.9.4.1 successful OSM response localStorage cache fallback
 
 ## 下一階段
-- [ ] V0.9.4 Safari 實機驗收：日月潭岸線是否正確載入、形狀是否可辨識
-- [ ] 將目前 shoreline wall 升級成較自然的 shoreline / land ribbon，不做垂直高牆
-- [ ] OSM snapshot cache：避免 Overpass 臨時故障時無法進入 Real World Water 模式
+- [ ] V0.9.4.1 Safari 實機驗收：倒車、岸線斜坡、OSM CACHE
+- [ ] 將 browser localStorage cache 升級成 repository 內建 OSM snapshot fallback
 - [ ] Issue #12 Phase 2：chunk / tile streaming + 前方預載 + 遠方卸載
 - [ ] DEM 高程資料 + 真實岸邊地形
+- [ ] 湖岸 vegetation / rock material pass（先保持低成本）
 - [ ] GPU visual wave 與 gameplay wave 的低頻相位/高度校準
 - [ ] CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
