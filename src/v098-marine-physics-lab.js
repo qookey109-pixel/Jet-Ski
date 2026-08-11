@@ -1,4 +1,4 @@
-// V0.9.8.1 Marine Physics Lab UI/runtime. The validated 9-point model remains default;
+// V0.9.8.2 Marine Physics Lab UI/runtime. The validated 9-point model remains default;
 // Voxel mode can be enabled live without changing ocean/world-mode code.
 (function () {
   'use strict';
@@ -6,7 +6,7 @@
   const physicsApi = window.JETSKI_PHYSICS && window.JETSKI_PHYSICS.hydroModel;
   if (!physicsApi || typeof physicsApi.setMode !== 'function') return;
 
-  const version = 'V0.9.8.1';
+  const version = 'V0.9.8.2';
   const buttons = [...document.querySelectorAll('[data-hydro-mode]')];
   const hud = document.querySelector('.hud');
   const row = document.createElement('div');
@@ -69,6 +69,8 @@
     version,
     setMode,
     get mode() { return physicsApi.mode; },
-    get diagnostics() { return physicsApi.diagnostics ? physicsApi.diagnostics() : null; }
+    get diagnostics() { return physicsApi.diagnostics ? physicsApi.diagnostics() : null; },
+    get smoothing() { return window.V0982_MARINE_SMOOTHING || null; },
+    get fastOceanSampler() { return window.V0982_FAST_OCEAN_SAMPLER || null; }
   };
 })();
