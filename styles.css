@@ -34,6 +34,37 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   user-select: none;
 }
 
+.physics-controls {
+  position: fixed;
+  top: 58px;
+  right: 14px;
+  z-index: 9;
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 12px;
+  background: rgba(0, 20, 32, .42);
+  backdrop-filter: blur(8px);
+  user-select: none;
+}
+
+.physics-controls button {
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 9px;
+  background: rgba(0, 27, 43, .55);
+  color: #fff;
+  font-weight: 750;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.physics-controls button.active {
+  background: rgba(255,255,255,.26);
+  border-color: rgba(255,255,255,.72);
+}
+
 .world-controls,
 .sea-controls {
   position: fixed;
@@ -117,6 +148,8 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
 @media (max-width: 620px) {
   .help { display: none; }
   .hud { font-size: 13px; }
+  .physics-controls { top: 8px; right: 8px; }
+  .physics-controls button { min-height: 30px; padding: 0 7px; font-size: 11px; }
   .mobile-controls button { min-width: 62px; min-height: 54px; font-size: 15px; }
   .world-controls { bottom: 126px; gap: 4px; }
   .sea-controls { bottom: 82px; }
@@ -127,6 +160,7 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
 @media (max-height: 480px) {
   .hud { top: 8px; left: 8px; padding: 7px 9px; font-size: 12px; }
   .help { top: 8px; right: 8px; padding: 7px 9px; }
+  .physics-controls { top: 48px; right: 8px; }
   .mobile-controls { bottom: 10px; padding: 0 10px; }
   .mobile-controls button { min-height: 48px; }
   .world-controls { bottom: 105px; }
