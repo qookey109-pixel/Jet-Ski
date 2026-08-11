@@ -21,9 +21,9 @@
 
   if (typeof window === 'undefined') return;
   const hydro = root.JETSKI_PHYSICS && root.JETSKI_PHYSICS.hydroModel;
-  if (!hydro || typeof root.updateJetSki !== 'function') return;
+  if (!hydro || typeof updateJetSki !== 'function') return;
 
-  const previousUpdateJetSki = root.updateJetSki;
+  const previousUpdateJetSki = updateJetSki;
   const state = {
     contactFrames: 0,
     slamFrames: 0,
@@ -32,9 +32,9 @@
     lastSlamLoad: 0
   };
 
-  root.updateJetSki = function v0983WaterContactForces(dt, t) {
+  updateJetSki = function v0983WaterContactForces(dt, t) {
     previousUpdateJetSki(dt, t);
-    if (hydro.mode !== 'voxel' || root.airborne || root.input.brake || !Number.isFinite(root.speed) || root.speed <= 0) {
+    if (hydro.mode !== 'voxel' || airborne || input.brake || !Number.isFinite(speed) || speed <= 0) {
       state.lastDecel = 0;
       state.lastSlamLoad = 0;
       return;
@@ -42,13 +42,13 @@
 
     const d = typeof hydro.diagnostics === 'function' ? hydro.diagnostics() : null;
     if (!d) return;
-    const speedRatio = clamp(root.speed / root.physics.maxSpeed, 0, 1);
+    const speedRatio = clamp(speed / physics.maxSpeed, 0, 1);
     const decel = computeVoxelContactDecel({ wetness: d.wetness, slamLoad: d.slamLoad, speedRatio });
     if (decel <= 0) return;
 
     const safeDt = clamp(dt || 0, 0, 1 / 20);
-    const loss = Math.min(root.speed, decel * safeDt);
-    root.speed = Math.max(0, root.speed - loss);
+    const loss = Math.min(speed, decel * safeDt);
+    speed = Math.max(0, speed - loss);
     state.contactFrames += 1;
     if ((d.slamLoad || 0) > 0.08) state.slamFrames += 1;
     state.accumulatedSpeedLoss += loss;
