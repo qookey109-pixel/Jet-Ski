@@ -1,6 +1,6 @@
-// V0.9.9 9-Point Plus hydrodynamics.
+// V0.9.9.1 9-Point Plus hydrodynamics.
 // Keeps the validated 9-point footprint as the water-surface authority, then adds
-// explicit gravity/heave inertia and slightly more inertial pitch/roll response.
+// explicit gravity/heave inertia, inertial pitch/roll, and a bounded external COM roll torque.
 (function (root) {
   'use strict';
 
@@ -15,7 +15,9 @@
     const gravity = Number.isFinite(config.gravity) ? config.gravity : 9.81;
     const neutralImmersion = 0.52;
     const immersionBandM = 0.24;
-    const centerOfMassVerticalM = -0.18; // below craft reference; stabilizing, not a full 6DOF CG solver.
+    const centerOfMassVerticalM = -0.18;
+    const virtualMetacentricHeightM = 0.58;
+    const maxComRollTarget = 0.15;
     const stabilityScale = clamp(1 + (-centerOfMassVerticalM) * 0.55, 0.85, 1.20);
     const heaveDampingPerSecond = 4.7;
     const angularDampingRatioPitch = 0.70;
@@ -34,7 +36,12 @@
       waterPitch: 0,
       waterRoll: 0,
       immersionProxy: neutralImmersion,
-      baselinePose: null
+      baselinePose: null,
+      externalLateralAcceleration: 0,
+      externalRelativeLateral: 0,
+      externalWaterRight: 0,
+      externalYawRate: 0,
+      comRollTarget: 0
     };
 
     function syncPose(y, pitch, roll) {
@@ -49,21 +56,32 @@
       if (typeof baseline.syncPose === 'function') baseline.syncPose(y, pitch || 0, roll || 0);
     }
 
+    function setExternalDynamics(dynamics) {
+      dynamics = dynamics || {};
+      const lateralAcceleration = clamp(Number(dynamics.lateralAcceleration) || 0, -7.0, 7.0);
+      state.externalLateralAcceleration = lateralAcceleration;
+      state.externalRelativeLateral = clamp(Number(dynamics.relativeLateral) || 0, -8.0, 8.0);
+      state.externalWaterRight = clamp(Number(dynamics.waterRight) || 0, -4.0, 4.0);
+      state.externalYawRate = clamp(Number(dynamics.yawRate) || 0, -2.0, 2.0);
+
+      // Reduced-order roll moment around a virtual metacentric height:
+      // phi ~= a_lat * h / (g * GM). Sign is outward from lateral acceleration.
+      const lever = Math.abs(centerOfMassVerticalM);
+      const rawRoll = -(lateralAcceleration * lever)
+        / Math.max(gravity * virtualMetacentricHeightM, 1e-6);
+      state.comRollTarget = clamp(rawRoll, -maxComRollTarget, maxComRollTarget);
+    }
+
     function updateSurfacePose(params) {
       const dt = clamp(Number(params.dt) || 0, 0, 1 / 20);
       if (!state.initialized) syncPose(params.position.y, 0, 0);
 
-      // Baseline still performs the exact validated nine-point sampling. Plus uses its
-      // aggregate target/water slopes instead of replacing the footprint with more cells.
       const base = baseline.updateSurfacePose(params);
       state.baselinePose = base;
       state.targetY = base.targetY;
       state.waterPitch = base.waterPitch;
       state.waterRoll = base.waterRoll;
 
-      // Explicit gravity + buoyancy proxy around the nine-point mean waterline.
-      // At targetY, buoyancy equals weight. Falling below the target increases displaced
-      // water smoothly; rising above it reduces buoyancy so gravity can pull the craft back.
       const heightError = state.targetY - state.y;
       const immersion = clamp(
         neutralImmersion + (heightError / immersionBandM) * neutralImmersion,
@@ -71,7 +89,8 @@
         1.08
       );
       const buoyancyAcceleration = gravity * (immersion / neutralImmersion);
-      const dampingAcceleration = heaveDampingPerSecond * state.heaveVelocity * (0.22 + 0.78 * clamp(immersion / neutralImmersion, 0, 1));
+      const dampingAcceleration = heaveDampingPerSecond * state.heaveVelocity
+        * (0.22 + 0.78 * clamp(immersion / neutralImmersion, 0, 1));
       const maxHeaveAcceleration = Number(config.maxHeaveAcceleration) || 16;
       const heaveAcceleration = clamp(
         buoyancyAcceleration - gravity - dampingAcceleration,
@@ -83,16 +102,13 @@
       state.heaveAcceleration = heaveAcceleration;
       state.immersionProxy = immersion;
 
-      // Keep the same wave targets as 9-Point Base but let angular velocity carry through
-      // the response. A slightly lower virtual CG increases restoring stability without
-      // making the ring instantly copy the surface normal.
       const targetPitch = clamp(
         base.waterPitch + (params.dynamicPitch || 0),
         -(config.maxPitch || 0.38),
         config.maxPitch || 0.38
       );
       const targetRoll = clamp(
-        base.waterRoll + (params.dynamicRoll || 0),
+        base.waterRoll + (params.dynamicRoll || 0) + state.comRollTarget,
         -(config.maxRoll || 0.46),
         config.maxRoll || 0.46
       );
@@ -134,7 +150,8 @@
         planingLift: base.planingLift,
         targetY: state.targetY,
         waterPitch: state.waterPitch,
-        waterRoll: state.waterRoll
+        waterRoll: state.waterRoll,
+        comRollTarget: state.comRollTarget
       };
     }
 
@@ -146,20 +163,28 @@
         immersionProxy: state.immersionProxy,
         targetY: state.targetY,
         centerOfMassVerticalM,
+        virtualMetacentricHeightM,
+        lateralAcceleration: state.externalLateralAcceleration,
+        relativeLateral: state.externalRelativeLateral,
+        waterRight: state.externalWaterRight,
+        yawRate: state.externalYawRate,
+        comRollTarget: state.comRollTarget,
         explicitGravity: true,
-        ninePointAuthority: true
+        ninePointAuthority: true,
+        externalComTorque: true
       });
     }
 
     return {
       syncPose,
+      setExternalDynamics,
       updateSurfacePose,
       relativeWaterKinematics() { return baseline.relativeWaterKinematics.apply(baseline, arguments); },
       longitudinalDrag() { return baseline.longitudinalDrag.apply(baseline, arguments); },
       lateralDamping() { return baseline.lateralDamping.apply(baseline, arguments); },
       getLandingLoss() { return baseline.getLandingLoss.apply(baseline, arguments); },
       diagnostics,
-      modelName: '9-Point Plus — gravity/inertia',
+      modelName: '9-Point Plus — gravity/inertia/lateral-COM',
       baseline
     };
   }
