@@ -186,9 +186,18 @@
     }
 
     // Final guard uses the new irregular surface, not the superseded 4-wave shape.
-    const minimumY = getWaveHeight(ski.position.x, ski.position.z, t) + physics.floatClearance;
+    // In Voxel mode, allow controlled immersion so buoyancy can oppose gravity naturally.
+    const hydro = window.JETSKI_PHYSICS && window.JETSKI_PHYSICS.hydroModel;
+    const voxelWaterborne = Boolean(hydro && hydro.mode === 'voxel' && !airborne);
+    const voxelAllowance = voxelWaterborne
+      ? ((window.V0924_GIANT_SURFACE_SYNC && window.V0924_GIANT_SURFACE_SYNC.voxelImmersionAllowanceM) || 0.22)
+      : 0;
+    const minimumY = getWaveHeight(ski.position.x, ski.position.z, t) + physics.floatClearance - voxelAllowance;
     if (ski.position.y < minimumY) {
       ski.position.y = minimumY;
+      if (voxelWaterborne && hydro && typeof hydro.syncPose === 'function') {
+        hydro.syncPose(ski.position.y, ski.rotation.x, ski.rotation.z);
+      }
       if (airborne) {
         airborne = false;
         verticalVelocity = 0;
