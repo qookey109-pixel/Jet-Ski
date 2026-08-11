@@ -1,43 +1,46 @@
-# Swim Ring Racing — V0.9.7
+# Swim Ring Racing — V0.9.8
 
 3D Web 水上遊戲 Prototype。手機橫向優先、桌面支援；玩家駕駛程序化 3D 游泳圈。
 
 ## Current State
 
-目前正式主線由 V0.9.3 海洋核心 + Real World Water / Coastline layers + V0.9.7 World Modes 組成：
+目前正式主線由 V0.9.3 海洋核心 + Real World Water / Coastline layers + V0.9.8 Marine Physics Lab 組成：
 
 - **V0.9.3 Irregular Infinite Ocean**：12 組 deterministic 不規則巨浪、visual/gameplay surface sync、anti-penetration、floating origin。
 - **V0.9.4.x Real World Water**：日月潭 OSM polygon、shoreline collision、倒車、OSM browser cache。
 - **V0.9.6 Taiwan Coast**：花蓮七星潭 OSM `natural=coastline` → 台灣東岸 → 太平洋無限外海。
 - **V0.9.7 Hawaii Coast**：Waikīkī / Oʻahu OSM `natural=coastline` → 夏威夷南岸 → Pacific Open Sea。
-- 核心 `src/main.js`、`src/ocean.js`、`src/hydrodynamics.js` 不重寫；Real World 功能維持 runtime overlay。
+- **V0.9.8 Marine Physics Lab**：保留 9-point hydrodynamics 為預設，新增 24-cell reduced voxel buoyancy，可在瀏覽器即時 A/B 切換。
+- 核心海浪、RealSeaState、world modes 與 coastline 邏輯不重寫。
 
-## V0.9.7 — Hawaii → Pacific Open Sea
+## V0.9.8 — Marine Physics Lab
 
-第一個夏威夷測試區：**Waikīkī / Oʻahu 南岸**。
+V0.9.8 的目標不是直接換掉已驗證的 V0.6 9-point hydrodynamics，而是增加第二個可比較的船體浮力模型。
 
-```text
-OpenStreetMap natural=coastline
-        ↓
-WGS84 → local meter coordinates
-        ↓
-OSM directed coastline
-        ↓
-local beach / land shelf + land-side collision
-        ↓
-V0.9.3 irregular infinite ocean
-        ↓
-Waikīkī 近岸 → 離岸 → Pacific Open Sea
-```
+### 9-Point（預設）
 
-重點：
+- 原本已驗證的 9 點 footprint 水面取樣。
+- spring-damper heave / pitch / roll。
+- planing lift、lateral damping、slamming 維持原本行為。
+- 仍是正式 fallback / baseline。
 
-- 夏威夷與台灣共用 `src/real-world-coast.js` 的 coastline direction / sea-land side 判斷。
-- 只阻擋玩家進入陸地，海側不建立第二道邊界。
-- Waikīkī 預設出生在岸外約 220m。
-- local coastline collision authority 約 1.4km；更遠外海完全交回 floating-origin infinite ocean，避免局部 OSM bbox 端點變成假牆。
-- OSM 使用主 / 備援 Overpass endpoint，成功資料寫入 browser localStorage fallback。
-- 第一版島上地形仍是低成本 sand/land shelf；DEM、建築、植被後續再加。
+### Voxel 24-cell（實驗）
+
+- 20 個外圈浮力 cell + 4 個內部穩定 cell。
+- 每個 cell 獨立取樣當前 gameplay water surface。
+- 依浸水比例估算 displacement / buoyancy。
+- 浮力在不同位置產生 pitch / roll torque。
+- 使用 craft mass、water density、approximate inertia 與 damping 積分 heave / pitch / roll。
+- planing / landing / lateral-drive 等非 pose 力仍沿用既有 baseline，避免一次改太多變數。
+- Voxel 與 9-Point 切換時同步當前 pose，降低切換跳動。
+
+操作：
+
+- 畫面右上：`⚓ 9-Point` / `🧊 Voxel`
+- 鍵盤：`P` 快速切換
+- HUD 會顯示目前模型；Voxel 模式額外顯示 active cells / submerged fraction。
+
+> V0.9.8 是 browser-safe reduced-order marine physics，不是 CFD/SPH，也不是完整 6DOF rigid-body replacement。
 
 ## 世界模式
 
@@ -46,19 +49,20 @@ Waikīkī 近岸 → 離岸 → Pacific Open Sea
 - `🌺 Waikīkī→外海`：夏威夷真實 coastline + Pacific Open Sea。
 - `🏞️ 日月潭`：OSM 湖泊 polygon + 湖岸碰撞。
 
-四個世界各自保存位置；切回原世界時恢復自己的位置狀態。
+四個世界各自保存位置；Marine Physics Lab 在所有世界共用同一套切換。
 
 ## 操作
 
 - `W` / `↑`：加速
 - `S` / `↓`：前進時煞車；接近停止後持續按住即可倒車
 - `A D` / `← →`：轉向；倒車時方向反向作用
+- `P`：9-Point / Voxel hydrodynamics 切換
 - Mobile：`GAS`、`BRAKE / REV`、左右方向鍵
 - `1`：Calm
 - `2`：Normal
 - `3`：Rough
 
-## Ocean Stack
+## Ocean / Physics Stack
 
 - V0.6：directional spectral ocean foundation、9-point hydrodynamics、planing / slamming / current / Stokes drift。
 - V0.7：RealSeaState contract；CWA / NOAA NDBC / Copernicus normalization。
@@ -68,6 +72,7 @@ Waikīkī 近岸 → 離岸 → Pacific Open Sea
 - V0.9.3：12-band irregular ocean + floating-origin infinite travel。
 - V0.9.6：Taiwan coastline → continuous nearshore/open sea。
 - V0.9.7：Hawaii coastline → continuous Waikīkī/Pacific open sea。
+- V0.9.8：9-point / 24-cell voxel buoyancy A/B selector。
 
 ## 啟動
 
@@ -82,14 +87,19 @@ node tests/real-world-water.test.js
 node tests/real-world-coast.test.js
 node tests/hawaii-coast.test.js
 node tests/reverse-controller.test.js
+node tests/marine-physics.test.js
 node tests/ocean-disturbance.test.js
 ```
+
+`marine-physics.test.js` 驗證 flat-water neutral buoyancy、前後/左右 wave slope response，以及 9-Point / Voxel selector contract。
 
 ## Attribution
 
 - Map data: © OpenStreetMap contributors, ODbL（Real World Water / Coast modes）。
 - VirtOcean visual lineage: XORXOR `2050` (MIT) / Three.js Water approach；詳見 `docs/VIRTOCEAN_ATTRIBUTION.md`。
+- Voxel-buoyancy architecture reference: QusaiAlbonni `three-sails` (MIT)；詳見 `docs/MARINE_PHYSICS_ATTRIBUTION.md`。
+- MohamedQatish `BoatPhysics3D` 在 V0.9.8 僅作教育/行為參考，未複製其程式或資產。
 
 ## Next
 
-Issue #12 下一步：V0.9.7 Safari 實機驗收 → repository 內建 OSM snapshots → coastline chunk/tile streaming → DEM 真實高程 → 從單一海岸窗擴成可沿 Oʻahu / 台灣海岸長距離航行。
+先做 Safari 實機 A/B：Calm / Normal / Rough 各跑 9-Point 與 Voxel，確認巨浪不穿模、heave/pitch/roll 不發散、FPS 可接受。只有 Voxel 證明比 baseline 更自然後，才考慮提升到更完整的 6DOF marine rigid-body / drag model。
