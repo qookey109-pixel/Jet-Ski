@@ -1,6 +1,6 @@
-// V0.9.9.3 reduced-order horizontal-plane marine dynamics for 9-Point Plus only.
-// Surge (u), Sway (v), and Yaw-rate (r) stay bounded; yaw can now be driven by
-// a physical steering moment instead of a directly assigned steering angle.
+// V0.10.3 reduced-order horizontal-plane marine dynamics for 9-Point Plus only.
+// Surge (u), Sway (v), and Yaw-rate (r) stay bounded. V0.10.3 keeps the accepted
+// Yaw equations unchanged but reads the migrated Yaw parameters from Calibration Contract.
 (function (root) {
   'use strict';
 
@@ -14,7 +14,12 @@
     const t = clamp((value - min) / Math.max(max - min, 1e-6), 0, 1);
     return t * t * (3 - 2 * t);
   }
+  function finiteOr(value, fallback) {
+    return Number.isFinite(value) ? Number(value) : fallback;
+  }
 
+  // V0.10.3 keeps these as exact legacy fallbacks for direct-file / partial-load safety.
+  // Runtime Yaw authority prefers V0101_CALIBRATION.contract when available.
   const DEFAULTS = Object.freeze({
     addedMassSurgeRatio: 0.12,
     addedMassSwayRatio: 0.55,
@@ -34,6 +39,34 @@
     yawLinearDamping: 0.88,
     yawInertiaKgM2: 165
   });
+
+  function resolveYawDynamicsConfig(runtimeRoot, fallback) {
+    const base = Object.assign({}, DEFAULTS, fallback || {});
+    const api = runtimeRoot && runtimeRoot.V0101_CALIBRATION;
+    const contract = api && api.contract;
+    const authority = contract && contract.authority;
+    if (!contract || !authority || authority.yawSourceOfTruth !== true) {
+      return { config: base, source: 'legacy-defaults' };
+    }
+
+    const inertia = contract.rigidBody && contract.rigidBody.inertiaKgM2;
+    const added = contract.addedMassRatio || {};
+    const damping = contract.damping || {};
+    const tuning = contract.responseTuning || {};
+    const limits = contract.responseLimits || {};
+
+    const config = Object.assign({}, base, {
+      yawInertiaKgM2: finiteOr(inertia && inertia.yaw, base.yawInertiaKgM2),
+      addedMassYawRatio: finiteOr(added.yaw, base.addedMassYawRatio),
+      yawResponse: finiteOr(tuning.yawResponse, base.yawResponse),
+      yawLinearDamping: finiteOr(damping.yawLinear, base.yawLinearDamping),
+      nonlinearYawDamping: finiteOr(damping.yawNonlinear, base.nonlinearYawDamping),
+      maxYawAcceleration: finiteOr(limits.maxYawAcceleration, base.maxYawAcceleration),
+      maxYawRate: finiteOr(limits.maxYawRate, base.maxYawRate)
+    });
+
+    return { config, source: 'V0101_CALIBRATION.contract.yaw' };
+  }
 
   function stepPlanarState(state, input, dt, options) {
     state = state || {};
@@ -110,7 +143,13 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DEFAULTS, stepPlanarState, normalizeAngle, smoothstepRange };
+    module.exports = {
+      DEFAULTS,
+      resolveYawDynamicsConfig,
+      stepPlanarState,
+      normalizeAngle,
+      smoothstepRange
+    };
   }
 
   if (typeof window === 'undefined' || typeof updateJetSki !== 'function') return;
@@ -130,6 +169,7 @@
     turnCoupling: 0,
     momentAuthority: false,
     externalYawMomentNm: 0,
+    yawConfigSource: 'legacy-defaults',
     legacySteeringDelta: 0,
     disturbanceYawDelta: 0,
     activeFrames: 0,
@@ -153,7 +193,7 @@
     state.resets += 1;
   }
 
-  updateJetSki = function v0992PlanarDynamics(dt, t) {
+  updateJetSki = function v0103PlanarDynamics(dt, t) {
     const yawBefore = yaw;
     previousUpdateJetSki(dt, t);
 
@@ -191,6 +231,7 @@
       disturbanceYawDelta = normalizeAngle(legacyYawAfter - yawBefore - legacySteeringDelta);
     }
 
+    const resolvedYaw = resolveYawDynamicsConfig(root, DEFAULTS);
     const next = stepPlanarState(state, {
       commandSurge: speed,
       commandSway: lateralSlip,
@@ -200,7 +241,7 @@
       slipMax: physics.slipMax,
       momentAuthority,
       externalYawMomentNm: momentAuthority ? steeringMoment.yawMomentNm : 0
-    }, dt);
+    }, dt, resolvedYaw.config);
 
     if (momentAuthority) {
       // Steering no longer owns yaw angle directly. The integrated body yaw-rate owns the
@@ -228,6 +269,7 @@
     state.turnCoupling = next.turnCoupling;
     state.momentAuthority = next.momentAuthority;
     state.externalYawMomentNm = next.externalYawMomentNm;
+    state.yawConfigSource = resolvedYaw.source;
     state.legacySteeringDelta = legacySteeringDelta;
     state.disturbanceYawDelta = disturbanceYawDelta;
     state.activeFrames += 1;
@@ -244,9 +286,10 @@
   };
 
   root.V0992_PLANAR_3DOF = {
-    version: 'V0.9.9.3',
+    version: 'V0.10.3',
     state,
     config: DEFAULTS,
+    resolveYawDynamicsConfig,
     stepPlanarState,
     plusOnly: true,
     baseUntouched: true,
@@ -254,6 +297,8 @@
     reverseAuthorityPreserved: true,
     shorelineAuthorityPreserved: true,
     reducedOrder3DOF: true,
-    steeringMomentReady: true
+    steeringMomentReady: true,
+    calibrationYawSourceReady: true,
+    legacyDefaultsAreFallbackOnly: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
