@@ -1,5 +1,5 @@
 // V0.9.9 9-Point Plus runtime: yaw inertia + progressive landing inertia reservoir.
-// It wraps the existing drive chain without changing the validated main.js steering equations.
+// It wraps the existing drive chain without changing validated main/guard equations.
 (function (root) {
   'use strict';
 
@@ -26,11 +26,13 @@
   if (typeof window === 'undefined' || typeof updateJetSki !== 'function') return;
 
   const previousUpdateJetSki = updateJetSki;
+  const plusImmersionAllowanceM = 0.18;
   const state = {
     yawRate: 0,
     desiredYawRate: 0,
     landingLoad: 0,
     landingEvents: 0,
+    contactGuardHits: 0,
     activeFrames: 0
   };
   let wasPlusLastFrame = false;
@@ -54,6 +56,26 @@
       return;
     }
 
+    // V0.9.2.4 / V0.9.3 keep their validated hard anti-penetration behavior. They may
+    // temporarily snap the visible root to the surface before this outer Plus layer runs.
+    // Restore the Plus heave solution afterward, with only a small safe immersion envelope.
+    if (!airborne && window.JETSKI_PHYSICS && window.JETSKI_PHYSICS.lastHydroPose) {
+      const plusPose = window.JETSKI_PHYSICS.lastHydroPose;
+      if (Number.isFinite(plusPose.y)) {
+        const surfaceY = getWaveHeight(ski.position.x, ski.position.z, t) + physics.floatClearance;
+        const catastrophicMinimumY = surfaceY - plusImmersionAllowanceM;
+        if (plusPose.y >= catastrophicMinimumY) {
+          ski.position.y = plusPose.y;
+        } else {
+          ski.position.y = catastrophicMinimumY;
+          state.contactGuardHits += 1;
+          if (hydro && typeof hydro.syncPose === 'function') {
+            hydro.syncPose(ski.position.y, ski.rotation.x, ski.rotation.z);
+          }
+        }
+      }
+    }
+
     const rawYawDelta = normalizeAngle(yaw - yawBefore);
     const desiredYawRate = rawYawDelta / safeDt;
     state.desiredYawRate = desiredYawRate;
@@ -62,7 +84,7 @@
       : clamp(desiredYawRate, -1.55, 1.55);
 
     // A recent hard water impact temporarily reduces yaw authority a little, giving the
-    // craft mass a sense of continuity instead of allowing an instantaneous direction snap.
+    // craft mass continuity instead of allowing an instantaneous direction snap.
     const landingYawScale = 1 - 0.14 * state.landingLoad;
     yaw = yawBefore + state.yawRate * safeDt * landingYawScale;
     ski.rotation.y = yaw;
@@ -82,10 +104,12 @@
   root.V099_NINE_POINT_PLUS_RUNTIME = {
     version: 'V0.9.9',
     state,
+    plusImmersionAllowanceM,
     normalizeAngle,
     smoothYawRate,
     landingLoadFromImpact,
     noExtraSpeedLoss: true,
+    legacyAntiPenetrationUnmodified: true,
     shorelineCollisionAuthorityPreserved: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
