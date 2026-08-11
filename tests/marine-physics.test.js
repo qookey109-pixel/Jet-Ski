@@ -1,4 +1,6 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const voxelModule = require('../src/marine-voxel-hydrodynamics.js');
 const createVoxel = voxelModule.createMarineVoxelHydrodynamicsModel;
 
@@ -48,6 +50,22 @@ assert(Math.abs(pose.roll) < 0.01);
 const flatDiag = model.diagnostics();
 assert(flatDiag.activeCells > 0 && flatDiag.activeCells <= flatDiag.voxelCount);
 assert(flatDiag.submergedFraction > 0.35 && flatDiag.submergedFraction < 0.70);
+assert(Math.abs(flatDiag.buoyancyToWeight - 1) < 0.15);
+
+// Dry-body gravity: when no voxel touches water, acceleration must be close to -g.
+model = createVoxel(config);
+model.syncPose(3.0, 0, 0);
+pose = model.updateSurfacePose({ ...params(() => -100), position: { x: 0, y: 3, z: 0 } });
+let dryDiag = model.diagnostics();
+assert.strictEqual(dryDiag.activeCells, 0);
+assert(dryDiag.buoyancyToWeight < 0.01);
+assert(dryDiag.heaveAcceleration < -9.4 && dryDiag.heaveAcceleration > -10.2);
+for (let i = 0; i < 59; i++) {
+  pose = model.updateSurfacePose({ ...params(() => -100), position: { x: 0, y: pose.y, z: 0 } });
+}
+dryDiag = model.diagnostics();
+assert(pose.y < 2.0, `dry fall should lose height, got y=${pose.y}`);
+assert(pose.heaveVelocity < -3.5, `dry fall should gain downward speed, got vy=${pose.heaveVelocity}`);
 
 model = createVoxel(config);
 model.syncPose(0.62, 0, 0);
@@ -107,5 +125,12 @@ assert(Number.isFinite(selector.updateSurfacePose(params(() => 0)).y));
 assert.strictEqual(selector.lateralDamping(), 2);
 selector.toggleMode();
 assert.strictEqual(selector.mode, 'nine-point');
+
+// Anti-penetration guards must preserve a controlled Voxel immersion envelope.
+const giantGuard = fs.readFileSync(path.join(__dirname, '../src/v0924-giant-surface-sync.js'), 'utf8');
+const infiniteGuard = fs.readFileSync(path.join(__dirname, '../src/v093-irregular-infinite-ocean.js'), 'utf8');
+assert(giantGuard.includes('voxelImmersionAllowanceM: 0.22'));
+assert(infiniteGuard.includes('voxelAllowance'));
+assert(infiniteGuard.includes("hydro.mode === 'voxel'"));
 
 console.log('marine-physics tests PASS');
