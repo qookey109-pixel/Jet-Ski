@@ -50,6 +50,7 @@
 
     const state = {
       initialized: false,
+      contactPrimed: false,
       heaveY: 0,
       heaveVelocity: 0,
       heaveAcceleration: 0,
@@ -77,6 +78,7 @@
 
     function syncPose(y, pitch, roll) {
       state.initialized = true;
+      state.contactPrimed = false;
       state.heaveY = y;
       state.pitch = pitch || 0;
       state.roll = roll || 0;
@@ -122,6 +124,7 @@
       const sinPitch = Math.sin(state.pitch);
       const sinRoll = Math.sin(state.roll);
       const safeDt = Math.max(dt, 1 / 240);
+      const measureEntry = state.contactPrimed;
 
       for (let i = 0; i < cells.length; i++) {
         const cell = cells[i];
@@ -133,7 +136,7 @@
         const immersion = clamp(depth / cellHeight, 0, 1);
         const cellVolume = displacementVolume * cell.volumeWeight;
         const force = waterDensity * gravity * cellVolume * immersion;
-        const entryRate = clamp((immersion - previousImmersion[i]) / safeDt, 0, 8);
+        const entryRate = measureEntry ? clamp((immersion - previousImmersion[i]) / safeDt, 0, 8) : 0;
         previousImmersion[i] = immersion;
         const weightedEntry = entryRate * cell.volumeWeight;
 
@@ -155,6 +158,7 @@
         if (cell.r >= 0) { rightWater += waterHeight * cell.volumeWeight; rightWeight += cell.volumeWeight; }
         else { leftWater += waterHeight * cell.volumeWeight; leftWeight += cell.volumeWeight; }
       }
+      state.contactPrimed = true;
 
       const wetness = clamp(submerged / neutralSubmergedFraction, 0, 1);
       const entryNormalized = clamp(weightedEntryRate / 4.5, 0, 1);
@@ -244,6 +248,7 @@
 
     function diagnostics() {
       return {
+        contactPrimed: state.contactPrimed,
         submergedFraction: state.submergedFraction,
         wetness: state.wetness,
         activeCells: state.activeCells,
