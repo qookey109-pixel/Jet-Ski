@@ -19,7 +19,6 @@ function makeContractRoot() {
     },
     V0992_PLANAR_3DOF: {
       config: {
-        // Non-yaw values remain legacy-owned.
         addedMassSurgeRatio: planar.DEFAULTS.addedMassSurgeRatio,
         addedMassSwayRatio: planar.DEFAULTS.addedMassSwayRatio,
         nonlinearSwayDamping: planar.DEFAULTS.nonlinearSwayDamping,
@@ -58,7 +57,8 @@ const root = makeContractRoot();
 const resolvedYaw = planar.resolveYawDynamicsConfig(root, planar.DEFAULTS);
 const resolvedSteering = steering.resolveSteeringConfig(root, steering.DEFAULTS);
 
-assert.equal(resolvedYaw.source, 'V0101_CALIBRATION.contract.yaw');
+// V0.10.4 shares one cached Planar source for migrated Surge + Yaw.
+assert.equal(resolvedYaw.source, 'V0101_CALIBRATION.contract.surge+yaw');
 assert.equal(resolvedSteering.source, 'V0101_CALIBRATION.contract.steering');
 assert.equal(resolvedYaw.config.yawInertiaKgM2, YAW_BASELINE_V0102.yawInertiaKgM2);
 assert.equal(resolvedYaw.config.addedMassYawRatio, YAW_BASELINE_V0102.addedMassYawRatio);
@@ -123,4 +123,4 @@ for (let i = 0; i < 20000; i++) {
 }
 
 assert(Math.abs(migratedState.r) <= YAW_BASELINE_V0102.maxYawRate + 1e-12);
-console.log('V0.10.3 yaw source-of-truth numerical equivalence PASS');
+console.log('V0.10.3 yaw source-of-truth numerical equivalence PASS under V0.10.4 shared cache');

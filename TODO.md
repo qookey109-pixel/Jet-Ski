@@ -50,9 +50,15 @@
 - [x] V0.10.3.1 cache regression：stable contract identity 20,000 次查詢只允許 resolver 執行 1 次
 - [x] **V0.10.3.1 Safari acceptance PASS**：實機回報「很正常了」；V0.10.3 的卡頓 regression 已解除
 - [x] V0.10.3.1 保留既有 steering / BRAKE / REV / Yaw source-of-truth 與 Safari GPU performance baseline
+- [x] V0.10.4 Calibration canonical Surge baseline：added mass 12% / response 5.4 / brake response 10.2 / accel 12.5 / brake 20
+- [x] V0.10.4 Planar Surge runtime 改讀 Calibration Contract；Legacy defaults 僅保留 direct-file / partial-load fallback
+- [x] V0.10.4 Surge + Yaw 共用 V0.10.3.1 identity-cached Planar config；不新增第二條 per-frame resolver
+- [x] V0.10.4 20,000-step Surge/Planar numerical equivalence：`maxDiff = 0`，包含 BRAKE path
+- [x] V0.10.4 沒有改 Surge/Yaw 方程與數值；Base / Voxel / reverse / shoreline / Safari GPU baseline 保留
 
 ## 下一階段
-- [ ] 選擇下一個單軸 authority migration；維持 numerical-equivalence-first / no-feel-change 策略
+- [ ] **V0.10.4 Safari acceptance**：確認 GAS / coast / BRAKE / REV / steering 與 frame-time 不比 V0.10.3.1 baseline 退步
+- [ ] V0.10.4 PASS 後再選下一個單軸 migration；優先評估 Sway source-of-truth
 - [ ] 新的 runtime source migration 禁止在 per-frame hot path 重建 immutable config；優先 cache / pre-resolve
 - [ ] 每次 migration 都保留 Base A/B fallback 與 Safari FPS / p95 / long-frame telemetry
 - [ ] Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口用 CFD/SPH / system-identification evidence 補，不先猜值
