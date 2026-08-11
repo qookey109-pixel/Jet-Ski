@@ -1,6 +1,6 @@
-// V0.9.4 Real World Water Map MVP — Sun Moon Lake.
-// Loads OSM water geometry through Overpass, renders a simple shoreline bank mesh,
-// and constrains the swim ring to the real water polygon while preserving V0.9.3 ocean physics.
+// V0.9.4.1 Real World Water — Sun Moon Lake shoreline refinement.
+// Loads OSM water geometry through Overpass, renders a sloped shoreline ribbon,
+// caches the latest successful OSM response, and constrains the swim ring to water.
 (function () {
   'use strict';
 
@@ -8,7 +8,8 @@
 
   const THREE = window.THREE;
   const Geo = window.REAL_WORLD_WATER;
-  const visualVersion = 'V0.9.4';
+  const visualVersion = 'V0.9.4.1';
+  const cacheKey = 'swimRing.osm.sunMoonLake.v1';
   const site = {
     id: 'sun-moon-lake',
     label: '日月潭 Sun Moon Lake',
@@ -33,7 +34,7 @@
   document.body.appendChild(attribution);
 
   const worldGroup = new THREE.Group();
-  worldGroup.name = 'V094SunMoonLakeWorld';
+  worldGroup.name = 'V0941SunMoonLakeWorld';
   scene.add(worldGroup);
 
   const state = {
@@ -43,6 +44,7 @@
     polygon: null,
     source: null,
     endpoint: null,
+    fromCache: false,
     collisions: 0
   };
 
@@ -87,48 +89,94 @@
     return { x: cx / (3 * twiceArea), z: cz / (3 * twiceArea) };
   }
 
-  function makeBankMesh(ring, options) {
-    const bottom = options && options.bottom != null ? options.bottom : -8;
-    const top = options && options.top != null ? options.top : 9;
+  function normalized(x, z) {
+    const len = Math.hypot(x, z) || 1;
+    return { x: x / len, z: z / len };
+  }
+
+  // Find the land-facing normal at each shoreline vertex. We test both sides against
+  // the actual water polygon, so concave bays and island holes do not rely only on winding.
+  function landNormal(ring, index, polygon) {
+    const n = ring.length - 1;
+    const prev = ring[(index - 1 + n) % n];
+    const curr = ring[index % n];
+    const next = ring[(index + 1) % n];
+    const tangent = normalized(next.x - prev.x, next.z - prev.z);
+    const a = { x: -tangent.z, z: tangent.x };
+    const b = { x: tangent.z, z: -tangent.x };
+    const probe = 14;
+    const pa = { x: curr.x + a.x * probe, z: curr.z + a.z * probe };
+    const pb = { x: curr.x + b.x * probe, z: curr.z + b.z * probe };
+    const aWater = Geo.pointInWater(pa, polygon.outer, polygon.holes);
+    const bWater = Geo.pointInWater(pb, polygon.outer, polygon.holes);
+    if (aWater !== bWater) return aWater ? b : a;
+
+    // Ambiguous narrow geometry fallback: point away from the ring centroid.
+    const center = ringCentroid(ring);
+    const fallback = normalized(curr.x - center.x, curr.z - center.z);
+    return fallback;
+  }
+
+  function buildRibbonGeometry(ring, polygon, nearOffset, farOffset, nearY, farY) {
     const positions = [];
-    for (let i = 0; i < ring.length - 1; i++) {
-      const a = ring[i], b = ring[i + 1];
+    const n = ring.length - 1;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      const a = ring[i], b = ring[j];
+      const na = landNormal(ring, i, polygon);
+      const nb = landNormal(ring, j, polygon);
+      const a0 = { x: a.x + na.x * nearOffset, z: a.z + na.z * nearOffset };
+      const a1 = { x: a.x + na.x * farOffset, z: a.z + na.z * farOffset };
+      const b0 = { x: b.x + nb.x * nearOffset, z: b.z + nb.z * nearOffset };
+      const b1 = { x: b.x + nb.x * farOffset, z: b.z + nb.z * farOffset };
       positions.push(
-        a.x, bottom, a.z, b.x, bottom, b.z, b.x, top, b.z,
-        a.x, bottom, a.z, b.x, top, b.z, a.x, top, a.z
+        a0.x, nearY, a0.z, b0.x, nearY, b0.z, b1.x, farY, b1.z,
+        a0.x, nearY, a0.z, b1.x, farY, b1.z, a1.x, farY, a1.z
       );
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({
-      color: options && options.color ? options.color : 0x496842,
-      roughness: 0.92,
-      metalness: 0.0,
-      side: THREE.DoubleSide
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.receiveShadow = true;
-    return mesh;
+    return geometry;
   }
 
-  function makeShoreLine(ring, color) {
-    const pts = ring.map(p => new THREE.Vector3(p.x, 9.05, p.z));
-    const geometry = new THREE.BufferGeometry().setFromPoints(pts);
-    return new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.82 }));
+  function makeShoreRibbon(ring, polygon) {
+    const group = new THREE.Group();
+
+    const wetGeometry = buildRibbonGeometry(ring, polygon, 0, 10, -3.0, 2.4);
+    const wetMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8c8169, roughness: 0.98, metalness: 0, side: THREE.DoubleSide
+    });
+    const wet = new THREE.Mesh(wetGeometry, wetMaterial);
+    wet.receiveShadow = true;
+    group.add(wet);
+
+    const landGeometry = buildRibbonGeometry(ring, polygon, 10, 34, 2.4, 10.5);
+    const landMaterial = new THREE.MeshStandardMaterial({
+      color: 0x557347, roughness: 1, metalness: 0, side: THREE.DoubleSide
+    });
+    const land = new THREE.Mesh(landGeometry, landMaterial);
+    land.receiveShadow = true;
+    group.add(land);
+
+    const pts = ring.map(p => new THREE.Vector3(p.x, 0.25, p.z));
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints(pts);
+    group.add(new THREE.Line(
+      lineGeometry,
+      new THREE.LineBasicMaterial({ color: 0xd8d2b0, transparent: true, opacity: 0.48 })
+    ));
+    return group;
   }
 
   function renderPolygon(polygon) {
     worldGroup.clear();
     const outer = Geo.simplifyRing(polygon.outer, 9);
-    worldGroup.add(makeBankMesh(outer, { color: 0x496842, bottom: -8, top: 9 }));
-    worldGroup.add(makeShoreLine(outer, 0xbed79c));
+    worldGroup.add(makeShoreRibbon(outer, polygon));
 
     for (const holeRaw of polygon.holes || []) {
       const hole = Geo.simplifyRing(holeRaw, 7);
       if (hole.length < 4) continue;
-      worldGroup.add(makeBankMesh(hole, { color: 0x5b6b3d, bottom: -8, top: 9 }));
-      worldGroup.add(makeShoreLine(hole, 0xd7e0a8));
+      worldGroup.add(makeShoreRibbon(hole, polygon));
     }
     syncWorldGroup();
   }
@@ -148,12 +196,13 @@
     return { x: 0, z: 0 };
   }
 
-  function activatePolygon(polygon, endpoint) {
+  function activatePolygon(polygon, endpoint, fromCache) {
     polygon.outer = Geo.simplifyRing(polygon.outer, 5);
     polygon.holes = (polygon.holes || []).map(h => Geo.simplifyRing(h, 5));
     state.polygon = polygon;
     state.source = `${polygon.sourceType}/${polygon.sourceId}`;
     state.endpoint = endpoint;
+    state.fromCache = Boolean(fromCache);
     state.loading = false;
     state.active = true;
     renderPolygon(polygon);
@@ -164,7 +213,28 @@
     ski.position.z = spawnLocal.z;
     speed = 0;
     lateralSlip = 0;
-    setStatus(`${site.label} · OSM ${state.source}`);
+    setStatus(`${site.label} · OSM ${state.source}${state.fromCache ? ' · CACHE' : ''}`);
+  }
+
+  function saveCache(json) {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), json }));
+    } catch (error) {
+      console.warn('[V0.9.4.1] OSM cache write failed:', error);
+    }
+  }
+
+  function loadCachedPolygon() {
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (!raw) return null;
+      const cached = JSON.parse(raw);
+      const polygon = Geo.extractBestWaterPolygon(cached.json, site.origin);
+      return polygon ? { polygon, savedAt: cached.savedAt || 0 } : null;
+    } catch (error) {
+      console.warn('[V0.9.4.1] OSM cache read failed:', error);
+      return null;
+    }
   }
 
   async function fetchFromEndpoint(base) {
@@ -177,6 +247,7 @@
       const json = await response.json();
       const polygon = Geo.extractBestWaterPolygon(json, site.origin);
       if (!polygon) throw new Error('No named water polygon found');
+      saveCache(json);
       return polygon;
     } finally {
       if (timeout) clearTimeout(timeout);
@@ -189,13 +260,20 @@
       try {
         setStatus(`OSM 載入中… ${endpoint.includes('kumi') ? '備援' : '主站'}`);
         const polygon = await fetchFromEndpoint(endpoint);
-        activatePolygon(polygon, endpoint);
+        activatePolygon(polygon, endpoint, false);
         return;
       } catch (error) {
         lastError = error;
-        console.warn('[V0.9.4] Overpass endpoint failed:', endpoint, error);
+        console.warn('[V0.9.4.1] Overpass endpoint failed:', endpoint, error);
       }
     }
+
+    const cached = loadCachedPolygon();
+    if (cached) {
+      activatePolygon(cached.polygon, 'localStorage-cache', true);
+      return;
+    }
+
     state.loading = false;
     state.error = lastError || new Error('OSM load failed');
     setStatus('OSM 載入失敗 · 保留純海洋模式');
@@ -203,7 +281,7 @@
 
   const previousUpdateJetSki = updateJetSki;
   let lastSafeWorld = currentWorldPoint();
-  updateJetSki = function v094RealWorldCollision(dt, t) {
+  updateJetSki = function v0941RealWorldCollision(dt, t) {
     if (state.active && state.polygon) {
       const before = currentWorldPoint();
       if (Geo.pointInWater(before, state.polygon.outer, state.polygon.holes)) lastSafeWorld = before;
@@ -227,7 +305,7 @@
   };
 
   const previousUpdateWater = updateWater;
-  updateWater = function v094RealWorldUpdateWater(t) {
+  updateWater = function v0941RealWorldUpdateWater(t) {
     previousUpdateWater(t);
     syncWorldGroup();
   };
@@ -242,6 +320,7 @@
     state,
     worldGroup,
     reload: loadWorld,
+    cacheKey,
     get isActive() { return state.active; }
   };
 
