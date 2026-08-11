@@ -12,6 +12,7 @@
   const legacyGetWaveHeight = getWaveHeight;
   const legacyUpdateJetSki = updateJetSki;
   const voxelHardImmersionAllowanceM = 0.58;
+  let voxelHardGuardHits = 0;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -92,6 +93,7 @@
     // snapping is reserved for genuinely catastrophic penetration only.
     if (ski.position.y < minimumY) {
       ski.position.y = minimumY;
+      if (guard.voxelWaterborne) voxelHardGuardHits += 1;
       if (guard.voxelWaterborne && guard.hydro && typeof guard.hydro.syncPose === 'function') {
         guard.hydro.syncPose(ski.position.y, ski.rotation.x, ski.rotation.z);
       }
@@ -117,6 +119,7 @@
     activeGuardUsesGlobalSampler: true,
     voxelImmersionAllowanceM: voxelHardImmersionAllowanceM,
     voxelHardGuardOnly: true,
+    get voxelHardGuardHits() { return voxelHardGuardHits; },
     previousSurfaceSampler: legacyGetWaveHeight
   };
 })();
