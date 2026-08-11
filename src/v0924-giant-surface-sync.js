@@ -1,6 +1,6 @@
 // V0.9.2.4 Giant Wave Surface Sync.
 // Makes gameplay surface sampling use the same giant-wave equation as the active visual shader,
-// then adds a hard anti-penetration guard so the swim ring cannot sink through a rising crest.
+// then adds an anti-penetration guard so the swim ring cannot disappear through a rising crest.
 (function () {
   'use strict';
 
@@ -11,6 +11,7 @@
   const G = 9.81;
   const legacyGetWaveHeight = getWaveHeight;
   const legacyUpdateJetSki = updateJetSki;
+  const voxelHardImmersionAllowanceM = 0.58;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -66,9 +67,9 @@
     return {
       hydro,
       voxelWaterborne,
-      // Voxel buoyancy needs real immersion to create force. Keep a 22 cm safety envelope
-      // instead of pinning the craft root exactly to water + floatClearance every frame.
-      allowance: voxelWaterborne ? 0.22 : 0
+      // Voxel buoyancy now owns normal water contact. The hard guard is moved much deeper
+      // and is only a catastrophic escape hatch, not a per-wave contact solver.
+      allowance: voxelWaterborne ? voxelHardImmersionAllowanceM : 0
     };
   }
 
@@ -87,8 +88,8 @@
     const guard = contactGuard();
     const minimumY = activeSurfaceHeight + physics.floatClearance - guard.allowance;
 
-    // 9-point keeps the original hard guard. Voxel mode gets controlled immersion so
-    // gravity/buoyancy/inertia can act before the catastrophic anti-penetration fallback.
+    // 9-point preserves the original hard guard. Voxel can immerse naturally; position
+    // snapping is reserved for genuinely catastrophic penetration only.
     if (ski.position.y < minimumY) {
       ski.position.y = minimumY;
       if (guard.voxelWaterborne && guard.hydro && typeof guard.hydro.syncPose === 'function') {
@@ -114,7 +115,8 @@
     gameplaySurfaceSynced: true,
     antiPenetrationGuard: true,
     activeGuardUsesGlobalSampler: true,
-    voxelImmersionAllowanceM: 0.22,
+    voxelImmersionAllowanceM: voxelHardImmersionAllowanceM,
+    voxelHardGuardOnly: true,
     previousSurfaceSampler: legacyGetWaveHeight
   };
 })();
