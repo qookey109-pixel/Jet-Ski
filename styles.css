@@ -53,7 +53,10 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   bottom: 138px;
   max-width: calc(100vw - 20px);
   flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.world-controls::-webkit-scrollbar { display: none; }
 .sea-controls { bottom: 92px; }
 
 .world-controls button,
