@@ -1,4 +1,4 @@
-# Swim Ring Racing — V0.10.1
+# Swim Ring Racing — V0.10.2
 
 3D Web 水上遊戲 Prototype。手機橫向優先、桌面支援；玩家駕駛程序化 3D 游泳圈。
 
@@ -14,14 +14,55 @@
 - **V0.9.9.3 Steering Force + Yaw Moment**：A/D 轉向由 steering force / stern yaw moment `Mz` 驅動。
 - **V0.9.9.3.1–.2 Safari Performance**：frame telemetry + Safari GPU budget；實機回報卡頓有改善。
 - **V0.10.0 Unified 6DOF Contract**：observer-first 六自由度 state contract；Safari acceptance PASS。
-- **V0.10.1 Calibration Contract**：把目前已存在的 mass / CG / inertia proxy / added-mass proxy / damping / steering lever arm 收斂成單一可追溯 catalog；不改變 physics authority。
+- **V0.10.1 Calibration Contract**：mass / CG / inertia proxy / added-mass proxy / damping / steering lever arm 單一可追溯 catalog；不改 physics authority。
+- **V0.10.2 Internal Roll/Pitch Rates**：9-Point+ 正式公開既有 `rollRate / pitchRate`；6DOF `p/q` 優先使用內部 state，不再依賴 render-pose finite difference。
 - `src/main.js`、`src/ocean.js`、`src/hydrodynamics.js` validated baseline 不重寫。
+
+## V0.10.2 — Internal Roll/Pitch Rate Exposure
+
+V0.10.2 不新增新的 roll/pitch solver，也不修改任何積分參數。
+
+9-Point+ 原本就有內部：
+
+```text
+pitchRate
+rollRate
+```
+
+過去這兩個值只存在 model closure 內，`V0.10.0` observer 因此需要由最終 render pose 做 finite difference 估算 `p/q`。
+
+現在 `nine-point-plus-hydrodynamics.js` 會在 pose result 與 diagnostics 正式公開：
+
+```text
+rollRate  -> 6DOF p
+pitchRate -> 6DOF q
+```
+
+6DOF 原本已有 internal-rate priority，因此 V0.10.2 不需要新增每幀 wrapper：
+
+- internal `rollRate` 存在 → `p` 使用 internal rate。
+- internal `pitchRate` 存在 → `q` 使用 internal rate。
+- 若來源缺失 → 保留 final-pose finite-difference fallback。
+- planar `r` 仍由 V0.9.9.2 提供。
+- Base / Voxel contract 仍 inactive。
+
+### Authority rule
+
+V0.10.2 只改「觀測來源」，不改物理 authority：
+
+- 不改 pitch / roll acceleration equation。
+- 不改 pitch / roll damping。
+- 不改 `pitchRate / rollRate` 積分。
+- 不改 9-Point+ pose authority。
+- 不改 Planar 3DOF / steering `Mz`。
+- 不改 Base / Voxel / reverse / shoreline / world collision。
+- 不改 Safari V0.9.9.3.2 performance baseline。
+
+`src/v0102-internal-pq-rates.js` 只提供版本與 source-status metadata，不包 `updateJetSki`，不參與每幀物理。
 
 ## V0.10.1 — Calibration Contract
 
-`src/v0101-calibration-contract.js` 建立 `marine-calibration-v1`。這一版是 **catalog-first**，不是重新調參，也不是把 proxy 宣稱成真實船舶試驗值。
-
-目前可追溯值：
+`src/v0101-calibration-contract.js` 建立 `marine-calibration-v1`。這是 **catalog-first**，不是重新調參，也不是把 proxy 宣稱成真實船舶試驗值。
 
 | 項目 | 目前值 | 狀態 |
 |---|---:|---|
@@ -31,7 +72,7 @@
 | Surge added mass | `12%` | proxy |
 | Sway added mass | `55%` | proxy |
 | Yaw added mass | `38%` | proxy |
-| Effective yaw inertia | `227.7 kg·m²` | derived from current proxy |
+| Effective yaw inertia | `227.7 kg·m²` | derived proxy |
 | Heave damping | `4.7 s⁻¹` | current Plus tuning |
 | Pitch damping ratio | `0.70` | current Plus tuning |
 | Roll damping ratio | `0.74` | current Plus tuning |
@@ -50,21 +91,7 @@
 
 這些值在有 CFD / SPH、實測或 system-identification evidence 前不會被猜測填入。
 
-### Authority rule
-
-V0.10.1 只讀目前 accepted runtime：
-
-- 不改 9-Point+ heave / pitch / roll。
-- 不改 Planar 3DOF `u/v/r`。
-- 不改 V0.9.9.3 steering `Mz`。
-- 不改 Base / Voxel / reverse / shoreline / world collision。
-- 不改 Safari V0.9.9.3.2 performance baseline。
-
-`V010_UNIFIED_6DOF.calibration` 只提供統一參數 catalog 給後續 force/moment migration 使用。
-
-## V0.10.0 — Unified Browser-Safe 6DOF State Contract
-
-統一 contract：
+## Unified 6DOF Contract
 
 ```text
 position:         x / y / z
@@ -77,7 +104,14 @@ force slots:      Fx / Fy / Fz
 moment slots:     Mx / My / Mz
 ```
 
-V0.10.0 仍是 observer：不寫 pose / velocity / load authority；Base / Voxel 不宣稱為 Plus 6DOF state。
+V0.10.2 後六個速度 state 的正式來源為：
+
+- `u / v / r`：Planar 3DOF。
+- `w`：9-Point+ heave state。
+- `p`：9-Point+ internal `rollRate`。
+- `q`：9-Point+ internal `pitchRate`。
+
+Observer 仍不寫 pose / velocity / load authority。
 
 ## Safari Performance Baseline
 
@@ -90,7 +124,7 @@ V0.9.9.3.2 保留：
 - gameplay / physics full `requestAnimationFrame`
 - HUD：FPS / p95 / long-frame count
 
-V0.10.0 Safari acceptance 已 PASS，未回報新的手感或卡頓 regression。
+V0.10.0 Safari acceptance 已 PASS；V0.10.2 不新增每幀計算迴圈。
 
 ## 物理切換
 
@@ -125,6 +159,7 @@ node tests/v09931-safari-performance.test.js
 node tests/v09932-safari-gpu-budget.test.js
 node tests/v010-unified-6dof-state.test.js
 node tests/v0101-calibration-contract.test.js
+node tests/v0102-internal-pq-rates.test.js
 node tests/real-world-water.test.js
 node tests/real-world-coast.test.js
 node tests/hawaii-coast.test.js
@@ -135,7 +170,7 @@ node tests/v0982-marine-smoothing.test.js
 node tests/v0983-water-contact-forces.test.js
 ```
 
-V0.10.1 regression 鎖定：runtime source mapping、known values、effective yaw inertia derivation、unknown inertia/added-mass 必須保持 null，以及 catalog 不得取得 physics authority。
+V0.10.2 regression 鎖定：Plus diagnostics 必須公開 finite `pitchRate / rollRate`、6DOF internal p/q 必須優先於相反的 pose finite-difference、fallback 仍可用、Base 不得被 Plus contract 認領、metadata 不得取得 physics authority。
 
 ## Attribution
 
@@ -145,6 +180,6 @@ V0.10.1 regression 鎖定：runtime source mapping、known values、effective ya
 
 ## Next
 
-1. 正式公開 9-Point+ `pitchRate / rollRate`，讓 6DOF `p/q` 從 finite-difference observer 升級成內部 state source。
-2. 建立 first authority migration candidate，優先選一個可由現有參數完整追溯、且能安全 A/B 的單軸，不一次換六軸。
-3. Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口留給後續 CFD/SPH / system-identification calibration，不先猜值。
+1. 選擇第一個正式 force/moment authority migration 軸；優先評估 **Yaw**，因為目前已有可追溯 `Mz + Izz proxy + yaw added mass`，可先做 source-of-truth consolidation 而不改手感。
+2. 每次 authority migration 都保留 9-Point Base A/B fallback 與 Safari telemetry。
+3. Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口留給 CFD/SPH / system-identification calibration，不先猜值。
