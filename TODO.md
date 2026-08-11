@@ -35,14 +35,19 @@
 - [x] V0.9.8 Marine Physics Lab：9-Point / Voxel A/B selector
 - [x] V0.9.8 24-cell reduced voxel buoyancy / per-cell water sampling / heave-pitch-roll torque
 - [x] V0.9.8 mode switch pose sync + 9-Point default fallback
-- [x] V0.9.8 marine physics Node regression：flat-water neutral buoyancy / wave slope response / selector contract
 - [x] V0.9.8 three-sails MIT attribution；BoatPhysics3D 僅行為參考
+- [x] V0.9.8.1 Voxel explicit gravity / inertia / immersion-dependent damping
+- [x] V0.9.8.1 dry-body gravity regression + giant-wave stress
+- [x] V0.9.8.2 Voxel hard water snap 改 catastrophic-only 58cm fallback
+- [x] V0.9.8.2 landing speed cliff / giant-wave passive decel smoothing（Voxel only）
+- [x] V0.9.8.2 exact V0.9.3 cached height-only sampler，降低 24-cell 重複 trig / temporary object cost
+- [x] V0.9.8.2 fast sampler / marine smoothing regression tests
 
 ## 下一階段
-- [ ] V0.9.8 Safari A/B 實機驗收：9-Point vs Voxel，Calm / Normal / Rough 全測
-- [ ] Voxel 巨浪穩定性：檢查 heave / pitch / roll 是否發散或 clamp 過度
-- [ ] Voxel FPS / mobile CPU cost；必要時 24 cells → 16 cells adaptive quality
-- [ ] 若 Voxel 通過，再加入 water-relative per-cell drag / slamming impulse
+- [ ] V0.9.8.2 Safari 實機驗收：確認偶發「像撞到東西」頓挫是否消失
+- [ ] Calm / Normal / Rough 各跑 9-Point 與 Voxel，確認重量感、下墜、回彈與 FPS
+- [ ] 若仍有規律 frame hitch：加入 lightweight frame-time / long-frame telemetry，分離 rendering / physics / GC spike
+- [ ] 若 Voxel 通過，再加入 water-relative per-cell drag / continuous slamming（避免 discrete impact cliff）
 - [ ] 若需要真正船舶，再做完整 6DOF rigid-body marine model；Ammo.js 先不導入
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
 - [ ] repository 內建 Waikīkī / 七星潭 OSM snapshots，避免首次啟動完全依賴 Overpass
