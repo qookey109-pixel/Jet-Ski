@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Swim Ring Racing V0.9.7</title>
+  <title>Swim Ring Racing V0.9.8</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -11,7 +11,7 @@
   <div id="boot-error" class="boot-error" hidden>3D 引擎沒有載入。請確認網路連線，或雙擊資料夾內的 start.command 啟動。</div>
 
   <div class="hud">
-    <div><strong>SWIM RING RACING</strong> <span id="version">V0.9.7</span></div>
+    <div><strong>SWIM RING RACING</strong> <span id="version">V0.9.8</span></div>
     <div>速度 <span id="speed">0</span> km/h</div>
     <div>海況 <span id="sea-state">一般 Normal</span></div>
     <div>海浪 <span id="wave-state">Hs 0.85 m · Tp 6.2 s</span></div>
@@ -19,7 +19,12 @@
     <div>狀態 <span id="air-state">水面 WATER</span></div>
   </div>
 
-  <div class="help">W/↑ 加速｜S/↓ 煞車，停住後倒車｜A/D 轉向｜世界：外海 / 台灣 / 夏威夷 / 日月潭｜1 / 2 / 3 海況</div>
+  <div class="help">W/↑ 加速｜S/↓ 煞車，停住後倒車｜A/D 轉向｜P 切換船體物理｜世界：外海 / 台灣 / 夏威夷 / 日月潭｜1 / 2 / 3 海況</div>
+
+  <div class="physics-controls" aria-label="marine physics controls">
+    <button data-hydro-mode="nine-point" class="active">⚓ 9-Point</button>
+    <button data-hydro-mode="voxel">🧊 Voxel</button>
+  </div>
 
   <div class="world-controls" aria-label="world mode controls">
     <button data-world-mode="open-sea" class="active">🌊 外海</button>
@@ -54,6 +59,8 @@
   <script src="./src/real-sea-data.js"></script>
   <script src="./src/ocean.js"></script>
   <script src="./src/hydrodynamics.js"></script>
+  <script src="./src/marine-voxel-hydrodynamics.js"></script>
+  <script src="./src/marine-hydrodynamics-selector.js"></script>
   <script src="./src/physics-surrogate.js"></script>
   <script src="./src/main.js"></script>
   <script src="./src/v06-runtime.js"></script>
@@ -75,5 +82,6 @@
   <script src="./src/taiwan-coast-runtime.js"></script>
   <script src="./src/hawaii-coast-runtime.js"></script>
   <script src="./src/v097-world-modes.js"></script>
+  <script src="./src/v098-marine-physics-lab.js"></script>
 </body>
 </html>
