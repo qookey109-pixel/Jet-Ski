@@ -14,6 +14,7 @@
     bounds: { south: 23.990, west: 121.585, north: 24.075, east: 121.665 }
   };
   const cacheKey = 'swimRing.osm.qixingtanCoast.v1';
+  const shoreGuardRangeM = 1200;
   const endpoints = [
     'https://overpass-api.de/api/interpreter?data=',
     'https://overpass.kumi.systems/api/interpreter?data='
@@ -74,7 +75,6 @@
     const dx = next.x - prev.x;
     const dz = next.z - prev.z;
     const len = Math.hypot(dx, dz) || 1;
-    // Local +cross/left side is water; local right side is land.
     return waterSide
       ? { x: -dz / len, z: dx / len }
       : { x: dz / len, z: -dx / len };
@@ -122,7 +122,6 @@
       wet.receiveShadow = true;
       worldGroup.add(wet);
 
-      // Phase 2A terrain placeholder: a broad rising land shelf. DEM replaces this later.
       const land = new THREE.Mesh(buildRibbon(points, 18, 650, 2.2, 52), landMaterial);
       land.receiveShadow = true;
       worldGroup.add(land);
@@ -223,7 +222,7 @@
     worldGroup.visible = state.active;
     statusRow.style.display = enabled ? '' : 'none';
     syncWorldGroup();
-    if (enabled && !state.loading && !state.loaded && typeof load === 'function') load();
+    if (enabled && !state.loading && !state.loaded) load();
   }
 
   function findSpawn(distanceFromShore) {
@@ -242,14 +241,14 @@
   updateJetSki = function v096TaiwanCoastCollision(dt, t) {
     if (state.active && state.coastlines.length) {
       const before = currentWorldPoint();
-      if (Coast.isWaterSide(before, state.coastlines, 2.5)) lastSafeWorld = before;
+      if (Coast.isWaterSide(before, state.coastlines, 2.5, shoreGuardRangeM)) lastSafeWorld = before;
     }
 
     previousUpdateJetSki(dt, t);
 
     if (!state.active || !state.coastlines.length) return;
     const after = currentWorldPoint();
-    if (!Coast.isWaterSide(after, state.coastlines, 2.5)) {
+    if (!Coast.isWaterSide(after, state.coastlines, 2.5, shoreGuardRangeM)) {
       const fallback = lastSafeWorld || findSpawn(35);
       if (fallback) {
         const local = toLocalWorld(fallback);
@@ -277,6 +276,7 @@
     state,
     worldGroup,
     cacheKey,
+    shoreGuardRangeM,
     load,
     setEnabled,
     findSpawn,
