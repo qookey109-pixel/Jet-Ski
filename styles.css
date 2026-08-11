@@ -34,10 +34,10 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   user-select: none;
 }
 
+.world-controls,
 .sea-controls {
   position: fixed;
   left: 50%;
-  bottom: 92px;
   z-index: 9;
   display: flex;
   gap: 7px;
@@ -49,6 +49,10 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   user-select: none;
 }
 
+.world-controls { bottom: 138px; }
+.sea-controls { bottom: 92px; }
+
+.world-controls button,
 .sea-controls button {
   min-height: 34px;
   padding: 0 11px;
@@ -60,6 +64,7 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   cursor: pointer;
 }
 
+.world-controls button.active,
 .sea-controls button.active {
   background: rgba(255,255,255,.26);
   border-color: rgba(255,255,255,.72);
@@ -105,8 +110,9 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   .help { display: none; }
   .hud { font-size: 13px; }
   .mobile-controls button { min-width: 62px; min-height: 54px; font-size: 15px; }
+  .world-controls { bottom: 126px; }
   .sea-controls { bottom: 82px; }
-  .sea-controls button { padding: 0 8px; font-size: 12px; }
+  .world-controls button, .sea-controls button { padding: 0 8px; font-size: 12px; }
 }
 
 @media (max-height: 480px) {
@@ -114,8 +120,9 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   .help { top: 8px; right: 8px; padding: 7px 9px; }
   .mobile-controls { bottom: 10px; padding: 0 10px; }
   .mobile-controls button { min-height: 48px; }
+  .world-controls { bottom: 105px; }
   .sea-controls { bottom: 65px; }
-  .sea-controls button { min-height: 30px; }
+  .world-controls button, .sea-controls button { min-height: 30px; }
 }
 
 .boot-error {
