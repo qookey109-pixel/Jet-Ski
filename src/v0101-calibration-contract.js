@@ -1,8 +1,28 @@
-// V0.10.1 Calibration Contract.
-// Catalog-first: gathers the reduced-order parameters already used by the validated runtime
-// without changing any physics authority. Unknown rigid-body values stay explicitly null.
+// V0.10.3 Calibration Contract.
+// V0.10.1 created the catalog. V0.10.3 promotes only the already-accepted Yaw subset
+// to runtime source-of-truth while preserving exactly the V0.10.2 numerical baseline.
 (function (root) {
   'use strict';
+
+  const YAW_BASELINE_V0102 = Object.freeze({
+    yawInertiaKgM2: 165,
+    addedMassYawRatio: 0.38,
+    yawResponse: 5.0,
+    yawLinearDamping: 0.88,
+    yawNonlinearDamping: 0.16,
+    maxYawAcceleration: 3.2,
+    maxYawRate: 1.55,
+    steering: Object.freeze({
+      sternLeverArmM: 1.45,
+      hydroForceCoeff: 1.05,
+      lowSpeedJetForceN: 82,
+      maxSteeringForceN: 360,
+      maxYawMomentNm: 520,
+      hydroAuthorityStartMps: 1.2,
+      hydroAuthorityFullMps: 12.0,
+      landingAuthorityLoss: 0.14
+    })
+  });
 
   function finiteOrNull(value) {
     return Number.isFinite(value) ? Number(value) : null;
@@ -19,13 +39,30 @@
     const steeringLeverArmM = finiteOrNull(input.steeringLeverArmM);
 
     const contract = {
-      version: 'V0.10.1',
+      version: 'V0.10.3',
       contract: 'marine-calibration-v1',
-      status: 'PARTIAL_REDUCED_ORDER',
+      status: 'PARTIAL_REDUCED_ORDER_YAW_SOURCE',
       authority: {
-        catalogOnly: true,
+        catalogOnly: false,
         changesPhysics: false,
+        changesPhysicsValues: false,
+        changesParameterSource: true,
+        yawSourceOfTruth: true,
         safeForAcceptedV010Baseline: true
+      },
+      sourceOfTruth: {
+        yaw: {
+          active: true,
+          numericalBaseline: 'V0.10.2',
+          noNewValues: true,
+          fields: [
+            'Izz',
+            'yaw added mass',
+            'yaw response/damping',
+            'yaw acceleration/rate limits',
+            'steering force -> Mz parameters'
+          ]
+        }
       },
       conventions: {
         cgVerticalSign: 'negative = below craft reference',
@@ -58,12 +95,18 @@
         yawLinear: finiteOrNull(input.yawLinearDamping),
         yawNonlinear: finiteOrNull(input.yawNonlinearDamping)
       },
+      responseTuning: {
+        yawResponse: finiteOrNull(input.yawResponse)
+      },
       steering: {
         leverArmM: steeringLeverArmM,
         hydroForceCoeff: finiteOrNull(input.hydroForceCoeff),
         lowSpeedJetForceN: finiteOrNull(input.lowSpeedJetForceN),
         maxSteeringForceN: finiteOrNull(input.maxSteeringForceN),
-        maxYawMomentNm: finiteOrNull(input.maxYawMomentNm)
+        maxYawMomentNm: finiteOrNull(input.maxYawMomentNm),
+        hydroAuthorityStartMps: finiteOrNull(input.hydroAuthorityStartMps),
+        hydroAuthorityFullMps: finiteOrNull(input.hydroAuthorityFullMps),
+        landingAuthorityLoss: finiteOrNull(input.landingAuthorityLoss)
       },
       responseLimits: {
         maxSurgeAcceleration: finiteOrNull(input.maxSurgeAcceleration),
@@ -101,56 +144,57 @@
     const hydroConfig = game.hydrodynamics || {};
     const planarApi = runtimeRoot.V0992_PLANAR_3DOF || {};
     const planar = planarApi.config || {};
-    const steeringApi = runtimeRoot.V0993_STEERING_YAW || {};
-    const steering = steeringApi.config || {};
     const hydro = runtimeRoot.JETSKI_PHYSICS && runtimeRoot.JETSKI_PHYSICS.hydroModel;
     const diagnostics = hydro && typeof hydro.diagnostics === 'function' ? (hydro.diagnostics() || {}) : {};
+    const yaw = YAW_BASELINE_V0102;
+    const steering = yaw.steering;
 
     return {
       massKg: hydroConfig.craftMassKg,
       cgVerticalM: diagnostics.centerOfMassVerticalM,
-      yawInertiaKgM2: planar.yawInertiaKgM2,
+      yawInertiaKgM2: yaw.yawInertiaKgM2,
       addedMassSurgeRatio: planar.addedMassSurgeRatio,
       addedMassSwayRatio: planar.addedMassSwayRatio,
-      addedMassYawRatio: planar.addedMassYawRatio,
-      // These three currently live as validated Plus constants rather than exported config.
-      // Catalog them here without making this file their physics authority.
+      addedMassYawRatio: yaw.addedMassYawRatio,
+      // These vertical/angular values remain cataloged legacy tuning, not migrated authority.
       heaveDampingPerSecond: 4.7,
       pitchDampingRatio: 0.70,
       rollDampingRatio: 0.74,
       swayNonlinearDamping: planar.nonlinearSwayDamping,
-      yawLinearDamping: planar.yawLinearDamping,
-      yawNonlinearDamping: planar.nonlinearYawDamping,
+      yawResponse: yaw.yawResponse,
+      yawLinearDamping: yaw.yawLinearDamping,
+      yawNonlinearDamping: yaw.yawNonlinearDamping,
       steeringLeverArmM: steering.sternLeverArmM,
       hydroForceCoeff: steering.hydroForceCoeff,
       lowSpeedJetForceN: steering.lowSpeedJetForceN,
       maxSteeringForceN: steering.maxSteeringForceN,
       maxYawMomentNm: steering.maxYawMomentNm,
+      hydroAuthorityStartMps: steering.hydroAuthorityStartMps,
+      hydroAuthorityFullMps: steering.hydroAuthorityFullMps,
+      landingAuthorityLoss: steering.landingAuthorityLoss,
       maxSurgeAcceleration: planar.maxSurgeAcceleration,
       maxBrakeAcceleration: planar.maxBrakeAcceleration,
       maxSwayAcceleration: planar.maxSwayAcceleration,
-      maxYawAcceleration: planar.maxYawAcceleration,
-      maxYawRate: planar.maxYawRate,
+      maxYawAcceleration: yaw.maxYawAcceleration,
+      maxYawRate: yaw.maxYawRate,
       maxHeaveAcceleration: hydroConfig.maxHeaveAcceleration,
       maxPitchAngularAcceleration: hydroConfig.maxPitchAngularAcceleration,
       maxRollAngularAcceleration: hydroConfig.maxRollAngularAcceleration,
       sources: {
         massKg: 'GAME_CONFIG.hydrodynamics.craftMassKg',
         cgVerticalM: '9-Point+ diagnostics.centerOfMassVerticalM',
-        yawInertiaKgM2: 'V0992_PLANAR_3DOF.config.yawInertiaKgM2',
+        yawCanonical: 'V0101_CALIBRATION.YAW_BASELINE_V0102 promoted by V0.10.3',
         addedMassSurgeRatio: 'V0992_PLANAR_3DOF.config.addedMassSurgeRatio',
         addedMassSwayRatio: 'V0992_PLANAR_3DOF.config.addedMassSwayRatio',
-        addedMassYawRatio: 'V0992_PLANAR_3DOF.config.addedMassYawRatio',
         plusVerticalAngularDamping: 'nine-point-plus-hydrodynamics.js validated constants',
-        planarDamping: 'V0992_PLANAR_3DOF.config',
-        steeringLeverArmM: 'V0993_STEERING_YAW.config.sternLeverArmM',
-        responseLimits: 'GAME_CONFIG.hydrodynamics + V0992_PLANAR_3DOF.config'
+        planarNonYaw: 'V0992_PLANAR_3DOF.config',
+        responseLimitsNonYaw: 'GAME_CONFIG.hydrodynamics + V0992_PLANAR_3DOF.config'
       }
     };
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { createCalibrationContract, readRuntimeInputs };
+    module.exports = { YAW_BASELINE_V0102, createCalibrationContract, readRuntimeInputs };
   }
 
   if (typeof window === 'undefined') return;
@@ -165,17 +209,16 @@
     });
   }
 
-  const versionNode = document.querySelector('#version');
-  if (versionNode) versionNode.textContent = 'V0.10.1';
-  document.title = 'Swim Ring Racing V0.10.1';
-
   root.V0101_CALIBRATION = {
-    version: 'V0.10.1',
+    version: 'V0.10.3',
+    schemaVersion: 'marine-calibration-v1',
     contract,
+    YAW_BASELINE_V0102,
     createCalibrationContract,
     readRuntimeInputs,
-    catalogOnly: true,
-    physicsAuthorityUntouched: true,
+    catalogOnly: false,
+    yawSourceOfTruth: true,
+    physicsValuesUnchanged: true,
     acceptedV010BaselinePreserved: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
