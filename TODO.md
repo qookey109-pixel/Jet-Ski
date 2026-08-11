@@ -33,21 +33,23 @@
 - [x] **V0.10.0 Safari acceptance PASS**：實機回報正常，observer layer 未造成可感知手感 regression
 - [x] V0.10.0 保留 V0.9.9.3.2 Safari GPU performance baseline；未回報新的卡頓 regression
 - [x] V0.10.1 `marine-calibration-v1` catalog：mass / CG vertical / Izz proxy / added-mass proxy / damping / steering lever arm
-- [x] V0.10.1 已知值保持來源追溯：mass 118 kg、CG -0.18 m、Izz 165 kg·m²、Surge/Sway/Yaw added mass 12/55/38%、lever arm 1.45 m
-- [x] V0.10.1 effective yaw inertia 227.7 kg·m² 僅列為 derived proxy，不宣稱實測值
 - [x] V0.10.1 Ixx / Iyy、Heave/Roll/Pitch added mass、CG longitudinal/lateral、SI damping derivatives 明確保持 UNCALIBRATED/null
-- [x] V0.10.1 catalog-only；不更動 9-Point+ / Planar 3DOF / steering / Base / Voxel / reverse / shoreline authority
-- [x] V0.10.1 calibration contract regression 覆蓋 known mapping / null gaps / no-authority rule
 - [x] V0.10.2 9-Point+ diagnostics / pose result 正式公開既有 `pitchRate / rollRate`
 - [x] V0.10.2 Unified 6DOF `p/q` 優先使用 internal `rollRate / pitchRate`；finite-difference 保留 fallback
 - [x] V0.10.2 不修改 pitch/roll acceleration、damping、rate integration 或 pose authority
-- [x] V0.10.2 Base / Voxel contract boundary 保留；不取得額外 physics authority
-- [x] V0.10.2 regression 鎖定 internal-rate precedence / fallback / Base boundary
+- [x] V0.10.3 建立 Calibration canonical Yaw baseline；數值完全沿用 V0.10.2
+- [x] V0.10.3 Planar Yaw runtime 優先讀 calibration：Izz / yaw added mass / response / damping / limits
+- [x] V0.10.3 Steering runtime 優先讀 calibration：lever arm / hydro force / jet force / force cap / Mz cap / authority range / landing loss
+- [x] V0.10.3 legacy Planar / Steering DEFAULTS 保留為 partial-load fallback，不再是正式 Yaw source
+- [x] V0.10.3 steering deterministic equivalence grid：legacy source vs calibration source一致
+- [x] V0.10.3 20,000-step Yaw source equivalence：`maxDiff = 0`、`max |r| = 1.55 rad/s`
+- [x] V0.10.3 沒有新增 update wrapper；Base / Voxel / reverse / shoreline / Safari performance baseline 保留
 
 ## 下一階段
-- [ ] 選擇第一個 force/moment authority migration 軸；優先評估 Yaw source-of-truth consolidation（既有 `Mz + Izz proxy + yaw added mass` 最完整）
-- [ ] 若做 Yaw migration，先做到 numerical equivalence / no-feel-change，再才考慮新校準值
-- [ ] 每次 authority migration 都保留 9-Point Base A/B fallback 與 Safari performance telemetry
+- [ ] **V0.10.3 Safari acceptance**：確認 Yaw source migration 沒有可感知 steering / BRAKE / reverse / Rough regression
+- [ ] Normal / Rough 各測 9-Point+；快速 A/D 不可出現新的 snap / weave
+- [ ] 確認 Safari HUD frame-time 不比 V0.9.9.3.2 / V0.10.0 baseline 明顯退步
+- [ ] Acceptance PASS 後再選下一個單軸 authority migration；不要一次把六軸全換掉
 - [ ] Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口用 CFD/SPH / system-identification evidence 補，不先猜值
 - [ ] Voxel 保留研究用途；除非有明確優勢，不再投入主線調參
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
