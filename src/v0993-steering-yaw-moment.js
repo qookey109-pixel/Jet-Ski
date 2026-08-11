@@ -1,6 +1,6 @@
-// V0.10.3 Plus-only steering force -> stern lever arm -> yaw moment.
-// V0.10.3 keeps the accepted steering equations unchanged while reading migrated
-// steering/Yaw parameters from Calibration Contract when available.
+// V0.10.3.1 Plus-only steering force -> stern lever arm -> yaw moment.
+// V0.10.3 keeps the accepted steering/Yaw source-of-truth. V0.10.3.1 removes repeated
+// calibration config allocation from the frame hot path by caching on contract identity.
 (function (root) {
   'use strict';
 
@@ -13,7 +13,6 @@
     return Number.isFinite(value) ? Number(value) : fallback;
   }
 
-  // Exact V0.10.2 numerical fallback. Runtime prefers Calibration Contract.
   const DEFAULTS = Object.freeze({
     sternLeverArmM: 1.45,
     hydroForceCoeff: 1.05,
@@ -47,6 +46,24 @@
         landingAuthorityLoss: finiteOr(steering.landingAuthorityLoss, base.landingAuthorityLoss)
       }),
       source: 'V0101_CALIBRATION.contract.steering'
+    };
+  }
+
+  function createIdentityConfigCache(resolver) {
+    let initialized = false;
+    let lastIdentity = null;
+    let lastValue = null;
+    let resolutions = 0;
+    return {
+      resolve(identity) {
+        if (initialized && identity === lastIdentity) return lastValue;
+        lastIdentity = identity;
+        initialized = true;
+        lastValue = resolver();
+        resolutions += 1;
+        return lastValue;
+      },
+      get resolutions() { return resolutions; }
     };
   }
 
@@ -92,12 +109,25 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DEFAULTS, resolveSteeringConfig, computeSteeringLoad, smoothstepRange };
+    module.exports = {
+      DEFAULTS,
+      resolveSteeringConfig,
+      createIdentityConfigCache,
+      computeSteeringLoad,
+      smoothstepRange
+    };
   }
 
   if (typeof window === 'undefined' || typeof updateJetSki !== 'function') return;
 
   const previousUpdateJetSki = updateJetSki;
+  const steeringConfigCache = createIdentityConfigCache(() => resolveSteeringConfig(root, DEFAULTS));
+  function getRuntimeSteeringConfig() {
+    const calibration = root.V0101_CALIBRATION;
+    const contractIdentity = calibration && calibration.contract ? calibration.contract : null;
+    return steeringConfigCache.resolve(contractIdentity);
+  }
+
   const state = {
     active: false,
     steering: 0,
@@ -110,6 +140,7 @@
     steeringForceN: 0,
     yawMomentNm: 0,
     configSource: 'legacy-defaults',
+    configResolutions: 0,
     appliedFrames: 0,
     resets: 0
   };
@@ -128,7 +159,7 @@
     state.resets += 1;
   }
 
-  updateJetSki = function v0103SteeringYawMoment(dt, t) {
+  updateJetSki = function v01031SteeringYawMoment(dt, t) {
     const api = root.JETSKI_PHYSICS;
     const hydro = api && api.hydroModel;
     const plusActive = Boolean(hydro && hydro.mode === 'nine-point-plus');
@@ -153,7 +184,7 @@
       const throttle = clamp(Math.max(Number(throttleValue) || 0, input.gas ? 0.35 : 0), 0, 1);
       const landingState = root.V099_NINE_POINT_PLUS_RUNTIME && root.V099_NINE_POINT_PLUS_RUNTIME.state;
       const landingLoad = landingState && Number.isFinite(landingState.landingLoad) ? landingState.landingLoad : 0;
-      const resolved = resolveSteeringConfig(root, DEFAULTS);
+      const resolved = getRuntimeSteeringConfig();
       const load = computeSteeringLoad({
         steering,
         relativeForward: speed - waterForward,
@@ -172,13 +203,12 @@
       state.steeringForceN = load.steeringForceN;
       state.yawMomentNm = load.yawMomentNm;
       state.configSource = resolved.source;
+      state.configResolutions = steeringConfigCache.resolutions;
       state.appliedFrames += 1;
     } else {
       clearState();
     }
 
-    // Set the moment command before entering the existing update chain so planar 3DOF can
-    // consume it in the same frame. Shoreline/world wrappers remain outside this layer.
     previousUpdateJetSki(dt, t);
 
     if (airborne || (root.V0941_REVERSE && root.V0941_REVERSE.controller && root.V0941_REVERSE.controller.active)) {
@@ -187,10 +217,12 @@
   };
 
   root.V0993_STEERING_YAW = {
-    version: 'V0.10.3',
+    version: 'V0.10.3.1',
     state,
     config: DEFAULTS,
     resolveSteeringConfig,
+    createIdentityConfigCache,
+    getRuntimeSteeringConfig,
     computeSteeringLoad,
     momentAuthority: true,
     plusOnly: true,
@@ -199,6 +231,8 @@
     reverseAuthorityPreserved: true,
     shorelineAuthorityPreserved: true,
     calibrationYawSourceReady: true,
-    legacyDefaultsAreFallbackOnly: true
+    legacyDefaultsAreFallbackOnly: true,
+    configResolutionCached: true,
+    get configCacheResolutions() { return steeringConfigCache.resolutions; }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -44,12 +44,16 @@
 - [x] V0.10.3 steering deterministic equivalence grid：legacy source vs calibration source一致
 - [x] V0.10.3 20,000-step Yaw source equivalence：`maxDiff = 0`、`max |r| = 1.55 rad/s`
 - [x] V0.10.3 沒有新增 update wrapper；Base / Voxel / reverse / shoreline / Safari performance baseline 保留
+- [x] **V0.10.3 Safari acceptance FAIL**：實機回報「變卡了」；不得視為正式 performance PASS
+- [x] V0.10.3.1 hotfix：Planar / Steering migrated config 改為依 Calibration Contract identity 快取，不再每幀重新 resolve / allocation
+- [x] V0.10.3.1 保留 V0.10.3 Yaw source-of-truth 與所有原數值；沒有回退成分散 defaults
+- [x] V0.10.3.1 cache regression：stable contract identity 20,000 次查詢只允許 resolver 執行 1 次
 
 ## 下一階段
-- [ ] **V0.10.3 Safari acceptance**：確認 Yaw source migration 沒有可感知 steering / BRAKE / reverse / Rough regression
-- [ ] Normal / Rough 各測 9-Point+；快速 A/D 不可出現新的 snap / weave
-- [ ] 確認 Safari HUD frame-time 不比 V0.9.9.3.2 / V0.10.0 baseline 明顯退步
-- [ ] Acceptance PASS 後再選下一個單軸 authority migration；不要一次把六軸全換掉
+- [ ] **V0.10.3.1 Safari acceptance**：確認卡頓是否恢復到 V0.10.0 / V0.9.9.3.2 baseline
+- [ ] Normal / Rough 各測 9-Point+；快速 A/D、BRAKE、REV 不可出現新的手感 regression
+- [ ] 確認 Safari HUD p95 / long-frame count 不再明顯惡化
+- [ ] V0.10.3.1 Acceptance PASS 後再選下一個單軸 authority migration
 - [ ] Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口用 CFD/SPH / system-identification evidence 補，不先猜值
 - [ ] Voxel 保留研究用途；除非有明確優勢，不再投入主線調參
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
