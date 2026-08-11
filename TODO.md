@@ -30,13 +30,19 @@
 - [x] V0.9.4.1 reverse-controller Node regression test
 - [x] V0.9.4.1 shoreline wall → wet-bank + land slope ribbon
 - [x] V0.9.4.1 successful OSM response localStorage cache fallback
+- [x] V0.9.5 外海 Open Sea / 日月潭 World Mode 切換
+- [x] V0.9.5 Open Sea 預設啟動、禁用湖岸碰撞、保留 V0.9.3 infinite ocean
+- [x] V0.9.5 世界切換位置 snapshot / floating-origin 狀態保存
+- [x] V0.9.5 外海隱藏 OSM-only 岸線 / attribution / map HUD
 
 ## 下一階段
-- [ ] V0.9.4.1 Safari 實機驗收：倒車、岸線斜坡、OSM CACHE
+- [ ] V0.9.5 Safari 實機驗收：外海長距離航行、日月潭切換、倒車
+- [ ] Issue #12 Phase 2A：台灣真實海岸線 prototype（先選一個東部海岸測試點）
+- [ ] 近岸 → 外海連續座標與 shoreline collision transition，不再只靠模式切換
 - [ ] 將 browser localStorage cache 升級成 repository 內建 OSM snapshot fallback
 - [ ] Issue #12 Phase 2：chunk / tile streaming + 前方預載 + 遠方卸載
 - [ ] DEM 高程資料 + 真實岸邊地形
-- [ ] 湖岸 vegetation / rock material pass（先保持低成本）
+- [ ] 海岸 vegetation / rock material pass（先保持低成本）
 - [ ] GPU visual wave 與 gameplay wave 的低頻相位/高度校準
 - [ ] CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
