@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Swim Ring Racing V0.9.5</title>
+  <title>Swim Ring Racing V0.9.6</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -11,7 +11,7 @@
   <div id="boot-error" class="boot-error" hidden>3D 引擎沒有載入。請確認網路連線，或雙擊資料夾內的 start.command 啟動。</div>
 
   <div class="hud">
-    <div><strong>SWIM RING RACING</strong> <span id="version">V0.9.5</span></div>
+    <div><strong>SWIM RING RACING</strong> <span id="version">V0.9.6</span></div>
     <div>速度 <span id="speed">0</span> km/h</div>
     <div>海況 <span id="sea-state">一般 Normal</span></div>
     <div>海浪 <span id="wave-state">Hs 0.85 m · Tp 6.2 s</span></div>
@@ -19,10 +19,11 @@
     <div>狀態 <span id="air-state">水面 WATER</span></div>
   </div>
 
-  <div class="help">W/↑ 加速｜S/↓ 煞車，停住後倒車｜A/D 轉向｜世界：外海 / 日月潭｜1 / 2 / 3 海況</div>
+  <div class="help">W/↑ 加速｜S/↓ 煞車，停住後倒車｜A/D 轉向｜世界：外海 / 台灣東岸 / 日月潭｜1 / 2 / 3 海況</div>
 
   <div class="world-controls" aria-label="world mode controls">
-    <button data-world-mode="open-sea" class="active">🌊 外海 Open Sea</button>
+    <button data-world-mode="open-sea" class="active">🌊 外海</button>
+    <button data-world-mode="taiwan-coast">🇹🇼 七星潭→外海</button>
     <button data-world-mode="sun-moon-lake">🏞️ 日月潭</button>
   </div>
 
@@ -69,6 +70,8 @@
   <script src="./src/reverse-controller.js"></script>
   <script src="./src/v0941-reverse.js"></script>
   <script src="./src/v094-real-world-water.js"></script>
-  <script src="./src/v095-world-modes.js"></script>
+  <script src="./src/real-world-coast.js"></script>
+  <script src="./src/taiwan-coast-runtime.js"></script>
+  <script src="./src/v096-world-modes.js"></script>
 </body>
 </html>
