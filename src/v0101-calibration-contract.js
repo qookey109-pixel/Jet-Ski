@@ -1,6 +1,6 @@
-// V0.10.3 Calibration Contract.
-// V0.10.1 created the catalog. V0.10.3 promotes only the already-accepted Yaw subset
-// to runtime source-of-truth while preserving exactly the V0.10.2 numerical baseline.
+// V0.10.4 Calibration Contract.
+// V0.10.3 promoted the accepted Yaw subset. V0.10.4 promotes only the already-accepted
+// Surge subset while preserving exactly the V0.10.3.1 numerical/performance baseline.
 (function (root) {
   'use strict';
 
@@ -24,6 +24,14 @@
     })
   });
 
+  const SURGE_BASELINE_V01031 = Object.freeze({
+    addedMassSurgeRatio: 0.12,
+    surgeResponse: 5.4,
+    brakeSurgeResponse: 10.2,
+    maxSurgeAcceleration: 12.5,
+    maxBrakeAcceleration: 20.0
+  });
+
   function finiteOrNull(value) {
     return Number.isFinite(value) ? Number(value) : null;
   }
@@ -39,18 +47,30 @@
     const steeringLeverArmM = finiteOrNull(input.steeringLeverArmM);
 
     const contract = {
-      version: 'V0.10.3',
+      version: 'V0.10.4',
       contract: 'marine-calibration-v1',
-      status: 'PARTIAL_REDUCED_ORDER_YAW_SOURCE',
+      status: 'PARTIAL_REDUCED_ORDER_SURGE_YAW_SOURCE',
       authority: {
         catalogOnly: false,
         changesPhysics: false,
         changesPhysicsValues: false,
         changesParameterSource: true,
         yawSourceOfTruth: true,
+        surgeSourceOfTruth: true,
         safeForAcceptedV010Baseline: true
       },
       sourceOfTruth: {
+        surge: {
+          active: true,
+          numericalBaseline: 'V0.10.3.1',
+          noNewValues: true,
+          fields: [
+            'surge added mass',
+            'surge response',
+            'brake surge response',
+            'surge acceleration limits'
+          ]
+        },
         yaw: {
           active: true,
           numericalBaseline: 'V0.10.2',
@@ -96,6 +116,8 @@
         yawNonlinear: finiteOrNull(input.yawNonlinearDamping)
       },
       responseTuning: {
+        surgeResponse: finiteOrNull(input.surgeResponse),
+        brakeSurgeResponse: finiteOrNull(input.brakeSurgeResponse),
         yawResponse: finiteOrNull(input.yawResponse)
       },
       steering: {
@@ -146,6 +168,7 @@
     const planar = planarApi.config || {};
     const hydro = runtimeRoot.JETSKI_PHYSICS && runtimeRoot.JETSKI_PHYSICS.hydroModel;
     const diagnostics = hydro && typeof hydro.diagnostics === 'function' ? (hydro.diagnostics() || {}) : {};
+    const surge = SURGE_BASELINE_V01031;
     const yaw = YAW_BASELINE_V0102;
     const steering = yaw.steering;
 
@@ -153,7 +176,7 @@
       massKg: hydroConfig.craftMassKg,
       cgVerticalM: diagnostics.centerOfMassVerticalM,
       yawInertiaKgM2: yaw.yawInertiaKgM2,
-      addedMassSurgeRatio: planar.addedMassSurgeRatio,
+      addedMassSurgeRatio: surge.addedMassSurgeRatio,
       addedMassSwayRatio: planar.addedMassSwayRatio,
       addedMassYawRatio: yaw.addedMassYawRatio,
       // These vertical/angular values remain cataloged legacy tuning, not migrated authority.
@@ -161,6 +184,8 @@
       pitchDampingRatio: 0.70,
       rollDampingRatio: 0.74,
       swayNonlinearDamping: planar.nonlinearSwayDamping,
+      surgeResponse: surge.surgeResponse,
+      brakeSurgeResponse: surge.brakeSurgeResponse,
       yawResponse: yaw.yawResponse,
       yawLinearDamping: yaw.yawLinearDamping,
       yawNonlinearDamping: yaw.yawNonlinearDamping,
@@ -172,8 +197,8 @@
       hydroAuthorityStartMps: steering.hydroAuthorityStartMps,
       hydroAuthorityFullMps: steering.hydroAuthorityFullMps,
       landingAuthorityLoss: steering.landingAuthorityLoss,
-      maxSurgeAcceleration: planar.maxSurgeAcceleration,
-      maxBrakeAcceleration: planar.maxBrakeAcceleration,
+      maxSurgeAcceleration: surge.maxSurgeAcceleration,
+      maxBrakeAcceleration: surge.maxBrakeAcceleration,
       maxSwayAcceleration: planar.maxSwayAcceleration,
       maxYawAcceleration: yaw.maxYawAcceleration,
       maxYawRate: yaw.maxYawRate,
@@ -183,18 +208,23 @@
       sources: {
         massKg: 'GAME_CONFIG.hydrodynamics.craftMassKg',
         cgVerticalM: '9-Point+ diagnostics.centerOfMassVerticalM',
+        surgeCanonical: 'V0101_CALIBRATION.SURGE_BASELINE_V01031 promoted by V0.10.4',
         yawCanonical: 'V0101_CALIBRATION.YAW_BASELINE_V0102 promoted by V0.10.3',
-        addedMassSurgeRatio: 'V0992_PLANAR_3DOF.config.addedMassSurgeRatio',
         addedMassSwayRatio: 'V0992_PLANAR_3DOF.config.addedMassSwayRatio',
         plusVerticalAngularDamping: 'nine-point-plus-hydrodynamics.js validated constants',
-        planarNonYaw: 'V0992_PLANAR_3DOF.config',
-        responseLimitsNonYaw: 'GAME_CONFIG.hydrodynamics + V0992_PLANAR_3DOF.config'
+        planarNonMigrated: 'V0992_PLANAR_3DOF.config',
+        responseLimitsNonMigrated: 'GAME_CONFIG.hydrodynamics + V0992_PLANAR_3DOF.config'
       }
     };
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { YAW_BASELINE_V0102, createCalibrationContract, readRuntimeInputs };
+    module.exports = {
+      YAW_BASELINE_V0102,
+      SURGE_BASELINE_V01031,
+      createCalibrationContract,
+      readRuntimeInputs
+    };
   }
 
   if (typeof window === 'undefined') return;
@@ -210,13 +240,15 @@
   }
 
   root.V0101_CALIBRATION = {
-    version: 'V0.10.3',
+    version: 'V0.10.4',
     schemaVersion: 'marine-calibration-v1',
     contract,
     YAW_BASELINE_V0102,
+    SURGE_BASELINE_V01031,
     createCalibrationContract,
     readRuntimeInputs,
     catalogOnly: false,
+    surgeSourceOfTruth: true,
     yawSourceOfTruth: true,
     physicsValuesUnchanged: true,
     acceptedV010BaselinePreserved: true
