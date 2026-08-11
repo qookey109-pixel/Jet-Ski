@@ -20,16 +20,25 @@
 - [x] V0.9.9.3 player direct yaw-angle steering removed from Plus final authority；cross-wave yaw disturbance 保留
 - [x] V0.9.9.3 moment branch 不受相反 `commandYawRate` 覆蓋的 regression
 - [x] Base / Voxel / reverse / ocean / coastline authority 保留
+- [x] V0.9.9.3.1 lightweight frame telemetry：FPS / p95 / long-frame count
+- [x] V0.9.9.3.1 Safari desktop reflection budget 30 FPS；physics/gameplay full RAF 保留
+- [x] V0.9.9.3.2 Safari GPU budget：pixel ratio 1.15x / reflection 256 / shadow 30 Hz
+- [x] Safari GPU budget 實機回報「有改善」；保留為 performance baseline
+- [x] V0.10.0 observer-first Unified 6DOF state contract：`x/y/z + u/v/w + roll/pitch/yaw + p/q/r`
+- [x] V0.10.0 floating-origin-aware world position + final render pose
+- [x] V0.10.0 generalized acceleration slots + `Fx/Fy/Fz/Mx/My/Mz` contract
+- [x] V0.10.0 未校準 force / moment slots 不捏造；僅接入既有 V0.9.9.3 `Mz`
+- [x] V0.10.0 Base / Voxel inactive boundary；observer 不寫 pose/velocity/load authority
+- [x] V0.10.0 20,000-step contract finite stress regression
 
 ## 下一階段
-- [ ] **V0.9.9.3 Safari 實機 A/B：9-Point+ vs Base**，Normal / Rough 各測至少 30 秒
-- [ ] 驗收轉向：按方向後應先建立 `Mz` / `r` 再轉，不可像直接折 yaw，也不可延遲過重
-- [ ] 驗收低速：有 GAS 時仍要有合理 jet steering；無油門低速不可過度靈敏
-- [ ] 驗收高速：`Mz` 可增加但須平順，不能蛇行或左右震盪
-- [ ] 驗收 BRAKE / reverse / shoreline：不可因 moment authority 失去原本控制或碰撞權限
-- [ ] 通過後：整合 Heave / Pitch / Roll + Surge / Sway / Yaw 為單一 browser-safe **6DOF state contract**
-- [ ] 6DOF 前/同步加入 lightweight frame-time telemetry，分離 Safari rendering / physics / GC spike
-- [ ] 6DOF 後建立參數校準表：mass / Ixx-Iyy-Izz / added mass / damping / steering lever arm
+- [ ] **V0.10.0 Safari acceptance**：確認 observer layer 沒有改變 9-Point+ / Base 手感，且 V0.9.9.3.2 的卡頓改善仍保留
+- [ ] Normal / Rough 各做 9-Point+ vs Base；BRAKE / reverse / shoreline 不可退步
+- [ ] 記錄 V0.10.0 HUD FPS / p95 / >25ms，與 V0.9.9.3.2 baseline 比較
+- [ ] 建立 calibration contract：mass / CG / Ixx-Iyy-Izz / added mass / damping / steering lever arm
+- [ ] 公開或正式映射 9-Point+ pitch/roll internal rate，讓 `p/q` 從 observer finite-difference 升級成內部 state source
+- [ ] 校準後逐軸建立可追溯 `Fx/Fy/Fz/Mx/My/Mz`，不要一次把六軸 authority 全換掉
+- [ ] 每次 authority migration 都保留 9-Point Base A/B fallback 與 Safari performance telemetry
 - [ ] Voxel 保留研究用途；除非有明確優勢，不再投入主線調參
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
 - [ ] repository 內建 Waikīkī / 七星潭 OSM snapshots
