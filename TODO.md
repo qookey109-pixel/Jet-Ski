@@ -48,12 +48,13 @@
 - [x] V0.10.3.1 hotfix：Planar / Steering migrated config 改為依 Calibration Contract identity 快取，不再每幀重新 resolve / allocation
 - [x] V0.10.3.1 保留 V0.10.3 Yaw source-of-truth 與所有原數值；沒有回退成分散 defaults
 - [x] V0.10.3.1 cache regression：stable contract identity 20,000 次查詢只允許 resolver 執行 1 次
+- [x] **V0.10.3.1 Safari acceptance PASS**：實機回報「很正常了」；V0.10.3 的卡頓 regression 已解除
+- [x] V0.10.3.1 保留既有 steering / BRAKE / REV / Yaw source-of-truth 與 Safari GPU performance baseline
 
 ## 下一階段
-- [ ] **V0.10.3.1 Safari acceptance**：確認卡頓是否恢復到 V0.10.0 / V0.9.9.3.2 baseline
-- [ ] Normal / Rough 各測 9-Point+；快速 A/D、BRAKE、REV 不可出現新的手感 regression
-- [ ] 確認 Safari HUD p95 / long-frame count 不再明顯惡化
-- [ ] V0.10.3.1 Acceptance PASS 後再選下一個單軸 authority migration
+- [ ] 選擇下一個單軸 authority migration；維持 numerical-equivalence-first / no-feel-change 策略
+- [ ] 新的 runtime source migration 禁止在 per-frame hot path 重建 immutable config；優先 cache / pre-resolve
+- [ ] 每次 migration 都保留 Base A/B fallback 與 Safari FPS / p95 / long-frame telemetry
 - [ ] Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口用 CFD/SPH / system-identification evidence 補，不先猜值
 - [ ] Voxel 保留研究用途；除非有明確優勢，不再投入主線調參
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
