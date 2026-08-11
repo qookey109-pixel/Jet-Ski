@@ -19,6 +19,7 @@
 
   let mode = MODES.OPEN_SEA;
   let pendingCoastSpawn = false;
+  let coastInitialized = false;
   const snapshots = {
     [MODES.OPEN_SEA]: null,
     [MODES.COAST]: null,
@@ -171,13 +172,13 @@
     setWorldOffset(0, 0);
     ski.position.x = spawn.x;
     ski.position.z = spawn.z;
-    // Face roughly seaward using the nearest coastline water normal.
     const nearest = window.REAL_WORLD_COAST && window.REAL_WORLD_COAST.nearestCoast
       ? window.REAL_WORLD_COAST.nearestCoast(spawn, coast.state.coastlines)
       : null;
     if (nearest && typeof yaw !== 'undefined') yaw = Math.atan2(nearest.waterNormal.x, nearest.waterNormal.z);
     settleOnWater();
     snapCamera();
+    coastInitialized = true;
     snapshots[MODES.COAST] = captureSnapshot();
     return true;
   }
@@ -189,7 +190,7 @@
     coast.setEnabled(true);
     setAttribution(true);
 
-    if (snapshots[MODES.COAST]) {
+    if (coastInitialized && snapshots[MODES.COAST]) {
       restoreSnapshot(snapshots[MODES.COAST]);
       pendingCoastSpawn = false;
     } else if (coast.state.loaded) {
@@ -197,6 +198,7 @@
     } else {
       pendingCoastSpawn = true;
       resetOceanPose();
+      snapshots[MODES.COAST] = captureSnapshot();
     }
     updateUi();
   }
@@ -238,8 +240,6 @@
 
   const previousUpdateJetSki = updateJetSki;
   updateJetSki = function v096WorldModeUpdate(dt, t) {
-    // V0.9.4 can finish an async lake load while another world is active and briefly
-    // mark the lake active / move the craft. Restore the active world's last pose.
     if (mode !== MODES.LAKE && lake.state && lake.state.active) {
       setLakeEnabled(false);
       const snapshot = snapshots[mode];
@@ -274,7 +274,6 @@
     }
   };
 
-  // Preserve V0.9.5 behavior: pure Open Sea remains the default after reload.
   setLakeEnabled(false);
   coast.setEnabled(false);
   setAttribution(false);
@@ -290,6 +289,7 @@
     modes: MODES,
     setMode,
     snapshots,
-    get mode() { return mode; }
+    get mode() { return mode; },
+    get coastInitialized() { return coastInitialized; }
   };
 })();
