@@ -42,13 +42,18 @@
 - [x] V0.9.8.2 landing speed cliff / giant-wave passive decel smoothing（Voxel only）
 - [x] V0.9.8.2 exact V0.9.3 cached height-only sampler，降低 24-cell 重複 trig / temporary object cost
 - [x] V0.9.8.2 fast sampler / marine smoothing regression tests
+- [x] V0.9.8.3 per-cell immersion delta / water-entry tracking
+- [x] V0.9.8.3 Voxel switch contact priming，避免第一幀假 slamming
+- [x] V0.9.8.3 progressive slamming load + bounded vertical slamming lift
+- [x] V0.9.8.3 continuous Voxel-only water-contact drag，保留 BRAKE / reverse / shoreline authority
+- [x] V0.9.8.3 water-contact force regression
 
 ## 下一階段
-- [ ] V0.9.8.2 Safari 實機驗收：確認偶發「像撞到東西」頓挫是否消失
+- [ ] V0.9.8.3 Safari 實機驗收：Normal / Rough 下確認 slamming/drag 連續、不出現撞隱形牆式速度 cliff
 - [ ] Calm / Normal / Rough 各跑 9-Point 與 Voxel，確認重量感、下墜、回彈與 FPS
 - [ ] 若仍有規律 frame hitch：加入 lightweight frame-time / long-frame telemetry，分離 rendering / physics / GC spike
-- [ ] 若 Voxel 通過，再加入 water-relative per-cell drag / continuous slamming（避免 discrete impact cliff）
-- [ ] 若需要真正船舶，再做完整 6DOF rigid-body marine model；Ammo.js 先不導入
+- [ ] Voxel yaw inertia / water-relative lateral force / center-of-mass
+- [ ] 若 Voxel 通過上述階段，再升級 browser-safe 6DOF marine rigid-body；Ammo.js 先不導入
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
 - [ ] repository 內建 Waikīkī / 七星潭 OSM snapshots，避免首次啟動完全依賴 Overpass
 - [ ] Issue #12 Phase 2B：coastline chunk/tile streaming + 前方預載 + 遠方卸載
