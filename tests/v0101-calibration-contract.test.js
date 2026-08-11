@@ -2,11 +2,12 @@ const assert = require('assert');
 const {
   YAW_BASELINE_V0102,
   SURGE_BASELINE_V01031,
+  SWAY_BASELINE_V0104,
   createCalibrationContract,
   readRuntimeInputs
 } = require('../src/v0101-calibration-contract.js');
 
-// Deliberately corrupt migrated Surge/Yaw values in the fake runtime. V0.10.4 must ignore
+// Deliberately corrupt migrated Surge/Sway/Yaw values in the fake runtime. V0.10.5 must ignore
 // these fields and preserve the canonical accepted baselines.
 const fakeRoot = {
   GAME_CONFIG: {
@@ -20,17 +21,19 @@ const fakeRoot = {
   V0992_PLANAR_3DOF: {
     config: {
       addedMassSurgeRatio: 9.99,
-      addedMassSwayRatio: 0.55,
+      addedMassSwayRatio: 9.99,
       addedMassYawRatio: 9.99,
       surgeResponse: 99,
       brakeSurgeResponse: 99,
-      nonlinearSwayDamping: 0.34,
+      swayResponse: 99,
+      swayYawCoupling: 99,
+      nonlinearSwayDamping: 99,
       yawLinearDamping: 9.99,
       nonlinearYawDamping: 9.99,
       yawInertiaKgM2: 9999,
       maxSurgeAcceleration: 99,
       maxBrakeAcceleration: 99,
-      maxSwayAcceleration: 5.2,
+      maxSwayAcceleration: 99,
       maxYawAcceleration: 99,
       maxYawRate: 99
     }
@@ -56,19 +59,22 @@ const fakeRoot = {
 const inputs = readRuntimeInputs(fakeRoot);
 const contract = createCalibrationContract(inputs);
 
-assert.equal(contract.version, 'V0.10.4');
+assert.equal(contract.version, 'V0.10.5');
 assert.equal(contract.contract, 'marine-calibration-v1');
-assert.equal(contract.status, 'PARTIAL_REDUCED_ORDER_SURGE_YAW_SOURCE');
+assert.equal(contract.status, 'PARTIAL_REDUCED_ORDER_SURGE_SWAY_YAW_SOURCE');
 assert.equal(contract.authority.catalogOnly, false);
 assert.equal(contract.authority.changesPhysics, false);
 assert.equal(contract.authority.changesPhysicsValues, false);
 assert.equal(contract.authority.changesParameterSource, true);
 assert.equal(contract.authority.surgeSourceOfTruth, true);
+assert.equal(contract.authority.swaySourceOfTruth, true);
 assert.equal(contract.authority.yawSourceOfTruth, true);
 assert.equal(contract.authority.safeForAcceptedV010Baseline, true);
 assert.equal(contract.sourceOfTruth.surge.numericalBaseline, 'V0.10.3.1');
-assert.equal(contract.sourceOfTruth.surge.noNewValues, true);
+assert.equal(contract.sourceOfTruth.sway.numericalBaseline, 'V0.10.4');
 assert.equal(contract.sourceOfTruth.yaw.numericalBaseline, 'V0.10.2');
+assert.equal(contract.sourceOfTruth.surge.noNewValues, true);
+assert.equal(contract.sourceOfTruth.sway.noNewValues, true);
 assert.equal(contract.sourceOfTruth.yaw.noNewValues, true);
 
 assert.equal(contract.rigidBody.massKg, 118);
@@ -78,7 +84,7 @@ assert.equal(contract.rigidBody.inertiaKgM2.roll, null);
 assert.equal(contract.rigidBody.inertiaKgM2.pitch, null);
 
 assert.equal(contract.addedMassRatio.surge, SURGE_BASELINE_V01031.addedMassSurgeRatio);
-assert.equal(contract.addedMassRatio.sway, 0.55);
+assert.equal(contract.addedMassRatio.sway, SWAY_BASELINE_V0104.addedMassSwayRatio);
 assert.equal(contract.addedMassRatio.yaw, YAW_BASELINE_V0102.addedMassYawRatio);
 assert.equal(contract.addedMassRatio.heave, null);
 assert.equal(contract.addedMassRatio.roll, null);
@@ -87,12 +93,14 @@ assert.equal(contract.addedMassRatio.pitch, null);
 assert.equal(contract.damping.heavePerSecond, 4.7);
 assert.equal(contract.damping.pitchDampingRatio, 0.70);
 assert.equal(contract.damping.rollDampingRatio, 0.74);
-assert.equal(contract.damping.swayNonlinear, 0.34);
+assert.equal(contract.damping.swayNonlinear, SWAY_BASELINE_V0104.nonlinearSwayDamping);
 assert.equal(contract.damping.yawLinear, YAW_BASELINE_V0102.yawLinearDamping);
 assert.equal(contract.damping.yawNonlinear, YAW_BASELINE_V0102.yawNonlinearDamping);
 assert.equal(contract.responseTuning.surgeResponse, SURGE_BASELINE_V01031.surgeResponse);
 assert.equal(contract.responseTuning.brakeSurgeResponse, SURGE_BASELINE_V01031.brakeSurgeResponse);
+assert.equal(contract.responseTuning.swayResponse, SWAY_BASELINE_V0104.swayResponse);
 assert.equal(contract.responseTuning.yawResponse, YAW_BASELINE_V0102.yawResponse);
+assert.equal(contract.coupling.swayYaw, SWAY_BASELINE_V0104.swayYawCoupling);
 
 assert.equal(contract.steering.leverArmM, YAW_BASELINE_V0102.steering.sternLeverArmM);
 assert.equal(contract.steering.hydroForceCoeff, YAW_BASELINE_V0102.steering.hydroForceCoeff);
@@ -105,6 +113,7 @@ assert.equal(contract.steering.landingAuthorityLoss, YAW_BASELINE_V0102.steering
 
 assert.equal(contract.responseLimits.maxSurgeAcceleration, SURGE_BASELINE_V01031.maxSurgeAcceleration);
 assert.equal(contract.responseLimits.maxBrakeAcceleration, SURGE_BASELINE_V01031.maxBrakeAcceleration);
+assert.equal(contract.responseLimits.maxSwayAcceleration, SWAY_BASELINE_V0104.maxSwayAcceleration);
 assert.equal(contract.responseLimits.maxYawAcceleration, YAW_BASELINE_V0102.maxYawAcceleration);
 assert.equal(contract.responseLimits.maxYawRate, YAW_BASELINE_V0102.maxYawRate);
 assert.ok(Math.abs(contract.derived.effectiveYawInertiaKgM2 - 227.7) < 1e-9);
@@ -119,4 +128,4 @@ assert.equal(empty.rigidBody.inertiaKgM2.yaw, null);
 assert.equal(empty.derived.effectiveYawInertiaKgM2, null);
 assert.equal(empty.authority.changesPhysicsValues, false);
 
-console.log('V0.10.4 calibration contract regression PASS');
+console.log('V0.10.5 calibration contract regression PASS');
