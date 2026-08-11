@@ -81,9 +81,12 @@
   // OSM natural=coastline ways are directed with land on the left and water on the right.
   // Our local coordinates map north to -Z, which mirrors the geographic plane; therefore
   // water is the positive-cross / local-left side of each directed segment.
-  function isWaterSide(point, coastlines, margin) {
+  // Outside maxGuardDistance the local coastline has no collision authority: this prevents
+  // a finite OSM bbox endpoint from becoming a fake boundary after the player reaches open sea.
+  function isWaterSide(point, coastlines, margin, maxGuardDistance) {
     const nearest = nearestCoast(point, coastlines);
     if (!nearest) return true;
+    if (Number.isFinite(maxGuardDistance) && nearest.distance > maxGuardDistance) return true;
     const guard = Number.isFinite(margin) ? margin : 0;
     return nearest.signedDistance >= -guard;
   }
