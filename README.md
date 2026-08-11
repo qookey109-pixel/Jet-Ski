@@ -1,4 +1,4 @@
-# Swim Ring Racing — V0.10.3
+# Swim Ring Racing — V0.10.3.1
 
 3D Web 水上遊戲 Prototype。手機橫向優先、桌面支援；玩家駕駛程序化 3D 游泳圈。
 
@@ -16,8 +16,38 @@
 - **V0.10.0 Unified 6DOF Contract**：observer-first 六自由度 state contract；Safari acceptance PASS。
 - **V0.10.1 Calibration Contract**：建立 mass / CG / inertia proxy / added-mass proxy / damping / steering catalog。
 - **V0.10.2 Internal Roll/Pitch Rates**：6DOF `p/q` 改用 9-Point+ 內部 `rollRate / pitchRate`。
-- **V0.10.3 Yaw Source-of-Truth**：把已驗證的 Yaw baseline 從 Planar / Steering 分散 defaults 收斂到 Calibration Contract，數值完全不變。
+- **V0.10.3 Yaw Source-of-Truth**：把已驗證的 Yaw baseline 從 Planar / Steering 分散 defaults 收斂到 Calibration Contract；numerical equivalence PASS，但 Safari 實機曾出現卡頓 regression。
+- **V0.10.3.1 Safari Yaw Config Cache Hotfix**：migrated Yaw config 改為依 Calibration Contract identity 快取；Safari 實機回報「很正常了」，acceptance PASS。
 - `src/main.js`、`src/ocean.js`、`src/hydrodynamics.js` validated baseline 不重寫。
+
+## V0.10.3.1 — Safari Yaw Config Cache Hotfix
+
+V0.10.3 的 Yaw source migration 在 Planar / Steering 兩條每幀 hot path 內重新 resolve calibration config，會建立短命 config 物件。Safari 實機回報因此「變卡了」。
+
+V0.10.3.1 改為：
+
+```text
+Calibration Contract identity
+        ↓
+resolve once
+        ↓
+cached Planar Yaw config
+cached Steering config
+        ↓
+per-frame direct reuse
+```
+
+只有 contract identity 真正改變時才重新解析。
+
+### Hotfix acceptance
+
+- V0.10.3 Safari acceptance：**FAIL — 變卡了**。
+- V0.10.3.1 cache regression：stable contract identity 20,000 次查詢，resolver 只執行 1 次。
+- contract identity 改變時才新增 1 次 resolution。
+- Yaw source-of-truth、Yaw 參數與方程全部保留。
+- Safari 實機重新驗收：**PASS —「很正常了」**。
+
+因此目前正式 performance / physics baseline 為 **V0.10.3.1**。
 
 ## V0.10.3 — Yaw Source-of-Truth Consolidation
 
@@ -43,11 +73,11 @@ V0993 Steering
   landing authority reduction
 ```
 
-V0.10.3 將上述 **既有原值** 固定成 `V0101_CALIBRATION.YAW_BASELINE_V0102`，再由 `marine-calibration-v1` contract 提供給兩個 consumer。
+V0.10.3 將上述既有原值固定成 `V0101_CALIBRATION.YAW_BASELINE_V0102`，再由 `marine-calibration-v1` contract 提供給兩個 consumer。
 
 ### Canonical accepted Yaw baseline
 
-| 項目 | V0.10.3 source value |
+| 項目 | Source value |
 |---|---:|
 | Yaw inertia `Izz` | `165 kg·m²` |
 | Yaw added mass | `38%` |
@@ -65,35 +95,17 @@ V0.10.3 將上述 **既有原值** 固定成 `V0101_CALIBRATION.YAW_BASELINE_V01
 | Hydro authority | `1.2 → 12.0 m/s` |
 | Landing steering loss | `14% max` |
 
-這些全部都是 V0.10.2 已使用的數字；**V0.10.3 沒有加入新的 calibration value**。
-
-### Runtime source rule
-
-正式 9-Point+ runtime：
-
-```text
-Calibration Contract
-  ├─ yaw dynamics config ──> Planar 3DOF
-  └─ steering/Mz config ───> Steering layer
-```
-
-- `V0992_PLANAR_3DOF` runtime 優先讀 `V0101_CALIBRATION.contract`。
-- `V0993_STEERING_YAW` runtime 優先讀同一份 contract。
-- 原本 `DEFAULTS` 保留，但只作 direct-file / partial-load fallback。
-- Base / Voxel 不取得 Plus Yaw authority。
-- reverse / airborne / shoreline / world wrappers authority 不變。
+這些全部都是 V0.10.2 已使用的數字；V0.10.3 / V0.10.3.1 都沒有加入新的 calibration value。
 
 ### Numerical equivalence gate
 
-V0.10.3 的第一要求不是「更真實」，而是先證明 source migration 沒改數值：
-
 - steering deterministic grid：legacy source 與 calibration source 完全一致。
 - Planar 3DOF：20,000-step deterministic stress，同時覆蓋 moment-authority 與 command-yaw fallback。
-- 等價 harness 結果：`maxDiff = 0`。
-- `max |r| = 1.55 rad/s`，仍遵守既有 bound。
+- 等價 harness：`maxDiff = 0`。
+- `max |r| = 1.55 rad/s`。
 - effective `Izz = 227.7 kg·m²`。
 
-目前 sandbox 無法直接 clone GitHub，因此這是**等價 Node regression**，不是宣稱完整 repository 原檔 test suite 已在本環境執行。
+目前 sandbox 無法直接 clone GitHub，因此這是等價 Node regression，不宣稱完整 repository 原檔 test suite 已在本環境執行。
 
 ## V0.10.2 — Internal Roll/Pitch Rates
 
@@ -136,7 +148,7 @@ Mx / My / Mz
 
 ## Safari Performance Baseline
 
-V0.9.9.3.2 保留：
+目前保留：
 
 - Safari desktop pixel ratio cap `1.15x`
 - reflective-water render target `256 × 256`
@@ -144,8 +156,9 @@ V0.9.9.3.2 保留：
 - mirror reflection `30 FPS`
 - gameplay / physics full `requestAnimationFrame`
 - HUD：FPS / p95 / long-frame count
+- immutable migrated config：identity cache / pre-resolve，避免 per-frame allocation
 
-V0.10.3 沒有新增 render pass 或額外 physics update wrapper。
+V0.10.3.1 Safari acceptance 已 PASS。
 
 ## 物理切換
 
@@ -182,6 +195,7 @@ node tests/v010-unified-6dof-state.test.js
 node tests/v0101-calibration-contract.test.js
 node tests/v0102-internal-pq-rates.test.js
 node tests/v0103-yaw-source-of-truth.test.js
+node tests/v01031-yaw-config-cache.test.js
 node tests/real-world-water.test.js
 node tests/real-world-coast.test.js
 node tests/hawaii-coast.test.js
@@ -200,6 +214,7 @@ node tests/v0983-water-contact-forces.test.js
 
 ## Next
 
-1. Safari / GitHub Pages A/B 驗證 V0.10.3 Yaw source migration 沒有可感知 steering / BRAKE / reverse / Rough regression。
-2. 通過後再選下一個單軸 authority migration；不要一次把六軸全部轉成新 solver。
-3. Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口繼續等 CFD/SPH / system-identification evidence，不先猜值。
+1. 下一個單軸 authority migration 繼續採 **numerical-equivalence-first / no-feel-change**。
+2. immutable runtime config 必須 cache / pre-resolve，不再放進 per-frame allocation hot path。
+3. 每次 migration 都保留 Base A/B fallback 與 Safari FPS / p95 / long-frame telemetry。
+4. Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口繼續等 CFD/SPH / system-identification evidence，不先猜值。
