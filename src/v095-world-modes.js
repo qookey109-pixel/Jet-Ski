@@ -23,6 +23,8 @@
   row.innerHTML = '世界 <span id="world-mode-state">外海 Open Sea</span>';
   if (hud) hud.appendChild(row);
   const modeStateEl = row.querySelector('#world-mode-state');
+  const osmStatusEl = document.querySelector('#world-map-state');
+  const osmStatusRow = osmStatusEl ? osmStatusEl.parentElement : null;
 
   const osmAttribution = [...document.querySelectorAll('div')]
     .find(el => el.textContent && el.textContent.trim() === '© OpenStreetMap contributors');
@@ -118,9 +120,11 @@
   }
 
   function setLakeVisibility(enabled) {
-    if (lake.worldGroup) lake.worldGroup.visible = Boolean(enabled && lake.state && lake.state.polygon);
-    if (lake.state) lake.state.active = Boolean(enabled && lake.state.polygon);
-    if (osmAttribution) osmAttribution.style.display = enabled ? '' : 'none';
+    const hasPolygon = Boolean(lake.state && lake.state.polygon);
+    if (lake.worldGroup) lake.worldGroup.visible = Boolean(enabled && hasPolygon);
+    if (lake.state) lake.state.active = Boolean(enabled && hasPolygon);
+    if (osmAttribution) osmAttribution.style.display = enabled && hasPolygon ? '' : 'none';
+    if (osmStatusRow) osmStatusRow.style.display = enabled ? '' : 'none';
   }
 
   function updateUi() {
@@ -172,7 +176,7 @@
       setLakeVisibility(true);
       lakeSnapshot = captureSnapshot();
     } else {
-      setLakeVisibility(false);
+      setLakeVisibility(true);
       if (lake.state && lake.state.error && typeof lake.reload === 'function') lake.reload();
     }
 
