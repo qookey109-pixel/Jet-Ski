@@ -38,10 +38,15 @@
 - [x] V0.10.1 Ixx / Iyy、Heave/Roll/Pitch added mass、CG longitudinal/lateral、SI damping derivatives 明確保持 UNCALIBRATED/null
 - [x] V0.10.1 catalog-only；不更動 9-Point+ / Planar 3DOF / steering / Base / Voxel / reverse / shoreline authority
 - [x] V0.10.1 calibration contract regression 覆蓋 known mapping / null gaps / no-authority rule
+- [x] V0.10.2 9-Point+ diagnostics / pose result 正式公開既有 `pitchRate / rollRate`
+- [x] V0.10.2 Unified 6DOF `p/q` 優先使用 internal `rollRate / pitchRate`；finite-difference 保留 fallback
+- [x] V0.10.2 不修改 pitch/roll acceleration、damping、rate integration 或 pose authority
+- [x] V0.10.2 Base / Voxel contract boundary 保留；不取得額外 physics authority
+- [x] V0.10.2 regression 鎖定 internal-rate precedence / fallback / Base boundary
 
 ## 下一階段
-- [ ] 公開或正式映射 9-Point+ `pitchRate / rollRate`，讓 6DOF `p/q` 從 observer finite-difference 升級成內部 state source
-- [ ] 選擇第一個 force/moment authority migration 軸；必須可由現有 calibration contract 完整追溯並可安全 A/B
+- [ ] 選擇第一個 force/moment authority migration 軸；優先評估 Yaw source-of-truth consolidation（既有 `Mz + Izz proxy + yaw added mass` 最完整）
+- [ ] 若做 Yaw migration，先做到 numerical equivalence / no-feel-change，再才考慮新校準值
 - [ ] 每次 authority migration 都保留 9-Point Base A/B fallback 與 Safari performance telemetry
 - [ ] Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口用 CFD/SPH / system-identification evidence 補，不先猜值
 - [ ] Voxel 保留研究用途；除非有明確優勢，不再投入主線調參
