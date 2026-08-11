@@ -1,4 +1,4 @@
-// V0.9.9.2 Marine Physics Lab UI/runtime.
+// V0.9.9.3 Marine Physics Lab UI/runtime.
 // 9-Point Plus is mainline; Base remains the trusted A/B reference; Voxel is experimental.
 (function () {
   'use strict';
@@ -6,7 +6,7 @@
   const physicsApi = window.JETSKI_PHYSICS && window.JETSKI_PHYSICS.hydroModel;
   if (!physicsApi || typeof physicsApi.setMode !== 'function') return;
 
-  const version = 'V0.9.9.2';
+  const version = 'V0.9.9.3';
   const buttons = [...document.querySelectorAll('[data-hydro-mode]')];
   const hud = document.querySelector('.hud');
   const row = document.createElement('div');
@@ -43,7 +43,7 @@
 
   if (typeof updateWater === 'function') {
     const previousUpdateWater = updateWater;
-    updateWater = function v0992MarinePhysicsHud(t) {
+    updateWater = function v0993MarinePhysicsHud(t) {
       previousUpdateWater(t);
       if (!stateEl || t - lastDiagUpdate < 0.25) return;
       lastDiagUpdate = t;
@@ -55,11 +55,15 @@
         stateEl.textContent = `Voxel EXP · ${submerged} · aY ${ay} · slam ${slam}`;
       } else if (d && d.mode === 'nine-point-plus') {
         const planar = window.V0992_PLANAR_3DOF && window.V0992_PLANAR_3DOF.state;
+        const steering = window.V0993_STEERING_YAW && window.V0993_STEERING_YAW.state;
         if (planar && planar.initialized) {
           const u = Number.isFinite(planar.u) ? planar.u.toFixed(1) : '--';
           const v = Number.isFinite(planar.v) ? `${planar.v >= 0 ? '+' : ''}${planar.v.toFixed(2)}` : '--';
           const r = Number.isFinite(planar.r) ? `${planar.r >= 0 ? '+' : ''}${planar.r.toFixed(2)}` : '--';
-          stateEl.textContent = `9-Point+ · u ${u} · v ${v} · r ${r}`;
+          const mz = steering && Number.isFinite(steering.yawMomentNm)
+            ? `${steering.yawMomentNm >= 0 ? '+' : ''}${Math.round(steering.yawMomentNm)}`
+            : '--';
+          stateEl.textContent = `9-Point+ · u ${u} · v ${v} · r ${r} · Mz ${mz}`;
         } else {
           const ay = Number.isFinite(d.heaveAcceleration) ? `${d.heaveAcceleration >= 0 ? '+' : ''}${d.heaveAcceleration.toFixed(1)}` : '--';
           stateEl.textContent = `9-Point+ · aY ${ay}`;
@@ -85,6 +89,7 @@
     get waterContactForces() { return window.V0983_WATER_CONTACT_FORCES || null; },
     get ninePointPlus() { return window.V099_NINE_POINT_PLUS_RUNTIME || null; },
     get lateralCom() { return window.V0991_LATERAL_COM || null; },
-    get planar3dof() { return window.V0992_PLANAR_3DOF || null; }
+    get planar3dof() { return window.V0992_PLANAR_3DOF || null; },
+    get steeringYawMoment() { return window.V0993_STEERING_YAW || null; }
   };
 })();

@@ -1,5 +1,5 @@
-// V0.9.9 9-Point Plus runtime: yaw inertia + progressive landing inertia reservoir.
-// It wraps the existing drive chain without changing validated main/guard equations.
+// V0.9.9.3 9-Point Plus runtime: heave restore + landing inertia reservoir.
+// Legacy yaw-rate smoothing remains as fallback, but yields when the steering-moment layer is active.
 (function (root) {
   'use strict';
 
@@ -33,6 +33,7 @@
     landingLoad: 0,
     landingEvents: 0,
     contactGuardHits: 0,
+    steeringMomentFrames: 0,
     activeFrames: 0
   };
   let wasPlusLastFrame = false;
@@ -76,18 +77,28 @@
       }
     }
 
-    const rawYawDelta = normalizeAngle(yaw - yawBefore);
-    const desiredYawRate = rawYawDelta / safeDt;
-    state.desiredYawRate = desiredYawRate;
-    state.yawRate = wasPlusLastFrame
-      ? smoothYawRate(state.yawRate, desiredYawRate, safeDt, 7.2, 1.55)
-      : clamp(desiredYawRate, -1.55, 1.55);
+    const steeringMomentState = root.V0993_STEERING_YAW && root.V0993_STEERING_YAW.state;
+    const steeringMomentOwnsYaw = Boolean(steeringMomentState && steeringMomentState.active);
 
-    // A recent hard water impact temporarily reduces yaw authority a little, giving the
-    // craft mass continuity instead of allowing an instantaneous direction snap.
-    const landingYawScale = 1 - 0.14 * state.landingLoad;
-    yaw = yawBefore + state.yawRate * safeDt * landingYawScale;
-    ski.rotation.y = yaw;
+    if (steeringMomentOwnsYaw) {
+      // V0.9.9.3: do not turn the craft by smoothing a directly assigned yaw angle.
+      // The outer 3DOF layer integrates the stern steering moment into yaw-rate instead.
+      const planar = root.V0992_PLANAR_3DOF && root.V0992_PLANAR_3DOF.state;
+      if (planar && Number.isFinite(planar.r)) state.yawRate = planar.r;
+      state.desiredYawRate = state.yawRate;
+      state.steeringMomentFrames += 1;
+    } else {
+      const rawYawDelta = normalizeAngle(yaw - yawBefore);
+      const desiredYawRate = rawYawDelta / safeDt;
+      state.desiredYawRate = desiredYawRate;
+      state.yawRate = wasPlusLastFrame
+        ? smoothYawRate(state.yawRate, desiredYawRate, safeDt, 7.2, 1.55)
+        : clamp(desiredYawRate, -1.55, 1.55);
+
+      const landingYawScale = 1 - 0.14 * state.landingLoad;
+      yaw = yawBefore + state.yawRate * safeDt * landingYawScale;
+      ski.rotation.y = yaw;
+    }
 
     if (airborneBefore && !airborne) {
       const load = landingLoadFromImpact(preLandingVerticalSpeed);
@@ -102,7 +113,7 @@
   };
 
   root.V099_NINE_POINT_PLUS_RUNTIME = {
-    version: 'V0.9.9',
+    version: 'V0.9.9.3',
     state,
     plusImmersionAllowanceM,
     normalizeAngle,
@@ -110,6 +121,7 @@
     landingLoadFromImpact,
     noExtraSpeedLoss: true,
     legacyAntiPenetrationUnmodified: true,
+    steeringMomentAuthorityAware: true,
     shorelineCollisionAuthorityPreserved: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
