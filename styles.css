@@ -49,7 +49,11 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   user-select: none;
 }
 
-.world-controls { bottom: 138px; }
+.world-controls {
+  bottom: 138px;
+  max-width: calc(100vw - 20px);
+  flex-wrap: nowrap;
+}
 .sea-controls { bottom: 92px; }
 
 .world-controls button,
@@ -62,6 +66,7 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   color: #fff;
   font-weight: 750;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .world-controls button.active,
@@ -110,9 +115,10 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   .help { display: none; }
   .hud { font-size: 13px; }
   .mobile-controls button { min-width: 62px; min-height: 54px; font-size: 15px; }
-  .world-controls { bottom: 126px; }
+  .world-controls { bottom: 126px; gap: 4px; }
   .sea-controls { bottom: 82px; }
-  .world-controls button, .sea-controls button { padding: 0 8px; font-size: 12px; }
+  .world-controls button { padding: 0 6px; font-size: 11px; }
+  .sea-controls button { padding: 0 8px; font-size: 12px; }
 }
 
 @media (max-height: 480px) {
