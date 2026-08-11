@@ -1,4 +1,4 @@
-// V0.9.9 Marine Physics Lab UI/runtime.
+// V0.9.9.1 Marine Physics Lab UI/runtime.
 // 9-Point Plus is mainline; Base remains the trusted A/B reference; Voxel is experimental.
 (function () {
   'use strict';
@@ -6,7 +6,7 @@
   const physicsApi = window.JETSKI_PHYSICS && window.JETSKI_PHYSICS.hydroModel;
   if (!physicsApi || typeof physicsApi.setMode !== 'function') return;
 
-  const version = 'V0.9.9';
+  const version = 'V0.9.9.1';
   const buttons = [...document.querySelectorAll('[data-hydro-mode]')];
   const hud = document.querySelector('.hud');
   const row = document.createElement('div');
@@ -37,14 +37,13 @@
   for (const button of buttons) button.addEventListener('click', () => setMode(button.dataset.hydroMode));
   window.addEventListener('keydown', event => {
     if (event.repeat || event.code !== 'KeyP') return;
-    // Safe keyboard A/B is Plus <-> Base only. Voxel requires the explicit EXP button.
     physicsApi.toggleMode();
     updateUi();
   });
 
   if (typeof updateWater === 'function') {
     const previousUpdateWater = updateWater;
-    updateWater = function v099MarinePhysicsHud(t) {
+    updateWater = function v0991MarinePhysicsHud(t) {
       previousUpdateWater(t);
       if (!stateEl || t - lastDiagUpdate < 0.25) return;
       lastDiagUpdate = t;
@@ -56,9 +55,10 @@
         stateEl.textContent = `Voxel EXP · ${submerged} · aY ${ay} · slam ${slam}`;
       } else if (d && d.mode === 'nine-point-plus') {
         const ay = Number.isFinite(d.heaveAcceleration) ? `${d.heaveAcceleration >= 0 ? '+' : ''}${d.heaveAcceleration.toFixed(1)}` : '--';
-        const inertia = window.V099_NINE_POINT_PLUS_RUNTIME && window.V099_NINE_POINT_PLUS_RUNTIME.state;
-        const yawRate = inertia && Number.isFinite(inertia.yawRate) ? inertia.yawRate.toFixed(2) : '--';
-        stateEl.textContent = `9-Point+ · aY ${ay} · yaw ${yawRate}`;
+        const lateral = window.V0991_LATERAL_COM && window.V0991_LATERAL_COM.state;
+        const rel = lateral && Number.isFinite(lateral.relativeLateral) ? lateral.relativeLateral.toFixed(2) : '--';
+        const rollDeg = Number.isFinite(d.comRollTarget) ? (d.comRollTarget * 57.2958).toFixed(1) : '--';
+        stateEl.textContent = `9-Point+ · aY ${ay} · slip ${rel} · CG ${rollDeg}°`;
       } else {
         stateEl.textContent = '9-Point Base';
       }
@@ -78,6 +78,7 @@
     get smoothing() { return window.V0982_MARINE_SMOOTHING || null; },
     get fastOceanSampler() { return window.V0982_FAST_OCEAN_SAMPLER || null; },
     get waterContactForces() { return window.V0983_WATER_CONTACT_FORCES || null; },
-    get ninePointPlus() { return window.V099_NINE_POINT_PLUS_RUNTIME || null; }
+    get ninePointPlus() { return window.V099_NINE_POINT_PLUS_RUNTIME || null; },
+    get lateralCom() { return window.V0991_LATERAL_COM || null; }
   };
 })();
