@@ -16,19 +16,23 @@
 - [x] V0.7.1 Visual Ocean Pass
 - [x] V0.8 browser-safe 2D IFFT ocean visual prototype
 - [x] V0.8.1 choppy crest / breaking foam / CPU wake prototype
-- [x] V0.9 VirtOcean-inspired GPU Gerstner rebuild
-- [x] V0.9 performance rebuild / disable active CPU FFT path
-- [x] V0.9.1 verify VirtOcean open-source lineage: XORXOR `2050` MIT
-- [x] V0.9.1 mirror-camera reflective water + water normals
-- [x] V0.9.1 broad rolling waves + softer GPU V wake
-- [x] V0.9.2 XORXOR atmosphere / sun / horizon composition pass
-- [x] V0.9.2 lower/farther ocean camera composition
-- [x] V0.9.2 sea-state water color / distortion tuning
-- [x] V0.9.2 tone down legacy long wake particles
+- [x] V0.9 VirtOcean-inspired GPU ocean rebuild / disable active CPU FFT path
+- [x] V0.9.1 XORXOR `2050` / mirror-camera reflective water / water normals
+- [x] V0.9.2 atmosphere / sun / horizon / camera composition pass
+- [x] V0.9.2.3 5–6 swim-ring-height giant-wave visual target + obstacle removal
+- [x] V0.9.2.4 giant visual/gameplay surface sync + anti-penetration guard
+- [x] V0.9.3 12-band irregular giant ocean + floating-origin infinite travel
+- [x] Issue #12 Phase 1 foundation: WGS84 → local game coordinates / OSM polygon parser
+- [x] V0.9.4 日月潭 OSM runtime：Overpass 載入 / 真實岸線 bank mesh / shoreline collision
+- [x] V0.9.4 OSM attribution + primary/fallback Overpass endpoints
+- [x] V0.9.4 real-world geometry Node regression test
 
 ## 下一階段
-- [ ] V0.9.2 Safari 實機畫面驗收：水色 / horizon / reflection / camera composition
-- [ ] V0.9.3 依實機截圖微調太陽高度、反射強度、rolling-wave amplitude
+- [ ] V0.9.4 Safari 實機驗收：日月潭岸線是否正確載入、形狀是否可辨識
+- [ ] 將目前 shoreline wall 升級成較自然的 shoreline / land ribbon，不做垂直高牆
+- [ ] OSM snapshot cache：避免 Overpass 臨時故障時無法進入 Real World Water 模式
+- [ ] Issue #12 Phase 2：chunk / tile streaming + 前方預載 + 遠方卸載
+- [ ] DEM 高程資料 + 真實岸邊地形
 - [ ] GPU visual wave 與 gameplay wave 的低頻相位/高度校準
 - [ ] CWA 實站整合測試 + station selector
 - [ ] 建立同源 cached real-sea JSON feed，避免瀏覽器 CORS / secret 暴露
