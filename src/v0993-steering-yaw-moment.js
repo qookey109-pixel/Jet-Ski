@@ -1,5 +1,6 @@
-// V0.9.9.3 Plus-only steering force -> stern lever arm -> yaw moment.
-// A/D no longer needs to directly own yaw angle in 9-Point+; the 3DOF body-rate integrates this moment.
+// V0.10.3 Plus-only steering force -> stern lever arm -> yaw moment.
+// V0.10.3 keeps the accepted steering equations unchanged while reading migrated
+// steering/Yaw parameters from Calibration Contract when available.
 (function (root) {
   'use strict';
 
@@ -8,7 +9,11 @@
     const t = clamp((value - min) / Math.max(max - min, 1e-6), 0, 1);
     return t * t * (3 - 2 * t);
   }
+  function finiteOr(value, fallback) {
+    return Number.isFinite(value) ? Number(value) : fallback;
+  }
 
+  // Exact V0.10.2 numerical fallback. Runtime prefers Calibration Contract.
   const DEFAULTS = Object.freeze({
     sternLeverArmM: 1.45,
     hydroForceCoeff: 1.05,
@@ -16,8 +21,34 @@
     maxSteeringForceN: 360,
     maxYawMomentNm: 520,
     hydroAuthorityStartMps: 1.2,
-    hydroAuthorityFullMps: 12.0
+    hydroAuthorityFullMps: 12.0,
+    landingAuthorityLoss: 0.14
   });
+
+  function resolveSteeringConfig(runtimeRoot, fallback) {
+    const base = Object.assign({}, DEFAULTS, fallback || {});
+    const api = runtimeRoot && runtimeRoot.V0101_CALIBRATION;
+    const contract = api && api.contract;
+    const authority = contract && contract.authority;
+    if (!contract || !authority || authority.yawSourceOfTruth !== true) {
+      return { config: base, source: 'legacy-defaults' };
+    }
+
+    const steering = contract.steering || {};
+    return {
+      config: Object.assign({}, base, {
+        sternLeverArmM: finiteOr(steering.leverArmM, base.sternLeverArmM),
+        hydroForceCoeff: finiteOr(steering.hydroForceCoeff, base.hydroForceCoeff),
+        lowSpeedJetForceN: finiteOr(steering.lowSpeedJetForceN, base.lowSpeedJetForceN),
+        maxSteeringForceN: finiteOr(steering.maxSteeringForceN, base.maxSteeringForceN),
+        maxYawMomentNm: finiteOr(steering.maxYawMomentNm, base.maxYawMomentNm),
+        hydroAuthorityStartMps: finiteOr(steering.hydroAuthorityStartMps, base.hydroAuthorityStartMps),
+        hydroAuthorityFullMps: finiteOr(steering.hydroAuthorityFullMps, base.hydroAuthorityFullMps),
+        landingAuthorityLoss: finiteOr(steering.landingAuthorityLoss, base.landingAuthorityLoss)
+      }),
+      source: 'V0101_CALIBRATION.contract.steering'
+    };
+  }
 
   function computeSteeringLoad(params, options) {
     params = params || {};
@@ -35,7 +66,7 @@
     );
     const hydroForce = o.hydroForceCoeff * forwardAbs * forwardAbs * waterAuthority;
     const jetForce = o.lowSpeedJetForceN * throttle;
-    const landingAuthority = 1 - 0.14 * landingLoad;
+    const landingAuthority = 1 - o.landingAuthorityLoss * landingLoad;
     const steeringForceN = clamp(
       steering * (hydroForce + jetForce) * landingAuthority,
       -o.maxSteeringForceN,
@@ -61,7 +92,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DEFAULTS, computeSteeringLoad, smoothstepRange };
+    module.exports = { DEFAULTS, resolveSteeringConfig, computeSteeringLoad, smoothstepRange };
   }
 
   if (typeof window === 'undefined' || typeof updateJetSki !== 'function') return;
@@ -78,6 +109,7 @@
     jetForceN: 0,
     steeringForceN: 0,
     yawMomentNm: 0,
+    configSource: 'legacy-defaults',
     appliedFrames: 0,
     resets: 0
   };
@@ -96,7 +128,7 @@
     state.resets += 1;
   }
 
-  updateJetSki = function v0993SteeringYawMoment(dt, t) {
+  updateJetSki = function v0103SteeringYawMoment(dt, t) {
     const api = root.JETSKI_PHYSICS;
     const hydro = api && api.hydroModel;
     const plusActive = Boolean(hydro && hydro.mode === 'nine-point-plus');
@@ -121,12 +153,13 @@
       const throttle = clamp(Math.max(Number(throttleValue) || 0, input.gas ? 0.35 : 0), 0, 1);
       const landingState = root.V099_NINE_POINT_PLUS_RUNTIME && root.V099_NINE_POINT_PLUS_RUNTIME.state;
       const landingLoad = landingState && Number.isFinite(landingState.landingLoad) ? landingState.landingLoad : 0;
+      const resolved = resolveSteeringConfig(root, DEFAULTS);
       const load = computeSteeringLoad({
         steering,
         relativeForward: speed - waterForward,
         throttle,
         landingLoad
-      });
+      }, resolved.config);
 
       state.active = true;
       state.steering = load.steering;
@@ -138,12 +171,13 @@
       state.jetForceN = load.jetForceN;
       state.steeringForceN = load.steeringForceN;
       state.yawMomentNm = load.yawMomentNm;
+      state.configSource = resolved.source;
       state.appliedFrames += 1;
     } else {
       clearState();
     }
 
-    // Set the moment command before entering the existing update chain so V0.9.9.2 can
+    // Set the moment command before entering the existing update chain so planar 3DOF can
     // consume it in the same frame. Shoreline/world wrappers remain outside this layer.
     previousUpdateJetSki(dt, t);
 
@@ -153,15 +187,18 @@
   };
 
   root.V0993_STEERING_YAW = {
-    version: 'V0.9.9.3',
+    version: 'V0.10.3',
     state,
     config: DEFAULTS,
+    resolveSteeringConfig,
     computeSteeringLoad,
     momentAuthority: true,
     plusOnly: true,
     baseUntouched: true,
     voxelUntouched: true,
     reverseAuthorityPreserved: true,
-    shorelineAuthorityPreserved: true
+    shorelineAuthorityPreserved: true,
+    calibrationYawSourceReady: true,
+    legacyDefaultsAreFallbackOnly: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
