@@ -32,12 +32,18 @@
 - [x] V0.10.0 20,000-step contract finite stress regression
 - [x] **V0.10.0 Safari acceptance PASS**：實機回報正常，observer layer 未造成可感知手感 regression
 - [x] V0.10.0 保留 V0.9.9.3.2 Safari GPU performance baseline；未回報新的卡頓 regression
+- [x] V0.10.1 `marine-calibration-v1` catalog：mass / CG vertical / Izz proxy / added-mass proxy / damping / steering lever arm
+- [x] V0.10.1 已知值保持來源追溯：mass 118 kg、CG -0.18 m、Izz 165 kg·m²、Surge/Sway/Yaw added mass 12/55/38%、lever arm 1.45 m
+- [x] V0.10.1 effective yaw inertia 227.7 kg·m² 僅列為 derived proxy，不宣稱實測值
+- [x] V0.10.1 Ixx / Iyy、Heave/Roll/Pitch added mass、CG longitudinal/lateral、SI damping derivatives 明確保持 UNCALIBRATED/null
+- [x] V0.10.1 catalog-only；不更動 9-Point+ / Planar 3DOF / steering / Base / Voxel / reverse / shoreline authority
+- [x] V0.10.1 calibration contract regression 覆蓋 known mapping / null gaps / no-authority rule
 
 ## 下一階段
-- [ ] 建立 calibration contract：mass / CG / Ixx-Iyy-Izz / added mass / damping / steering lever arm
-- [ ] 公開或正式映射 9-Point+ pitch/roll internal rate，讓 `p/q` 從 observer finite-difference 升級成內部 state source
-- [ ] 校準後逐軸建立可追溯 `Fx/Fy/Fz/Mx/My/Mz`，不要一次把六軸 authority 全換掉
+- [ ] 公開或正式映射 9-Point+ `pitchRate / rollRate`，讓 6DOF `p/q` 從 observer finite-difference 升級成內部 state source
+- [ ] 選擇第一個 force/moment authority migration 軸；必須可由現有 calibration contract 完整追溯並可安全 A/B
 - [ ] 每次 authority migration 都保留 9-Point Base A/B fallback 與 Safari performance telemetry
+- [ ] Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口用 CFD/SPH / system-identification evidence 補，不先猜值
 - [ ] Voxel 保留研究用途；除非有明確優勢，不再投入主線調參
 - [ ] V0.9.7 Safari 實機驗收：Waikīkī 岸線方向、靠岸碰撞、離岸長距離航行
 - [ ] repository 內建 Waikīkī / 七星潭 OSM snapshots
