@@ -1,6 +1,6 @@
 const assert = require('assert');
 const { createMarineVoxelHydrodynamicsModel } = require('../src/marine-voxel-hydrodynamics.js');
-const { computeVoxelContactDecel } = require('../src/v0983-water-contact-forces.js');
+const { computeVoxelContactDecel, landingImpactFromVerticalSpeed } = require('../src/v0983-water-contact-forces.js');
 
 const config = {
   gravity: 9.81,
@@ -71,5 +71,11 @@ assert(light > 0);
 assert(wetFast > light);
 assert(slamming > wetFast);
 assert(slamming <= 6.8);
+
+// Whole-craft landing impacts map smoothly into a bounded reservoir instead of a speed cliff.
+assert.strictEqual(landingImpactFromVerticalSpeed(1.0), 0);
+assert(landingImpactFromVerticalSpeed(4.0) > 0);
+assert(landingImpactFromVerticalSpeed(6.0) > landingImpactFromVerticalSpeed(4.0));
+assert.strictEqual(landingImpactFromVerticalSpeed(20), 1);
 
 console.log('v0983-water-contact-forces tests PASS');
