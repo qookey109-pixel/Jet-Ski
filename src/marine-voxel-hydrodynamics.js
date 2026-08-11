@@ -1,4 +1,4 @@
-// V0.9.8 Marine Physics Lab — reduced 3DOF voxel buoyancy for browser use.
+// V0.9.8.1 Marine Physics Lab — reduced 3DOF voxel buoyancy with explicit gravity/inertia.
 // Clean-room implementation inspired by the voxel-buoyancy approach in
 // QusaiAlbonni/three-sails (MIT). It does not import Ape-ECS or its rigid-body code.
 (function (root) {
@@ -32,7 +32,7 @@
 
   function createMarineVoxelHydrodynamicsModel(config) {
     config = config || {};
-    const gravity = 9.81;
+    const gravity = Number.isFinite(config.gravity) ? config.gravity : 9.81;
     const mass = config.craftMassKg || 118;
     const waterDensity = config.waterDensity || 1025;
     const neutralSubmergedFraction = 0.52;
@@ -43,18 +43,33 @@
     const inertiaPitch = mass * Math.pow(layout.L * 2, 2) / 7.0;
     const inertiaRoll = mass * Math.pow(layout.R * 2, 2) / 7.0;
 
+    // The old V0.9.8 model reused spring-model damping ratios. That made the craft
+    // feel glued to the surface. V0.9.8.1 gives the force-integrated voxel body its
+    // own lighter damping, and applies almost none of it when the body is out of water.
+    const voxelHeaveDampingRatio = Number.isFinite(config.voxelHeaveDampingRatio)
+      ? config.voxelHeaveDampingRatio
+      : 0.32;
+    const voxelAngularDampingRatio = Number.isFinite(config.voxelAngularDampingRatio)
+      ? config.voxelAngularDampingRatio
+      : 0.34;
+    const airDampingShare = 0.035;
+
     const state = {
       initialized: false,
       heaveY: 0,
       heaveVelocity: 0,
+      heaveAcceleration: 0,
       pitch: 0,
       pitchRate: 0,
       roll: 0,
       rollRate: 0,
       submergedFraction: 0,
+      wetness: 0,
       activeCells: 0,
       maxDepth: 0,
       netBuoyancy: 0,
+      netVerticalForce: 0,
+      buoyancyToWeight: 0,
       immersionVariance: 0,
       planingLift: 0
     };
@@ -65,6 +80,7 @@
       state.pitch = pitch || 0;
       state.roll = roll || 0;
       state.heaveVelocity = 0;
+      state.heaveAcceleration = 0;
       state.pitchRate = 0;
       state.rollRate = 0;
     }
@@ -126,19 +142,33 @@
         else { leftWater += waterHeight * cell.volumeWeight; leftWeight += cell.volumeWeight; }
       }
 
+      // Gravity is always present. Hydrodynamic damping grows with actual immersion;
+      // when dry, only a tiny air-damping share remains so the body can truly fall.
+      const wetness = clamp(submerged / neutralSubmergedFraction, 0, 1);
       const heaveOmega = Math.PI * 2 * (config.heaveFrequencyHz || 1.35);
-      const heaveDamping = 2 * (config.heaveDampingRatio || 0.78) * heaveOmega * mass * 0.82;
-      const netVerticalForce = totalBuoyancy - mass * gravity - heaveDamping * state.heaveVelocity;
-      const heaveAcceleration = clamp(netVerticalForce / mass, -(config.maxHeaveAcceleration || 16), config.maxHeaveAcceleration || 16);
+      const fullWaterHeaveDamping = 2 * voxelHeaveDampingRatio * heaveOmega * mass;
+      const heaveDamping = fullWaterHeaveDamping * (airDampingShare + (1 - airDampingShare) * wetness);
+      const quadraticWaterDrag = mass * 0.16 * wetness * state.heaveVelocity * Math.abs(state.heaveVelocity);
+      const weightForce = mass * gravity;
+      const netVerticalForce = totalBuoyancy - weightForce
+        - heaveDamping * state.heaveVelocity
+        - quadraticWaterDrag;
+      const heaveAcceleration = clamp(
+        netVerticalForce / mass,
+        -(config.maxHeaveAcceleration || 16),
+        config.maxHeaveAcceleration || 16
+      );
       state.heaveVelocity += heaveAcceleration * dt;
       state.heaveY += state.heaveVelocity * dt;
 
       const pitchOmega = Math.PI * 2 * (config.pitchFrequencyHz || 1.65);
       const rollOmega = Math.PI * 2 * (config.rollFrequencyHz || 1.90);
-      const pitchDamping = 2 * (config.pitchDampingRatio || 0.80) * pitchOmega * inertiaPitch;
-      const rollDamping = 2 * (config.rollDampingRatio || 0.84) * rollOmega * inertiaRoll;
-      const pitchControl = inertiaPitch * pitchOmega * pitchOmega * 0.42 * (dynamicPitch - state.pitch);
-      const rollControl = inertiaRoll * rollOmega * rollOmega * 0.42 * (dynamicRoll - state.roll);
+      const angularWetness = 0.08 + 0.92 * wetness;
+      const pitchDamping = 2 * voxelAngularDampingRatio * pitchOmega * inertiaPitch * angularWetness;
+      const rollDamping = 2 * voxelAngularDampingRatio * rollOmega * inertiaRoll * angularWetness;
+      const controlShare = 0.10 + 0.90 * wetness;
+      const pitchControl = inertiaPitch * pitchOmega * pitchOmega * 0.26 * controlShare * (dynamicPitch - state.pitch);
+      const rollControl = inertiaRoll * rollOmega * rollOmega * 0.26 * controlShare * (dynamicRoll - state.roll);
 
       pitchTorque += pitchControl - pitchDamping * state.pitchRate;
       rollTorque += rollControl - rollDamping * state.rollRate;
@@ -166,17 +196,22 @@
       const immersionVariance = Math.max(0, sumImmersionSq - sumImmersion * sumImmersion);
 
       state.submergedFraction = submerged;
+      state.wetness = wetness;
       state.activeCells = active;
       state.maxDepth = maxDepth;
       state.netBuoyancy = totalBuoyancy;
+      state.netVerticalForce = netVerticalForce;
+      state.buoyancyToWeight = weightForce > 0 ? totalBuoyancy / weightForce : 0;
       state.immersionVariance = immersionVariance;
       state.planingLift = planingLift;
+      state.heaveAcceleration = heaveAcceleration;
 
       return {
         y: state.heaveY,
         pitch: state.pitch,
         roll: state.roll,
         heaveVelocity: state.heaveVelocity,
+        heaveAcceleration,
         immersionVariance,
         planingLift,
         targetY: sumWater + floatClearance,
@@ -188,13 +223,18 @@
     function diagnostics() {
       return {
         submergedFraction: state.submergedFraction,
+        wetness: state.wetness,
         activeCells: state.activeCells,
         voxelCount: cells.length,
         maxDepth: state.maxDepth,
         netBuoyancy: state.netBuoyancy,
+        netVerticalForce: state.netVerticalForce,
+        buoyancyToWeight: state.buoyancyToWeight,
         immersionVariance: state.immersionVariance,
         planingLift: state.planingLift,
-        heaveVelocity: state.heaveVelocity
+        heaveVelocity: state.heaveVelocity,
+        heaveAcceleration: state.heaveAcceleration,
+        gravity
       };
     }
 
@@ -202,7 +242,7 @@
       syncPose,
       updateSurfacePose,
       diagnostics,
-      modelName: '24-cell reduced voxel buoyancy',
+      modelName: '24-cell reduced voxel buoyancy — gravity/inertia',
       voxelCount: cells.length
     };
   }
