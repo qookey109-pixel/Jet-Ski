@@ -30,6 +30,10 @@ assert(land.signedDistance < 0);
 assert.strictEqual(coast.isWaterSide({ x: 0, z: 100 }, lines, 0), true);
 assert.strictEqual(coast.isWaterSide({ x: 0, z: -100 }, lines, 0), false);
 
+// A finite coastline bbox must not become an infinite fake wall. Once outside the
+// nearshore guard range, local coastline collision has no authority.
+assert.strictEqual(coast.isWaterSide({ x: 0, z: -5000 }, lines, 0, 1200), true);
+
 const q = coast.buildOverpassQuery({ south: 23.9, west: 121.5, north: 24.1, east: 121.7 });
 assert(q.includes('natural'));
 assert(q.includes('coastline'));
