@@ -1,4 +1,4 @@
-# Swim Ring Racing — V0.9.9.3
+# Swim Ring Racing — V0.10.0
 
 3D Web 水上遊戲 Prototype。手機橫向優先、桌面支援；玩家駕駛程序化 3D 游泳圈。
 
@@ -11,48 +11,78 @@
 - **V0.9.9 9-Point Plus**：以實機手感較好的 9-point footprint 為主線；Base 保留 A/B；Voxel 降為 EXP。
 - **V0.9.9.1 Lateral + COM**：Plus-only 水相對側向力、側滑收斂、低重心 roll torque。
 - **V0.9.9.2 Planar 3DOF**：Surge `u`、Sway `v`、Yaw-rate `r` + added-mass proxy。
-- **V0.9.9.3 Steering Force + Yaw Moment**：A/D 轉向由水中 steering force / stern yaw moment 驅動，不再以直接 yaw-angle change 作 Plus 最終操舵。
+- **V0.9.9.3 Steering Force + Yaw Moment**：A/D 轉向由 steering force / stern yaw moment `Mz` 驅動，不再以 direct yaw-angle change 作 Plus 最終操舵。
+- **V0.9.9.3.1–.2 Safari Performance**：frame telemetry、Safari desktop reflection throttle、GPU budget；實機回報卡頓有改善。
+- **V0.10.0 Unified 6DOF Contract**：observer-first，把現有已驗證的六自由度狀態收斂到同一 browser-safe contract，不改變既有 authority。
 - `src/main.js`、`src/ocean.js`、`src/hydrodynamics.js` validated baseline 不重寫。
 
-## V0.9.9.3 — Steering Force + Yaw Moment
+## V0.10.0 — Unified Browser-Safe 6DOF State Contract
 
-這版把 9-Point+ 的水平面轉向再往真正船體動力學推一步。
+這一版先做「狀態整合」，不是重寫 rigid-body solver。
 
-### Steering load
+統一 contract：
 
-- A/D / 左右鍵仍是玩家控制輸入，但只形成 steering demand。
-- 依 craft 相對水的前進速度計算速度相關 steering force。
-- 低速有小量 jet steering authority，避免有油門卻完全無法轉向。
-- 高速 hydrodynamic steering force 隨相對水速增加，但有 force cap，不允許單幀暴衝。
-- steering force 作用在船尾約 `1.45 m` lever arm，轉成 bounded yaw moment `Mz`。
-- hard landing 後短時間降低部分 steering authority，沿用既有 landing inertia 概念。
+```text
+position:         x / y / z
+body velocity:    u / v / w
+orientation:      roll / pitch / yaw
+angular velocity: p / q / r
+acceleration:     uDot / vDot / wDot
+angular accel:    pDot / qDot / rDot
+force slots:      Fx / Fy / Fz
+moment slots:     Mx / My / Mz
+```
 
-### Moment-driven yaw
+目前來源：
 
-V0.9.9.2 的 `r` 現在新增 moment-authority 分支：
+- `u / v / r`：V0.9.9.2 planar 3DOF。
+- `w / wDot`：9-Point+ heave state / diagnostics。
+- `p / q`：現有 Plus 內部 rate 尚未公開，因此 V0.10.0 observer 由最外層 final pose 做 shortest-angle finite difference；這只是觀測，不會回寫物理。
+- `rDot`：planar yaw acceleration。
+- `Mz`：V0.9.9.3 steering yaw moment。
+- `position`：使用 final local pose + V0.9.3 floating-origin offset，保持長距離航行座標連續。
 
-- effective yaw inertia 使用基礎 `Izz` proxy + 38% rotational added mass。
-- `Mz / Izz` 產生 yaw angular acceleration。
-- 加入 linear + nonlinear yaw damping。
-- `r` 經積分後才更新 Plus 的 yaw。
-- moment authority 開啟時，即使舊 `commandYawRate` 指向相反方向，也不能蓋過 `Mz`；regression 有鎖定此行為。
-- 原本 cross-wave 等非玩家 yaw disturbance 保留，不會為了新操舵把海浪擾動清掉。
+### Observer-first authority rule
 
-### Authority boundaries
+`src/v010-unified-6dof-state.js` 載在 runtime stack 最後：
 
-- **9-Point Base 完全不套用 V0.9.9.3**。
-- **Voxel EXP 完全不套用 V0.9.9.3**。
-- 倒車仍交給原 reverse controller。
-- 騰空時 steering-moment layer 退讓。
-- shoreline / world collision wrappers 仍在更外層，保持最終位置與碰撞 authority。
+- 不寫 `ski.position` / `ski.rotation`。
+- 不寫 `speed` / `lateralSlip` / `u/v/r`。
+- 不產生 steering force。
+- 不搶 reverse authority。
+- 不搶 shoreline / world collision authority。
+- Base / Voxel 不宣稱為 Plus 6DOF state；切離 9-Point+ 時 contract 會標示 inactive。
 
-HUD 在 9-Point+ 顯示：`u / v / r / Mz`。
+因此 V0.10.0 是**統一資料契約**，不是新的物理 authority。
+
+### Force / Moment slots
+
+V0.10.0 已建立 `Fx/Fy/Fz/Mx/My/Mz` contract，但在 mass / inertia calibration 正式建立前：
+
+- `Fx / Fy / Fz = null`
+- `Mx / My = null`
+- `Mz` 使用已存在且可追溯的 V0.9.9.3 steering moment。
+
+不會用未校準的質量／慣量去捏造牛頓或牛頓米數值。
+
+## Safari Performance Baseline
+
+V0.9.9.3.2 保留為 Safari baseline：
+
+- Safari desktop pixel ratio cap：`1.15x`
+- reflective-water render target：`256 × 256`
+- shadow refresh budget：`30 Hz`
+- mirror reflection budget：`30 FPS`
+- gameplay / physics 仍維持完整 `requestAnimationFrame` cadence
+- HUD 顯示 FPS / p95 frame time / long-frame count
+
+實機回報：相較 V0.9.9.3 原版，卡頓**有改善**。目前不再盲目降低畫質；後續 6DOF 每一步都沿用 telemetry 監控 regression。
 
 ## 物理切換
 
-- `⚓ 9-Point+` — 預設主線，包含 V0.9.9.3 moment-driven yaw。
-- `⚓ Base` — 原 9-Point 可信基準。
-- `🧊 Voxel EXP` — 24-cell 實驗。
+- `⚓ 9-Point+` — 預設主線；V0.10.0 contract active。
+- `⚓ Base` — 原 9-Point 可信 A/B baseline；V0.10.0 contract inactive。
+- `🧊 Voxel EXP` — 24-cell 實驗；V0.10.0 contract inactive。
 - `P` — 只在 9-Point+ / Base 間 A/B。
 
 ## 世界模式
@@ -77,6 +107,9 @@ node tests/nine-point-plus.test.js
 node tests/v0991-lateral-com.test.js
 node tests/v0992-planar-3dof.test.js
 node tests/v0993-steering-yaw-moment.test.js
+node tests/v09931-safari-performance.test.js
+node tests/v09932-safari-gpu-budget.test.js
+node tests/v010-unified-6dof-state.test.js
 node tests/real-world-water.test.js
 node tests/real-world-coast.test.js
 node tests/hawaii-coast.test.js
@@ -87,7 +120,7 @@ node tests/v0982-marine-smoothing.test.js
 node tests/v0983-water-contact-forces.test.js
 ```
 
-V0.9.9.3 regression 鎖定：steering force / yaw moment 正負方向、低速 jet authority、高速 water authority、force/moment caps、landing authority，以及 3DOF moment branch 不得被相反 `commandYawRate` 蓋過。另保留 20,000-step finite/stability stress。
+V0.10.0 regression 鎖定：6DOF field mapping、floating-origin world position、yaw wrap、Base inactive boundary、observer no-authority contract、未校準 force/moment 不得被虛構，以及 20,000-step finite stress。
 
 ## Attribution
 
@@ -97,4 +130,6 @@ V0.9.9.3 regression 鎖定：steering force / yaw moment 正負方向、低速 j
 
 ## Next
 
-Safari 做 **9-Point+ vs Base** A/B，Normal / Rough 觀察轉向是否變成「施力後船身建立 yaw-rate」而不是直接折方向，同時 BRAKE / reverse / shoreline 不可退步。若通過，下一層把 Heave / Pitch / Roll + Surge / Sway / Yaw 收斂成單一 browser-safe 6DOF state contract，再做 frame-time telemetry 與參數校準。
+1. Safari / GitHub Pages 驗證 V0.10.0 observer layer 不改變 9-Point+ / Base 手感與目前已改善的 frame-time baseline。
+2. 建立正式 calibration contract：`mass / CG / Ixx-Iyy-Izz / added mass / damping / steering lever arm`。
+3. 校準完成後，才逐步把 `Fx/Fy/Fz/Mx/My/Mz` 從 observer slots 轉成可追溯的 force/moment authority；每次只遷移一個軸並保留 A/B fallback。
