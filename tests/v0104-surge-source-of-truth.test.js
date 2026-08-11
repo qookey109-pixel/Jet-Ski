@@ -2,6 +2,7 @@ const assert = require('assert');
 const {
   YAW_BASELINE_V0102,
   SURGE_BASELINE_V01031,
+  SWAY_BASELINE_V0104,
   createCalibrationContract
 } = require('../src/v0101-calibration-contract.js');
 const planar = require('../src/v0992-planar-3dof-runtime.js');
@@ -11,17 +12,19 @@ const contract = createCalibrationContract({
   cgVerticalM: -0.18,
   yawInertiaKgM2: YAW_BASELINE_V0102.yawInertiaKgM2,
   addedMassSurgeRatio: SURGE_BASELINE_V01031.addedMassSurgeRatio,
-  addedMassSwayRatio: planar.DEFAULTS.addedMassSwayRatio,
+  addedMassSwayRatio: SWAY_BASELINE_V0104.addedMassSwayRatio,
   addedMassYawRatio: YAW_BASELINE_V0102.addedMassYawRatio,
   surgeResponse: SURGE_BASELINE_V01031.surgeResponse,
   brakeSurgeResponse: SURGE_BASELINE_V01031.brakeSurgeResponse,
+  swayResponse: SWAY_BASELINE_V0104.swayResponse,
+  swayYawCoupling: SWAY_BASELINE_V0104.swayYawCoupling,
   yawResponse: YAW_BASELINE_V0102.yawResponse,
-  swayNonlinearDamping: planar.DEFAULTS.nonlinearSwayDamping,
+  swayNonlinearDamping: SWAY_BASELINE_V0104.nonlinearSwayDamping,
   yawLinearDamping: YAW_BASELINE_V0102.yawLinearDamping,
   yawNonlinearDamping: YAW_BASELINE_V0102.yawNonlinearDamping,
   maxSurgeAcceleration: SURGE_BASELINE_V01031.maxSurgeAcceleration,
   maxBrakeAcceleration: SURGE_BASELINE_V01031.maxBrakeAcceleration,
-  maxSwayAcceleration: planar.DEFAULTS.maxSwayAcceleration,
+  maxSwayAcceleration: SWAY_BASELINE_V0104.maxSwayAcceleration,
   maxYawAcceleration: YAW_BASELINE_V0102.maxYawAcceleration,
   maxYawRate: YAW_BASELINE_V0102.maxYawRate
 });
@@ -30,7 +33,7 @@ const resolved = planar.resolvePlanarDynamicsConfig(root, planar.DEFAULTS);
 
 assert.equal(contract.authority.surgeSourceOfTruth, true);
 assert.equal(contract.sourceOfTruth.surge.numericalBaseline, 'V0.10.3.1');
-assert.equal(resolved.source, 'V0101_CALIBRATION.contract.surge+yaw');
+assert.equal(resolved.source, 'V0101_CALIBRATION.contract.surge+sway+yaw');
 assert.equal(resolved.config.addedMassSurgeRatio, SURGE_BASELINE_V01031.addedMassSurgeRatio);
 assert.equal(resolved.config.surgeResponse, SURGE_BASELINE_V01031.surgeResponse);
 assert.equal(resolved.config.brakeSurgeResponse, SURGE_BASELINE_V01031.brakeSurgeResponse);
@@ -58,7 +61,7 @@ assert.equal(resolutions, 2);
 assert.equal(cache.resolutions, 2);
 
 // 20,000-step full Planar numerical equivalence. This deliberately exercises GAS/coast/BRAKE,
-// sway coupling, Yaw moment authority and command-yaw fallback while Surge comes from calibration.
+// Sway coupling, Yaw moment authority and command-yaw fallback while all migrated axes use calibration.
 let legacyState = { u: 0, v: 0, r: 0 };
 let migratedState = { u: 0, v: 0, r: 0 };
 let maxDiff = 0;
@@ -95,4 +98,4 @@ assert.equal(maxDiff, 0);
 assert(legacyState.u >= 0 && legacyState.u <= 36);
 assert(migratedState.u >= 0 && migratedState.u <= 36);
 
-console.log('V0.10.4 Surge source-of-truth numerical equivalence PASS');
+console.log('V0.10.4 Surge source-of-truth numerical equivalence PASS under V0.10.5 shared cache');

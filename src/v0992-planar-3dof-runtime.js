@@ -1,6 +1,6 @@
-// V0.10.4 reduced-order horizontal-plane marine dynamics for 9-Point Plus only.
-// V0.10.3/3.1 keep accepted Yaw source-of-truth + identity caching. V0.10.4 promotes
-// accepted Surge parameters through the same cached Planar config with no value changes.
+// V0.10.5 reduced-order horizontal-plane marine dynamics for 9-Point Plus only.
+// V0.10.3/3.1 keep accepted Yaw source-of-truth + identity caching, V0.10.4 adds Surge,
+// and V0.10.5 promotes accepted Sway through the same cached Planar config.
 (function (root) {
   'use strict';
 
@@ -43,7 +43,11 @@
     const api = runtimeRoot && runtimeRoot.V0101_CALIBRATION;
     const contract = api && api.contract;
     const authority = contract && contract.authority;
-    if (!contract || !authority || (authority.yawSourceOfTruth !== true && authority.surgeSourceOfTruth !== true)) {
+    if (!contract || !authority || (
+      authority.yawSourceOfTruth !== true
+      && authority.surgeSourceOfTruth !== true
+      && authority.swaySourceOfTruth !== true
+    )) {
       return { config: base, source: 'legacy-defaults' };
     }
 
@@ -51,6 +55,7 @@
     const added = contract.addedMassRatio || {};
     const damping = contract.damping || {};
     const tuning = contract.responseTuning || {};
+    const coupling = contract.coupling || {};
     const limits = contract.responseLimits || {};
     const config = Object.assign({}, base);
     const sources = [];
@@ -62,6 +67,15 @@
       config.maxSurgeAcceleration = finiteOr(limits.maxSurgeAcceleration, base.maxSurgeAcceleration);
       config.maxBrakeAcceleration = finiteOr(limits.maxBrakeAcceleration, base.maxBrakeAcceleration);
       sources.push('surge');
+    }
+
+    if (authority.swaySourceOfTruth === true) {
+      config.addedMassSwayRatio = finiteOr(added.sway, base.addedMassSwayRatio);
+      config.swayResponse = finiteOr(tuning.swayResponse, base.swayResponse);
+      config.nonlinearSwayDamping = finiteOr(damping.swayNonlinear, base.nonlinearSwayDamping);
+      config.maxSwayAcceleration = finiteOr(limits.maxSwayAcceleration, base.maxSwayAcceleration);
+      config.swayYawCoupling = finiteOr(coupling.swayYaw, base.swayYawCoupling);
+      sources.push('sway');
     }
 
     if (authority.yawSourceOfTruth === true) {
@@ -81,7 +95,7 @@
     };
   }
 
-  // Compatibility alias for older regression/helpers. It now resolves the complete migrated Planar subset.
+  // Compatibility alias for older regression/helpers. It resolves the complete migrated Planar subset.
   function resolveYawDynamicsConfig(runtimeRoot, fallback) {
     return resolvePlanarDynamicsConfig(runtimeRoot, fallback);
   }
@@ -219,6 +233,7 @@
     externalYawMomentNm: 0,
     planarConfigSource: 'legacy-defaults',
     surgeConfigSource: 'legacy-defaults',
+    swayConfigSource: 'legacy-defaults',
     yawConfigSource: 'legacy-defaults',
     planarConfigResolutions: 0,
     yawConfigResolutions: 0,
@@ -245,7 +260,7 @@
     state.resets += 1;
   }
 
-  updateJetSki = function v0104PlanarDynamics(dt, t) {
+  updateJetSki = function v0105PlanarDynamics(dt, t) {
     const yawBefore = yaw;
     previousUpdateJetSki(dt, t);
 
@@ -319,6 +334,7 @@
     state.externalYawMomentNm = next.externalYawMomentNm;
     state.planarConfigSource = resolvedPlanar.source;
     state.surgeConfigSource = resolvedPlanar.source;
+    state.swayConfigSource = resolvedPlanar.source;
     state.yawConfigSource = resolvedPlanar.source;
     state.planarConfigResolutions = planarConfigCache.resolutions;
     state.yawConfigResolutions = planarConfigCache.resolutions;
@@ -338,7 +354,7 @@
   };
 
   root.V0992_PLANAR_3DOF = {
-    version: 'V0.10.4',
+    version: 'V0.10.5',
     state,
     config: DEFAULTS,
     resolvePlanarDynamicsConfig,
@@ -355,6 +371,7 @@
     reducedOrder3DOF: true,
     steeringMomentReady: true,
     calibrationSurgeSourceReady: true,
+    calibrationSwaySourceReady: true,
     calibrationYawSourceReady: true,
     legacyDefaultsAreFallbackOnly: true,
     configResolutionCached: true,

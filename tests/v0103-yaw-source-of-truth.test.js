@@ -57,8 +57,8 @@ const root = makeContractRoot();
 const resolvedYaw = planar.resolveYawDynamicsConfig(root, planar.DEFAULTS);
 const resolvedSteering = steering.resolveSteeringConfig(root, steering.DEFAULTS);
 
-// V0.10.4 shares one cached Planar source for migrated Surge + Yaw.
-assert.equal(resolvedYaw.source, 'V0101_CALIBRATION.contract.surge+yaw');
+// V0.10.5 shares one cached Planar source for migrated Surge + Sway + Yaw.
+assert.equal(resolvedYaw.source, 'V0101_CALIBRATION.contract.surge+sway+yaw');
 assert.equal(resolvedSteering.source, 'V0101_CALIBRATION.contract.steering');
 assert.equal(resolvedYaw.config.yawInertiaKgM2, YAW_BASELINE_V0102.yawInertiaKgM2);
 assert.equal(resolvedYaw.config.addedMassYawRatio, YAW_BASELINE_V0102.addedMassYawRatio);
@@ -123,4 +123,4 @@ for (let i = 0; i < 20000; i++) {
 }
 
 assert(Math.abs(migratedState.r) <= YAW_BASELINE_V0102.maxYawRate + 1e-12);
-console.log('V0.10.3 yaw source-of-truth numerical equivalence PASS under V0.10.4 shared cache');
+console.log('V0.10.3 yaw source-of-truth numerical equivalence PASS under V0.10.5 shared cache');

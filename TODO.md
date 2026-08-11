@@ -57,12 +57,16 @@
 - [x] V0.10.4 沒有改 Surge/Yaw 方程與數值；Base / Voxel / reverse / shoreline / Safari GPU baseline 保留
 - [x] **V0.10.4 Safari acceptance PASS**：實機回報「正常」；GAS / coast / BRAKE / REV / steering 與 frame-time 無可感知 regression
 - [x] V0.10.4 成為新的 accepted physics/performance baseline；沿用 V0.10.3.1 identity-cache 規則
+- [x] V0.10.5 Calibration canonical Sway baseline：added mass 55% / response 4.8 / nonlinear damping 0.34 / max accel 5.2 / yaw coupling 0.055
+- [x] V0.10.5 Planar Sway runtime 改讀 Calibration Contract；Surge / Sway / Yaw 共用同一 identity-cached Planar config
+- [x] V0.10.5 沒有新增 update wrapper 或 per-frame config resolver；legacy defaults 保留 partial-load fallback
+- [x] V0.10.5 20,000-step Sway/Planar numerical equivalence：`maxDiff = 0`，`max |v| ≈ 3.831 m/s < 4.8 m/s`
+- [x] V0.10.5 沒有改 Sway/Surge/Yaw 方程與數值；Base / Voxel / reverse / shoreline / Safari GPU baseline 保留
 
 ## 下一階段
-- [ ] **V0.10.5 Sway Source-of-Truth**：維持 numerical-equivalence-first / no-feel-change
-- [ ] Sway migration 優先收斂 added mass / sway response / nonlinear damping / max sway acceleration / turn coupling；不改原數值
-- [ ] Sway 與 Surge/Yaw 共用既有 identity-cached Planar config；不得新增 per-frame immutable config allocation
-- [ ] V0.10.5 工程驗證後必須再做 Safari A/B acceptance，才可繼續其他軸
+- [ ] **V0.10.5 Safari acceptance**：Normal / Rough 測快速 A/D、連續左右擺、GAS/BRAKE/REV，確認 Sway 手感與 frame-time 不退步
+- [ ] V0.10.5 PASS 後再決定下一個 authority migration；不要直接跳到未校準 Roll/Pitch inertia
+- [ ] 新的 runtime source migration 禁止在 per-frame hot path 重建 immutable config；優先 cache / pre-resolve
 - [ ] 每次 migration 都保留 Base A/B fallback 與 Safari FPS / p95 / long-frame telemetry
 - [ ] Ixx / Iyy、Heave/Roll/Pitch added mass 等缺口用 CFD/SPH / system-identification evidence 補，不先猜值
 - [ ] Voxel 保留研究用途；除非有明確優勢，不再投入主線調參
