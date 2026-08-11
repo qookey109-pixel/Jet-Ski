@@ -59,6 +59,31 @@ model.syncPose(0.62, 0, 0);
 for (let i = 0; i < 600; i++) pose = model.updateSurfacePose(params((x, z) => x * 0.08));
 assert(pose.roll < -0.02);
 
+// Giant-wave stability: the reduced voxel integrator must stay finite and respect angle clamps.
+model = createVoxel(config);
+model.syncPose(0.62, 0, 0);
+for (let i = 0; i < 12000; i++) {
+  const t = i / 60;
+  const surfaceAt = (x, z) =>
+    3.0 * Math.sin(x * 0.025 + z * 0.035 - t * 0.7)
+    + 1.6 * Math.sin(-x * 0.05 + z * 0.02 + t * 1.1)
+    + 0.8 * Math.sin(x * 0.11 - z * 0.08 - t * 1.7);
+  pose = model.updateSurfacePose({
+    dt: 1 / 60,
+    position: { x: 0, y: pose ? pose.y : 0.62, z: 0 },
+    forward: { x: 0, z: 1 },
+    right: { x: 1, z: 0 },
+    speedRatio: 0.65,
+    dynamicPitch: 0.04 * Math.sin(t * 0.5),
+    dynamicRoll: 0.12 * Math.sin(t * 0.8),
+    surfaceAt,
+    floatClearance: 0.62
+  });
+  assert(Number.isFinite(pose.y) && Number.isFinite(pose.pitch) && Number.isFinite(pose.roll));
+  assert(Math.abs(pose.pitch) <= config.maxPitch + 1e-6);
+  assert(Math.abs(pose.roll) <= config.maxRoll + 1e-6);
+}
+
 // Selector contract: 9-point remains default and non-pose forces keep using baseline logic.
 global.createMarineVoxelHydrodynamicsModel = createVoxel;
 global.createHydrodynamicsModel = () => ({
