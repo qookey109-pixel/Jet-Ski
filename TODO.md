@@ -62,9 +62,18 @@
 - [x] V0.10.5 沒有新增 update wrapper 或 per-frame config resolver；legacy defaults 保留 partial-load fallback
 - [x] V0.10.5 20,000-step Sway/Planar numerical equivalence：`maxDiff = 0`，`max |v| ≈ 3.831 m/s < 4.8 m/s`
 - [x] V0.10.5 沒有改 Sway/Surge/Yaw 方程與數值；Base / Voxel / reverse / shoreline / Safari GPU baseline 保留
+- [x] V0.10.5.1 Real-World 3D Preview engineering scaffold：台灣/夏威夷沿岸可選 Google Photorealistic 3D 視覺層
+- [x] V0.10.5.1 保留 OSM coastline collision / sea-land authority；Google layer 僅視覺，不寫入 ocean / 9-Point+ / Planar physics
+- [x] V0.10.5.1 pin `3d-tiles-renderer@0.3.36` + Three `0.152.2` compatibility；Google API key 不寫入 repo，只存在瀏覽器 localStorage
+- [x] V0.10.5.1 Google layer 失敗 / API key 缺失 / `file://` 時自動回 OSM；退出沿岸時 dispose tiles，不新增自訂 Google tile cache
+- [x] V0.10.5.1 local axes 對齊：Google renderer X=north/Z=east → game X=east/Z=south，並跟隨 V0.9.3 floating origin
 
 ## 下一階段
 - [ ] **V0.10.5 Safari acceptance**：Normal / Rough 測快速 A/D、連續左右擺、GAS/BRAKE/REV，確認 Sway 手感與 frame-time 不退步
+- [ ] **V0.10.5.1 Real-World 3D browser acceptance**：GitHub Pages + restricted Map Tiles API key，先驗 Waikīkī，再驗七星潭
+- [ ] V0.10.5.1 驗收 Google 3D terrain/建物方位、OSM 碰撞重合、custom ocean 不被 Google water mesh 明顯遮蔽、Safari FPS/p95/memory
+- [ ] 若 shoreline vertical datum 有偏差，只調 visual `verticalOffsetM`；不得改 gameplay water height / collision authority 來迎合 3D mesh
+- [ ] Google 3D attribution 必須常駐可見；不得自行 prefetch/index/store/cache Google tile content
 - [ ] V0.10.5 PASS 後再決定下一個 authority migration；不要直接跳到未校準 Roll/Pitch inertia
 - [ ] 新的 runtime source migration 禁止在 per-frame hot path 重建 immutable config；優先 cache / pre-resolve
 - [ ] 每次 migration 都保留 Base A/B fallback 與 Safari FPS / p95 / long-frame telemetry
@@ -74,7 +83,7 @@
 - [ ] repository 內建 Waikīkī / 七星潭 OSM snapshots
 - [ ] Issue #12 Phase 2B：coastline chunk/tile streaming + 前方預載 + 遠方卸載
 - [ ] Oʻahu / 台灣東岸相鄰 coastline chunks
-- [ ] DEM 高程 + 真實海岸地形
+- [ ] DEM 高程 + 真實海岸地形（Google 3D unavailable/offline fallback 仍需要開放資料方案）
 - [ ] 近岸 wave shoaling / breaking / attenuation（保持 visual/gameplay sync）
 - [ ] CWA / NOAA 實站與 cached real-sea feed
 - [ ] CFD/SPH calibration cases + PhysicsNeMo offline surrogate dataset
