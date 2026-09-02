@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Swim Ring Racing V0.10.5.1</title>
+  <title>Swim Ring Racing V0.10.5.2</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -11,7 +11,7 @@
   <div id="boot-error" class="boot-error" hidden>3D 引擎沒有載入。請確認網路連線，或雙擊資料夾內的 start.command 啟動。</div>
 
   <div class="hud">
-    <div><strong>SWIM RING RACING</strong> <span id="version">V0.10.5.1</span></div>
+    <div><strong>SWIM RING RACING</strong> <span id="version">V0.10.5.2</span></div>
     <div>速度 <span id="speed">0</span> km/h</div>
     <div>海況 <span id="sea-state">一般 Normal</span></div>
     <div>海浪 <span id="wave-state">Hs 0.85 m · Tp 6.2 s</span></div>
@@ -19,7 +19,7 @@
     <div>狀態 <span id="air-state">水面 WATER</span></div>
   </div>
 
-  <div class="help">W/↑ 加速｜S/↓ 煞車，停住後倒車｜A/D 轉向｜P：9-Point+ / Base A/B｜世界：外海 / 台灣 / 夏威夷 / 日月潭｜🌍 真實3D：沿岸 Google 3D EXP｜1 / 2 / 3 海況</div>
+  <div class="help">W/↑ 加速｜S/↓ 煞車，停住後倒車｜A/D 轉向｜P：9-Point+ / Base A/B｜世界：外海 / 台灣 / 夏威夷 / 日月潭｜🌍 真實3D EXP｜4 Rogue / 5 Tsunami / 6 Lightning / 7 Rain / 0 Clear｜1 / 2 / 3 海況</div>
 
   <div class="physics-controls" aria-label="marine physics controls">
     <button data-hydro-mode="nine-point-plus" class="active">⚓ 9-Point+</button>
@@ -104,5 +104,7 @@
   <script src="./src/v0105-sway-source-of-truth.js"></script>
   <!-- Optional visual-only real-world 3D layer. OSM collision + current ocean/physics remain authoritative. -->
   <script src="./src/v01051-real-world-3d-preview.js"></script>
+  <!-- Optional natural-disaster EXP layer. Default sea remains unchanged until an event is triggered. -->
+  <script src="./src/v01052-natural-disaster-events.js"></script>
 </body>
 </html>
