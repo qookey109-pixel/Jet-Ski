@@ -75,13 +75,15 @@
 - [x] V0.10.5.2 新增 `THIRD_PARTY_NOTICES.md`，保留 Token-Gremlin / Davi MIT attribution
 - [x] V0.10.5.2.1 observer-only 災害同步診斷：CPU event delta / visual shader state / craft-water clearance / hydro mode HUD
 - [x] V0.10.5.2.1 診斷層固定 4 Hz、無 physics/water writes；pure diagnostic 20,000-step finite/equality regression
+- [x] V0.10.5.2.2 observer-only Acceptance Capture：8 秒記錄既有 sync / FPS / p95 / long-frame / craft-water telemetry
+- [x] V0.10.5.2.2 產生 Baseline / Rogue / Tsunami PASS-or-REVIEW receipt；不自動觸發事件、不寫 physics/water
 
 ## 下一階段
 - [ ] **V0.10.5 Safari acceptance**：Normal / Rough 測快速 A/D、連續左右擺、GAS/BRAKE/REV，確認 Sway 手感與 frame-time 不退步
 - [ ] **V0.10.5.1 Real-World 3D browser acceptance**：GitHub Pages + restricted Map Tiles API key，先驗 Waikīkī，再驗七星潭
 - [ ] V0.10.5.1 驗收 Google 3D terrain/建物方位、OSM 碰撞重合、custom ocean 不被 Google water mesh 明顯遮蔽、Safari FPS/p95/memory
-- [ ] **V0.10.5.2.1 Natural Disaster EXP browser acceptance**：Google 3D OFF，Normal 海況依序 Rogue / Clear / Tsunami / Clear / Lightning / Rain / Clear
-- [ ] V0.10.5.2.1 Rogue/Tsunami 期間 HUD 應顯示 `CPU✓ VIS✓`；觀察 Event m、craft m、9-Point+ 浮力反應與 Safari FPS/p95/long-frame
+- [ ] **V0.10.5.2.2 Natural Disaster browser acceptance**：Google 3D OFF + Normal + 9-Point+，先 Capture Baseline，再 Rogue / Tsunami 各 Capture 8 秒
+- [ ] V0.10.5.2.2 Copy receipt 應保留 `CPU/VIS/eventPeak/craft/FPS/p95/>25ms/hydro mode`；只有使用者實機回報後才能將災害 EXP 標成 acceptance PASS
 - [ ] V0.10.5.2 若 Safari/手機卡頓，優先降低 disaster shader gradient sampling / Rain line count；不得改正常海況 physics baseline 迎合 FX
 - [ ] 若 shoreline vertical datum 有偏差，只調 visual `verticalOffsetM`；不得改 gameplay water height / collision authority 來迎合 3D mesh
 - [ ] Google 3D attribution 必須常駐可見；不得自行 prefetch/index/store/cache Google tile content
