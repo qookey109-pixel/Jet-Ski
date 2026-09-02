@@ -85,6 +85,8 @@
     const reasons = [];
     if (!summary.cpuSyncPass) reasons.push('cpu-sync');
     if (!summary.visualSyncPass) reasons.push('visual-sync');
+    if (summary.fpsAvg <= 0 || summary.p95MaxMs <= 0) reasons.push('perf-unavailable');
+    if (summary.hydroMode !== 'nine-point-plus') reasons.push('hydro-mode');
     if ((summary.label === 'ROGUE' || summary.label === 'TSUNAMI') && summary.eventPeakM < 0.1) {
       reasons.push('event-not-observed');
     }
@@ -172,6 +174,7 @@
   }
 
   function readSample() {
+    if (typeof diagnostics.update === 'function') diagnostics.update();
     const d = diagnostics.state || {};
     const p = perfApi && perfApi.state ? perfApi.state : {};
     const waterEventActive = Boolean(disasters.state && (disasters.state.tsunami || disasters.state.rogue));
