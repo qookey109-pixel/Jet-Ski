@@ -73,13 +73,15 @@
 - [x] V0.10.5.2 Rain/Lightning 為 lightweight FX；沒有匯入 ABYSSAL FFT Ocean / volumetric clouds / TAA / post stack
 - [x] V0.10.5.2 事件數學 stress：Tsunami 20,000 + Rogue 20,000 + combined 20,000 finite samples PASS；max abs 約 9.66 m / 6.26 m
 - [x] V0.10.5.2 新增 `THIRD_PARTY_NOTICES.md`，保留 Token-Gremlin / Davi MIT attribution
+- [x] V0.10.5.2.1 observer-only 災害同步診斷：CPU event delta / visual shader state / craft-water clearance / hydro mode HUD
+- [x] V0.10.5.2.1 診斷層固定 4 Hz、無 physics/water writes；pure diagnostic 20,000-step finite/equality regression
 
 ## 下一階段
 - [ ] **V0.10.5 Safari acceptance**：Normal / Rough 測快速 A/D、連續左右擺、GAS/BRAKE/REV，確認 Sway 手感與 frame-time 不退步
 - [ ] **V0.10.5.1 Real-World 3D browser acceptance**：GitHub Pages + restricted Map Tiles API key，先驗 Waikīkī，再驗七星潭
 - [ ] V0.10.5.1 驗收 Google 3D terrain/建物方位、OSM 碰撞重合、custom ocean 不被 Google water mesh 明顯遮蔽、Safari FPS/p95/memory
-- [ ] **V0.10.5.2 Natural Disaster EXP browser acceptance**：先不開 Google 3D，Normal 海況逐一測 Rogue / Tsunami / Lightning / Rain / Clear
-- [ ] V0.10.5.2 驗收 Rogue/Tsunami 的 visual/gameplay sync、9-Point+ 浮力反應、floating-origin 後事件位置、Safari FPS/p95/long-frame
+- [ ] **V0.10.5.2.1 Natural Disaster EXP browser acceptance**：Google 3D OFF，Normal 海況依序 Rogue / Clear / Tsunami / Clear / Lightning / Rain / Clear
+- [ ] V0.10.5.2.1 Rogue/Tsunami 期間 HUD 應顯示 `CPU✓ VIS✓`；觀察 Event m、craft m、9-Point+ 浮力反應與 Safari FPS/p95/long-frame
 - [ ] V0.10.5.2 若 Safari/手機卡頓，優先降低 disaster shader gradient sampling / Rain line count；不得改正常海況 physics baseline 迎合 FX
 - [ ] 若 shoreline vertical datum 有偏差，只調 visual `verticalOffsetM`；不得改 gameplay water height / collision authority 來迎合 3D mesh
 - [ ] Google 3D attribution 必須常駐可見；不得自行 prefetch/index/store/cache Google tile content
