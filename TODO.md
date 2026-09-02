@@ -32,7 +32,7 @@
 - [x] V0.10.0 20,000-step contract finite stress regression
 - [x] **V0.10.0 Safari acceptance PASS**：實機回報正常，observer layer 未造成可感知手感 regression
 - [x] V0.10.0 保留 V0.9.9.3.2 Safari GPU performance baseline；未回報新的卡頓 regression
-- [x] V0.10.1 `marine-calibration-v1` catalog：mass / CG vertical / Izz proxy / added-mass proxy / damping / steering lever arm
+- [x] V0.10.1 `marine-calibration-v1` catalog：mass / CG / inertia proxy / added-mass proxy / damping / steering catalog
 - [x] V0.10.1 Ixx / Iyy、Heave/Roll/Pitch added mass、CG longitudinal/lateral、SI damping derivatives 明確保持 UNCALIBRATED/null
 - [x] V0.10.2 9-Point+ diagnostics / pose result 正式公開既有 `pitchRate / rollRate`
 - [x] V0.10.2 Unified 6DOF `p/q` 優先使用 internal `rollRate / pitchRate`；finite-difference 保留 fallback
@@ -67,11 +67,20 @@
 - [x] V0.10.5.1 pin `3d-tiles-renderer@0.3.36` + Three `0.152.2` compatibility；Google API key 不寫入 repo，只存在瀏覽器 localStorage
 - [x] V0.10.5.1 Google layer 失敗 / API key 缺失 / `file://` 時自動回 OSM；退出沿岸時 dispose tiles，不新增自訂 Google tile cache
 - [x] V0.10.5.1 local axes 對齊：Google renderer X=north/Z=east → game X=east/Z=south，並跟隨 V0.9.3 floating origin
+- [x] V0.10.5.2 Natural Disaster Events EXP：Rogue Wave / Tsunami / Lightning / Rain / Clear 控制列與 4/5/6/7/0 快捷鍵
+- [x] V0.10.5.2 Rogue/Tsunami 使用 world-offset-aware event height modifier；同一事件參數同步 CPU `getWaveHeight()` 與 reflective-water vertex shader
+- [x] V0.10.5.2 不取代 V0.9.3 ocean，不改 9-Point+ / Planar / Steering / reverse；無事件時保持既有海況 sampler
+- [x] V0.10.5.2 Rain/Lightning 為 lightweight FX；沒有匯入 ABYSSAL FFT Ocean / volumetric clouds / TAA / post stack
+- [x] V0.10.5.2 事件數學 stress：Tsunami 20,000 + Rogue 20,000 + combined 20,000 finite samples PASS；max abs 約 9.66 m / 6.26 m
+- [x] V0.10.5.2 新增 `THIRD_PARTY_NOTICES.md`，保留 Token-Gremlin / Davi MIT attribution
 
 ## 下一階段
 - [ ] **V0.10.5 Safari acceptance**：Normal / Rough 測快速 A/D、連續左右擺、GAS/BRAKE/REV，確認 Sway 手感與 frame-time 不退步
 - [ ] **V0.10.5.1 Real-World 3D browser acceptance**：GitHub Pages + restricted Map Tiles API key，先驗 Waikīkī，再驗七星潭
 - [ ] V0.10.5.1 驗收 Google 3D terrain/建物方位、OSM 碰撞重合、custom ocean 不被 Google water mesh 明顯遮蔽、Safari FPS/p95/memory
+- [ ] **V0.10.5.2 Natural Disaster EXP browser acceptance**：先不開 Google 3D，Normal 海況逐一測 Rogue / Tsunami / Lightning / Rain / Clear
+- [ ] V0.10.5.2 驗收 Rogue/Tsunami 的 visual/gameplay sync、9-Point+ 浮力反應、floating-origin 後事件位置、Safari FPS/p95/long-frame
+- [ ] V0.10.5.2 若 Safari/手機卡頓，優先降低 disaster shader gradient sampling / Rain line count；不得改正常海況 physics baseline 迎合 FX
 - [ ] 若 shoreline vertical datum 有偏差，只調 visual `verticalOffsetM`；不得改 gameplay water height / collision authority 來迎合 3D mesh
 - [ ] Google 3D attribution 必須常駐可見；不得自行 prefetch/index/store/cache Google tile content
 - [ ] V0.10.5 PASS 後再決定下一個 authority migration；不要直接跳到未校準 Roll/Pitch inertia
