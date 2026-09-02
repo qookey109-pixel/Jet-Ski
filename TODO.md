@@ -41,7 +41,7 @@
 - [x] V0.10.3 Planar Yaw runtime 優先讀 calibration：Izz / yaw added mass / response / damping / limits
 - [x] V0.10.3 Steering runtime 優先讀 calibration：lever arm / hydro force / jet force / force cap / Mz cap / authority range / landing loss
 - [x] V0.10.3 legacy Planar / Steering DEFAULTS 保留為 partial-load fallback，不再是正式 Yaw source
-- [x] V0.10.3 steering deterministic equivalence grid：legacy source 與 calibration source一致
+- [x] V0.10.3 steering deterministic equivalence grid：legacy source vs calibration source一致
 - [x] V0.10.3 20,000-step Yaw source equivalence：`maxDiff = 0`、`max |r| = 1.55 rad/s`
 - [x] V0.10.3 沒有新增 update wrapper；Base / Voxel / reverse / shoreline / Safari performance baseline 保留
 - [x] **V0.10.3 Safari acceptance FAIL**：實機回報「變卡了」；不得視為正式 performance PASS
