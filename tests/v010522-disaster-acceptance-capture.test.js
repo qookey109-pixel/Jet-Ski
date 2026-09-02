@@ -53,6 +53,16 @@ assert(slowGate.reasons.includes('fps-regression'));
 assert(slowGate.reasons.includes('p95-regression'));
 assert(slowGate.reasons.includes('long-frame-regression'));
 
+const noPerf = capture.summarizeCapture(baselineSamples.map(sample => ({ ...sample, fps: 0, p95Ms: 0 })), 'BASELINE');
+const noPerfGate = capture.evaluateCapture(noPerf, null);
+assert.equal(noPerfGate.gate, 'REVIEW');
+assert(noPerfGate.reasons.includes('perf-unavailable'));
+
+const wrongHydro = capture.summarizeCapture(baselineSamples.map(sample => ({ ...sample, hydroMode: 'nine-point' })), 'BASELINE');
+const wrongHydroGate = capture.evaluateCapture(wrongHydro, null);
+assert.equal(wrongHydroGate.gate, 'REVIEW');
+assert(wrongHydroGate.reasons.includes('hydro-mode'));
+
 for (let i = 0; i < 20000; i++) {
   const event = Math.sin(i * 0.013) * 9;
   const samples = [{
