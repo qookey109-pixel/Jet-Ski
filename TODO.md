@@ -32,7 +32,7 @@
 - [x] V0.10.0 20,000-step contract finite stress regression
 - [x] **V0.10.0 Safari acceptance PASS**：實機回報正常，observer layer 未造成可感知手感 regression
 - [x] V0.10.0 保留 V0.9.9.3.2 Safari GPU performance baseline；未回報新的卡頓 regression
-- [x] V0.10.1 `marine-calibration-v1` catalog：mass / CG / inertia proxy / added-mass proxy / damping / steering catalog
+- [x] V0.10.1 `marine-calibration-v1` catalog：mass / CG vertical / Izz proxy / added-mass proxy / damping / steering lever arm
 - [x] V0.10.1 Ixx / Iyy、Heave/Roll/Pitch added mass、CG longitudinal/lateral、SI damping derivatives 明確保持 UNCALIBRATED/null
 - [x] V0.10.2 9-Point+ diagnostics / pose result 正式公開既有 `pitchRate / rollRate`
 - [x] V0.10.2 Unified 6DOF `p/q` 優先使用 internal `rollRate / pitchRate`；finite-difference 保留 fallback
