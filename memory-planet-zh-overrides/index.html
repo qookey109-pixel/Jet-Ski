@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="theme-color" content="#090713" />
+    <meta name="description" content="記憶星球是一款原創 Three.js 3D Web 遊戲。滾動、收集散落在童話宇宙中的記憶，從微小核心一路成長為一顆巨大的記憶星球。" />
+    <title>記憶星球 — 一場童話宇宙旅程</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/src/style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.179.1/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.179.1/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <div id="boot-fallback" class="ui menu">
+        <div class="panel">
+          <div class="logo-kicker">一場微小而遼闊的宇宙旅程</div>
+          <h1>記憶<br>星球</h1>
+          <p class="subtitle">滾過一顆孤獨的童話星球，拾起散落在世界各處的記憶，從微小的星球核心一路成長，最後成為一顆屬於自己的發光世界。</p>
+          <div class="menu-buttons">
+            <button class="primary">開始旅程</button>
+            <button>設定</button>
+            <button>操作方式</button>
+          </div>
+          <p class="small" style="text-align:center;margin-top:18px">Three.js 原創程序生成體驗・建議使用耳機</p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
