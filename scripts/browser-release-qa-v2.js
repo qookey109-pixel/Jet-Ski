@@ -120,6 +120,10 @@ async function startRace(page) {
 
 async function driveAndBoost(page, r) {
   const before = Number(await page.locator('#speed').textContent()) || 0;
+  const motionStart = await page.evaluate(() => ({
+    wallMs: performance.now(),
+    planarFrames: Number(window.V0992_PLANAR_3DOF && window.V0992_PLANAR_3DOF.state && window.V0992_PLANAR_3DOF.state.activeFrames) || 0
+  }));
   await page.keyboard.down('w');
   await page.waitForTimeout(700);
   await page.keyboard.down('Space');
@@ -136,6 +140,7 @@ async function driveAndBoost(page, r) {
       try { gasState = Boolean(eval('input && input.gas')); } catch (_) {}
       try { rawSpeed = Number(eval('speed')); } catch (_) {}
       try { maxSpeed = Number(eval('physics.maxSpeed')); } catch (_) {}
+      const planar = window.V0992_PLANAR_3DOF && window.V0992_PLANAR_3DOF.state;
       return {
         requested: Boolean(window.JETSKI_BOOST.state.requested),
         active: Boolean(window.JETSKI_BOOST.state.active),
@@ -145,7 +150,12 @@ async function driveAndBoost(page, r) {
         gas: gasState,
         speedMps: rawSpeed,
         maxSpeedMps: maxSpeed,
-        speedRatio: Number.isFinite(rawSpeed) && Number.isFinite(maxSpeed) && maxSpeed > 0 ? rawSpeed / maxSpeed : null
+        speedRatio: Number.isFinite(rawSpeed) && Number.isFinite(maxSpeed) && maxSpeed > 0 ? rawSpeed / maxSpeed : null,
+        planarFrames: Number(planar && planar.activeFrames) || 0,
+        planarU: Number(planar && planar.u),
+        planarCommandU: Number(planar && planar.commandU),
+        planarSurgeAcceleration: Number(planar && planar.surgeAcceleration),
+        wallMs: performance.now()
       };
     });
     if (sample.activationCount >= 1) break;
@@ -155,6 +165,14 @@ async function driveAndBoost(page, r) {
   const during = Number(await page.locator('#speed').textContent()) || 0;
   await page.keyboard.up('Space');
   await page.keyboard.up('w');
+
+  if (sample) {
+    const elapsedMs = Math.max(1, Number(sample.wallMs) - Number(motionStart.wallMs));
+    const frameDelta = Math.max(0, Number(sample.planarFrames) - Number(motionStart.planarFrames));
+    sample.motionElapsedMs = elapsedMs;
+    sample.planarFrameDelta = frameDelta;
+    sample.approxPlanarHz = frameDelta * 1000 / elapsedMs;
+  }
 
   assert(during > before, `Craft did not accelerate: ${before} -> ${during}`);
   assert(sample && sample.requested, `Space did not reach Boost request state: ${JSON.stringify(sample)}`);
@@ -194,17 +212,64 @@ async function installCoastFlowStubs(page) {
   });
 }
 
-async function moveToGate(page) {
-  return page.evaluate(() => {
+async function crossCurrentGate(page) {
+  const before = await page.evaluate(() => {
     const manager = window.JETSKI_RACE_MANAGER;
     if (!manager || manager.state.phase !== 'racing') return { ok: false, phase: manager && manager.state.phase };
-    const cp = manager.course.checkpoints[manager.state.nextCheckpointIndex];
+    const gate = manager.state.nextCheckpointIndex;
+    const cp = manager.course.checkpoints[gate];
+    const radius = Number(manager.course.checkpointRadiusM) || 14;
+    let craft = null;
+    try { craft = eval('ski'); } catch (_) {}
+    if (!cp || !craft || !craft.position) return { ok: false, reason: 'gate-or-craft-unavailable' };
+    craft.position.x = cp.x + radius * 3;
+    craft.position.z = cp.z;
+    return {
+      ok: true,
+      gate,
+      lap: manager.state.lap,
+      checkpointsPassed: manager.state.checkpointsPassed
+    };
+  });
+  if (!before.ok) return before;
+
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+
+  const entered = await page.evaluate(expectedGate => {
+    const manager = window.JETSKI_RACE_MANAGER;
+    if (!manager || manager.state.phase !== 'racing') return { ok: false, phase: manager && manager.state.phase };
+    if (manager.state.nextCheckpointIndex !== expectedGate) {
+      return { ok: false, reason: 'gate-advanced-before-entry', gate: manager.state.nextCheckpointIndex };
+    }
+    const cp = manager.course.checkpoints[expectedGate];
     let craft = null;
     try { craft = eval('ski'); } catch (_) {}
     if (!cp || !craft || !craft.position) return { ok: false, reason: 'gate-or-craft-unavailable' };
     craft.position.x = cp.x;
     craft.position.z = cp.z;
-    return { ok: true, gate: manager.state.nextCheckpointIndex, lap: manager.state.lap };
+    return { ok: true };
+  }, before.gate);
+  if (!entered.ok) return entered;
+
+  await page.waitForFunction(previous => {
+    const manager = window.JETSKI_RACE_MANAGER;
+    const state = manager && manager.state;
+    if (!state) return false;
+    return state.phase === 'finished'
+      || state.checkpointsPassed > previous.checkpointsPassed
+      || state.lap !== previous.lap
+      || state.nextCheckpointIndex !== previous.gate;
+  }, before, { timeout: 2000 });
+
+  return page.evaluate(() => {
+    const state = window.JETSKI_RACE_MANAGER.state;
+    return {
+      ok: true,
+      phase: state.phase,
+      gate: state.nextCheckpointIndex,
+      lap: state.lap,
+      checkpointsPassed: state.checkpointsPassed
+    };
   });
 }
 
@@ -213,9 +278,8 @@ async function finishRace(page, r, label) {
     const phase = await page.evaluate(() => window.JETSKI_RACE_MANAGER.state.phase);
     if (phase === 'finished') break;
     assert(phase === 'racing', `${label}: unexpected phase ${phase}`);
-    const moved = await moveToGate(page);
-    assert(moved.ok, `${label}: ${JSON.stringify(moved)}`);
-    await page.waitForTimeout(120);
+    const crossed = await crossCurrentGate(page);
+    assert(crossed.ok, `${label}: ${JSON.stringify(crossed)}`);
   }
   const state = await page.evaluate(() => ({
     phase: window.JETSKI_RACE_MANAGER.state.phase,
