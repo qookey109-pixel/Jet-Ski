@@ -1,16 +1,20 @@
-// V0.11.0 Race Manager. Integrates race flow with the existing validated craft/ocean stack.
+// V0.11.5 Race Manager. Selectable multi-race flow over the validated craft/ocean stack.
 (function (root) {
   'use strict';
 
   const Race = root.JETSKI_RACE_COURSE;
   const RaceUI = root.JETSKI_RACE_UI;
+  const Progression = root.JETSKI_PROGRESSION_CORE;
   const THREE = root.THREE;
-  if (!Race || !RaceUI || !THREE) return;
+  if (!Race || !RaceUI || !Progression || !THREE) return;
   if (typeof ski === 'undefined' || typeof updateJetSki !== 'function' || typeof getWaveHeight !== 'function') return;
 
-  const VERSION = 'V0.11.0';
-  const course = Race.OPEN_SEA_CIRCUIT;
+  const VERSION = 'V0.11.5';
   const CONFIG_MUTATION_KEYS = new Set(['Digit0', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'KeyP']);
+  const PREPARE_TIMEOUT_MS = 15000;
+
+  let selectedEvent = Progression.EVENTS[0];
+  let course = Progression.buildCourse(selectedEvent);
   let raceState = Race.createRaceState(course);
   let countdownEndMs = 0;
   let countdownLastValue = null;
@@ -18,6 +22,7 @@
   let pauseStartedMs = 0;
   let wasInsideTarget = false;
   let activeGateIndex = -1;
+  let preparingStartedMs = 0;
   let audioContext = null;
 
   const worldButtons = [...document.querySelectorAll('[data-world-mode]')];
@@ -71,9 +76,8 @@
   launcher.addEventListener('click', showMainMenu);
   document.body.appendChild(launcher);
 
-  // Checkpoint visuals are independent of the old decorative buoy ring.
   const courseGroup = new THREE.Group();
-  courseGroup.name = 'V0110RaceCourse';
+  courseGroup.name = 'V0115RaceCourse';
   scene.add(courseGroup);
 
   const gateGeometry = new THREE.TorusGeometry(6.2, 0.34, 10, 34);
@@ -83,21 +87,27 @@
   const finishMaterial = new THREE.MeshStandardMaterial({ color: 0xffdc72, emissive: 0xff9b18, emissiveIntensity: 2.0, roughness: 0.3, metalness: 0.08 });
   const gateGroups = [];
 
+  function clearGateVisuals() {
+    courseGroup.clear();
+    gateGroups.length = 0;
+    activeGateIndex = -1;
+  }
+
   function buildGate(index) {
     const cp = course.checkpoints[index];
     const next = course.checkpoints[(index + 1) % course.checkpoints.length];
     const group = new THREE.Group();
-    const ringMesh = new THREE.Mesh(gateGeometry, index === 0 ? finishMaterial : inactiveMaterial);
-    const leftPost = new THREE.Mesh(postGeometry, index === 0 ? finishMaterial : inactiveMaterial);
-    const rightPost = new THREE.Mesh(postGeometry, index === 0 ? finishMaterial : inactiveMaterial);
+    const material = index === 0 ? finishMaterial : inactiveMaterial;
+    const ringMesh = new THREE.Mesh(gateGeometry, material);
+    const leftPost = new THREE.Mesh(postGeometry, material);
+    const rightPost = new THREE.Mesh(postGeometry, material);
     ringMesh.castShadow = false;
     leftPost.castShadow = false;
     rightPost.castShadow = false;
     ringMesh.position.y = 6.25;
     leftPost.position.set(-6.2, 1.9, 0);
     rightPost.position.set(6.2, 1.9, 0);
-    const heading = Math.atan2(next.x - cp.x, next.z - cp.z);
-    group.rotation.y = heading;
+    group.rotation.y = Math.atan2(next.x - cp.x, next.z - cp.z);
     group.position.set(cp.x, 0, cp.z);
     group.add(ringMesh, leftPost, rightPost);
     group.userData.ring = ringMesh;
@@ -107,7 +117,10 @@
     gateGroups.push(group);
   }
 
-  for (let i = 0; i < course.checkpoints.length; i++) buildGate(i);
+  function rebuildCourseVisuals() {
+    clearGateVisuals();
+    for (let i = 0; i < course.checkpoints.length; i++) buildGate(i);
+  }
 
   function setGateMaterial(index, active) {
     const group = gateGroups[index];
@@ -131,7 +144,7 @@
   }
 
   function raceBaselineLocked() {
-    return raceState.phase === 'countdown' || raceState.phase === 'racing' || raceState.phase === 'paused';
+    return raceState.phase === 'preparing' || raceState.phase === 'countdown' || raceState.phase === 'racing' || raceState.phase === 'paused';
   }
 
   function setConfigLocked(locked) {
@@ -142,14 +155,38 @@
 
   function normalizeRaceConfig() {
     if (root.V097_WORLD_MODES && typeof root.V097_WORLD_MODES.setMode === 'function') {
-      root.V097_WORLD_MODES.setMode(course.worldMode);
+      root.V097_WORLD_MODES.setMode(selectedEvent.worldMode);
     }
-    if (typeof selectSeaState === 'function') selectSeaState(course.seaState);
+    if (typeof selectSeaState === 'function') selectSeaState(selectedEvent.seaState);
     const hydro = root.JETSKI_PHYSICS && root.JETSKI_PHYSICS.hydroModel;
     if (hydro && typeof hydro.setMode === 'function') hydro.setMode('nine-point-plus');
     if (root.V01052_NATURAL_DISASTERS && typeof root.V01052_NATURAL_DISASTERS.clearEvents === 'function') {
       root.V01052_NATURAL_DISASTERS.clearEvents();
     }
+  }
+
+  function coastRuntimeFor(event) {
+    if (event.worldMode === 'hawaii-coast') return root.V097_HAWAII_COAST || null;
+    if (event.worldMode === 'taiwan-coast') return root.V096_TAIWAN_COAST || null;
+    return null;
+  }
+
+  function resolvePreparedCourse() {
+    if (!selectedEvent.relative) return Progression.buildCourse(selectedEvent);
+    const worldApi = root.V097_WORLD_MODES;
+    if (!worldApi || worldApi.mode !== selectedEvent.worldMode || worldApi.pendingCoastMode) return null;
+    const coastRuntime = coastRuntimeFor(selectedEvent);
+    if (!coastRuntime || !coastRuntime.state || !coastRuntime.state.loaded || typeof coastRuntime.findSpawn !== 'function') return null;
+    const spawn = coastRuntime.findSpawn(selectedEvent.coastSpawnDistanceM || 200);
+    if (!spawn) return null;
+
+    let heading = typeof yaw === 'number' ? yaw : 0;
+    const coastApi = root.REAL_WORLD_COAST;
+    if (coastApi && typeof coastApi.nearestCoast === 'function' && coastRuntime.state.coastlines) {
+      const nearest = coastApi.nearestCoast(spawn, coastRuntime.state.coastlines);
+      if (nearest && nearest.waterNormal) heading = Math.atan2(nearest.waterNormal.x, nearest.waterNormal.z);
+    }
+    return Progression.buildCourse(selectedEvent, spawn, heading);
   }
 
   function snapCameraToCraft() {
@@ -188,15 +225,24 @@
     snapCameraToCraft();
   }
 
-  function startRace() {
-    ui.root.style.display = '';
-    normalizeRaceConfig();
-    setConfigLocked(true);
+  function selectEvent(eventId) {
+    if (raceBaselineLocked()) return false;
+    selectedEvent = Progression.getEvent(eventId);
+    course = Progression.buildCourse(selectedEvent, { x: ski.position.x, z: ski.position.z }, typeof yaw === 'number' ? yaw : 0);
+    raceState = Race.createRaceState(course);
+    clearGateVisuals();
+    root.dispatchEvent(new CustomEvent('jetski:race-selected', { detail: { eventId: selectedEvent.id, event: selectedEvent } }));
+    return true;
+  }
+
+  function beginPreparedRace(nowMs, preparedCourse) {
+    course = preparedCourse;
+    rebuildCourseVisuals();
     setCourseVisible(true);
     resetCraftToGrid();
     raceState = Race.createRaceState(course);
     raceState.phase = 'countdown';
-    countdownEndMs = performance.now() + 3200;
+    countdownEndMs = nowMs + 3200;
     countdownLastValue = null;
     goHideAtMs = 0;
     pauseStartedMs = 0;
@@ -204,8 +250,32 @@
     activeGateIndex = -1;
     ui.showRaceHud();
     ui.updateHud(raceState);
-    launcher.style.display = 'none';
+    ui.setCountdown(3);
     updateActiveGate();
+    root.dispatchEvent(new CustomEvent('jetski:race-ready', { detail: { eventId: selectedEvent.id, course } }));
+  }
+
+  function startRace(eventId) {
+    if (eventId && !raceBaselineLocked()) selectEvent(eventId);
+    ui.root.style.display = '';
+    normalizeRaceConfig();
+    setConfigLocked(true);
+    setCourseVisible(false);
+    clearGateVisuals();
+    raceState = Race.createRaceState(course);
+    raceState.phase = 'preparing';
+    preparingStartedMs = performance.now();
+    countdownEndMs = 0;
+    countdownLastValue = null;
+    goHideAtMs = 0;
+    wasInsideTarget = false;
+    ui.showRaceHud();
+    ui.updateHud(raceState);
+    ui.setCountdown(selectedEvent.relative ? 'LOADING' : 'READY');
+    launcher.style.display = 'none';
+
+    const ready = resolvePreparedCourse();
+    if (ready) beginPreparedRace(preparingStartedMs, ready);
   }
 
   function enterFreeRide() {
@@ -250,6 +320,28 @@
     ui.setCountdown(null);
     ui.showResults(raceState);
     finishTone();
+    root.dispatchEvent(new CustomEvent('jetski:race-finished', {
+      detail: {
+        eventId: selectedEvent.id,
+        elapsedMs: raceState.elapsedMs,
+        bestLapMs: raceState.bestLapMs,
+        finished: true
+      }
+    }));
+  }
+
+  function updatePreparing(nowMs) {
+    if (raceState.phase !== 'preparing') return;
+    const ready = resolvePreparedCourse();
+    if (ready) {
+      beginPreparedRace(nowMs, ready);
+      return;
+    }
+    if (nowMs - preparingStartedMs > PREPARE_TIMEOUT_MS) {
+      ui.setCountdown(null);
+      ui.toast('COAST DATA UNAVAILABLE · TRY AGAIN');
+      showMainMenu();
+    }
   }
 
   function updateCountdown(nowMs) {
@@ -273,10 +365,10 @@
   }
 
   function updateGateHeights(t) {
+    if (!gateGroups.length) return;
     for (let i = 0; i < gateGroups.length; i++) {
       const cp = course.checkpoints[i];
-      const waterY = getWaveHeight(cp.x, cp.z, t);
-      gateGroups[i].position.y = waterY;
+      gateGroups[i].position.y = getWaveHeight(cp.x, cp.z, t);
     }
   }
 
@@ -301,6 +393,7 @@
 
   function runtimeUpdate(dt, t) {
     const nowMs = performance.now();
+    updatePreparing(nowMs);
     updateGateHeights(t);
     updateCountdown(nowMs);
     if (goHideAtMs && nowMs >= goHideAtMs) {
@@ -311,12 +404,11 @@
   }
 
   function drivingLocked() {
-    return raceState.phase === 'menu' || raceState.phase === 'countdown' || raceState.phase === 'paused' || raceState.phase === 'finished';
+    return raceState.phase === 'menu' || raceState.phase === 'preparing' || raceState.phase === 'countdown' || raceState.phase === 'paused' || raceState.phase === 'finished';
   }
 
-  // One allocation-free race control wrapper: lock inputs outside active driving, then delegate to the full existing stack.
   const previousUpdateJetSki = updateJetSki;
-  updateJetSki = function v0110RaceManagedUpdate(dt, t) {
+  updateJetSki = function v0115RaceManagedUpdate(dt, t) {
     const locked = drivingLocked();
     const gasBefore = input.gas;
     const brakeBefore = input.brake;
@@ -344,7 +436,6 @@
     runtimeUpdate(dt, t);
   };
 
-  // Capture phase beats the older global hotkeys registered by existing modules without changing those modules.
   addEventListener('keydown', event => {
     if (raceBaselineLocked() && CONFIG_MUTATION_KEYS.has(event.code)) {
       event.preventDefault();
@@ -373,9 +464,11 @@
 
   root.JETSKI_RACE_MANAGER = {
     version: VERSION,
-    course,
     configMutationKeys: [...CONFIG_MUTATION_KEYS],
     get state() { return raceState; },
+    get course() { return course; },
+    get selectedEvent() { return selectedEvent; },
+    selectEvent,
     startRace,
     enterFreeRide,
     showMainMenu,

@@ -1,4 +1,4 @@
-// V0.11.1 AI Opponents + Ranking runtime.
+// V0.11.5 AI Opponents + Ranking runtime. Dynamic course-aware reduced-order rivals.
 (function (root) {
   'use strict';
   const THREE = root.THREE;
@@ -6,8 +6,7 @@
   const Manager = root.JETSKI_RACE_MANAGER;
   if (!THREE || !Core || !Manager || typeof scene === 'undefined' || typeof getWaveHeight !== 'function') return;
 
-  const VERSION = 'V0.11.1';
-  const course = Manager.course;
+  const VERSION = 'V0.11.5';
   const configs = [
     { id: 'coral', name: 'CORAL', speedMps: 10.1, steeringResponse: 2.8, color: 0xff6b6b, lane: -4.5 },
     { id: 'tide', name: 'TIDE', speedMps: 10.7, steeringResponse: 3.0, color: 0x67e8f9, lane: 0 },
@@ -15,11 +14,16 @@
   ];
 
   const group = new THREE.Group();
-  group.name = 'V0111AIRacers';
+  group.name = 'V0115AIRacers';
   scene.add(group);
   const racers = [];
   let lastPhase = 'menu';
+  let lastCourseId = null;
   let startedAtMs = 0;
+
+  function currentCourse() {
+    return Manager.course;
+  }
 
   function makeVisual(config) {
     const g = new THREE.Group();
@@ -40,6 +44,8 @@
   }
 
   function resetAll() {
+    const course = currentCourse();
+    if (!course || !course.checkpoints || course.checkpoints.length < 2) return;
     const start = course.checkpoints[0];
     const next = course.checkpoints[1];
     const baseYaw = Math.atan2(next.x - start.x, next.z - start.z);
@@ -64,6 +70,7 @@
       group.add(visual);
       racers.push({ agent, visual, config: cfg });
     }
+    lastCourseId = course.id || null;
   }
 
   function wavePose(entry, t) {
@@ -90,6 +97,18 @@
     };
   }
 
+  function rankedEntries() {
+    const course = currentCourse();
+    if (!course) return [];
+    return Core.rankRacers([playerSnapshot(), ...racers.map(r => r.agent)], course);
+  }
+
+  function getPlayerRank() {
+    const ranked = rankedEntries();
+    const index = ranked.findIndex(r => r.id === 'player');
+    return index >= 0 ? index + 1 : ranked.length || 1;
+  }
+
   function ensureRankingHud() {
     let el = document.querySelector('[data-jr-position]');
     if (el) return el;
@@ -105,21 +124,23 @@
 
   function updateRanking() {
     if (!positionEl) return;
-    const entries = [playerSnapshot(), ...racers.map(r => r.agent)];
-    const ranked = Core.rankRacers(entries, course);
+    const ranked = rankedEntries();
     const index = ranked.findIndex(r => r.id === 'player');
-    positionEl.textContent = `${Math.max(0, index) + 1} / ${ranked.length}`;
+    positionEl.textContent = `${Math.max(0, index) + 1} / ${ranked.length || 4}`;
   }
 
   function update(dt, t) {
     const phase = Manager.state.phase;
+    const course = currentCourse();
+    const courseId = course && course.id;
+    if (courseId && courseId !== lastCourseId && phase !== 'racing') resetAll();
     if (phase !== lastPhase) {
       if (phase === 'countdown') resetAll();
       if (phase === 'racing' && lastPhase === 'countdown') startedAtMs = performance.now();
       lastPhase = phase;
     }
     group.visible = phase === 'countdown' || phase === 'racing' || phase === 'paused' || phase === 'finished';
-    if (!group.visible) return;
+    if (!group.visible || !course) return;
     if (phase === 'racing') {
       const now = performance.now() - startedAtMs;
       for (const entry of racers) Core.advanceAgent(entry.agent, dt, course, now);
@@ -129,12 +150,21 @@
   }
 
   const previousUpdateJetSki = updateJetSki;
-  updateJetSki = function v0111AIRaceUpdate(dt, t) {
+  updateJetSki = function v0115AIRaceUpdate(dt, t) {
     previousUpdateJetSki(dt, t);
     update(dt, t);
   };
 
   resetAll();
   group.visible = false;
-  root.JETSKI_RACE_AI = { version: VERSION, racers, resetAll, update, reducedOrderAI: true, playerPhysicsRewritten: false };
+  root.JETSKI_RACE_AI = {
+    version: VERSION,
+    racers,
+    resetAll,
+    update,
+    getPlayerRank,
+    rankedEntries,
+    reducedOrderAI: true,
+    playerPhysicsRewritten: false
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
