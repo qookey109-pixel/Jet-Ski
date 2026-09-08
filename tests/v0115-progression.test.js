@@ -1,8 +1,7 @@
 const assert = require('assert');
 const Core = require('../src/game/progression-core.js');
 
-assert.equal(Core.VERSION, 'V0.11.5');
-assert.equal(Core.EVENTS.length, 3);
+assert.equal(Core.EVENTS.length >= 4, true);
 assert.equal(Core.EVENTS[0].id, 'open-sea-circuit');
 assert.equal(Core.EVENTS[1].worldMode, 'hawaii-coast');
 assert.equal(Core.EVENTS[2].worldMode, 'taiwan-coast');
@@ -55,7 +54,9 @@ recorded = Core.recordResult(profile, {
   eventId: 'qixingtan-bluewater', elapsedMs: 111000, placement: 1, finished: true
 });
 profile = recorded.profile;
-assert.equal(Core.campaignComplete(profile), true);
+assert.equal(recorded.unlockedEventId, 'pacific-crown-final');
+assert.equal(Core.isUnlocked(profile, 'pacific-crown-final'), true);
+assert.equal(Core.campaignComplete(profile), false);
 assert.equal(profile.totalFinishes, 4);
 
 for (let i = 0; i < 20000; i++) {
