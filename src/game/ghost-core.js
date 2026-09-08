@@ -8,7 +8,9 @@
   const MAX_SAMPLES = 5000;
 
   function finite(value, fallback) {
-    return Number.isFinite(Number(value)) ? Number(value) : fallback;
+    if (value == null || value === '') return fallback;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
   }
 
   function round(value, precision) {
@@ -194,7 +196,7 @@
     if (!Number.isFinite(elapsed) || elapsed <= 0) return false;
     const knownBest = finite(knownBestMs, Infinity);
     if (Number.isFinite(knownBest) && elapsed > knownBest) return false;
-    const existing = existingGhost && finite(existingGhost.timeMs, Infinity);
+    const existing = existingGhost ? finite(existingGhost.timeMs, Infinity) : Infinity;
     return !Number.isFinite(existing) || elapsed < existing;
   }
 
