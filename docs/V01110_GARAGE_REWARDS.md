@@ -38,15 +38,13 @@ Storage key:
 
 ## Visual implementation
 
-V0.11.10 does not rewrite the existing procedural swim-ring craft.
+V0.11.10 does not replace the existing procedural swim-ring geometry.
 
-Instead it adds a lightweight child `Group` to the existing craft containing:
+Because the game is delivered as classic scripts, the Garage runtime can reuse the existing `inflatableMat` and `stripeMat` material bindings created by `main.js`. Selecting a livery changes only those existing material colors/emissive values.
 
-- one transparent outer torus shell
-- four short accent arc bands
-- one small front crest
+This avoids stacking another transparent ring on top of the original craft, reducing z-fighting risk and extra draw/geometry cost.
 
-The materials update only when the selected livery changes.
+The only added craft geometry is a tiny front Octahedron badge used exclusively by the `Pacific Crown` livery. It has no collision or shadow role.
 
 No external texture/model asset is required.
 
@@ -62,6 +60,7 @@ The new livery is not auto-equipped; player choice remains explicit.
 
 Unchanged:
 
+- player geometry used by gameplay
 - player collision shape
 - player mass
 - CG
@@ -75,7 +74,7 @@ Unchanged:
 - disasters
 - Safari GPU budget
 
-The livery Group is visual-only and has no collision or gameplay state.
+Livery changes are material-only, plus one visual-only championship badge. They do not alter gameplay state.
 
 ## Automated gate
 
@@ -101,10 +100,10 @@ Verify on GitHub Pages / Safari:
 3. Locked liveries cannot be selected.
 4. Newly earned star thresholds unlock the expected livery.
 5. Reload preserves selected livery.
-6. Overlay has no severe z-fighting with the existing ring/bands.
-7. Livery remains attached during pitch/roll/yaw and airborne motion.
+6. Existing ring and stripe materials change cleanly without flicker/z-fighting.
+7. Livery remains correct during pitch/roll/yaw and airborne motion.
 8. Ghost remains visually distinguishable from the selected player livery.
-9. Pacific Crown remains readable in the darker Final-event palette.
+9. Pacific Crown badge/livery remains readable in the darker Final-event palette.
 10. FPS / p95 / long-frame behavior remains acceptable.
 
 README accepted physics/performance baseline remains V0.10.4 until fresh user acceptance justifies a formal promotion.
