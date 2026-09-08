@@ -6,6 +6,7 @@ on:
       - 'src/game/**'
       - 'src/ai/**'
       - 'src/gameplay/**'
+      - 'src/input/**'
       - 'src/ui/race-ui.js'
       - 'tests/v011*.test.js'
       - 'scripts/**'
@@ -18,6 +19,7 @@ on:
       - 'src/game/**'
       - 'src/ai/**'
       - 'src/gameplay/**'
+      - 'src/input/**'
       - 'src/ui/race-ui.js'
       - 'tests/v011*.test.js'
       - 'scripts/**'
@@ -37,7 +39,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Syntax check race, AI, Boost and delivery runtime
+      - name: Syntax check race, AI, Boost, input and delivery runtime
         run: |
           node --check src/game/race-course.js
           node --check src/ui/race-ui.js
@@ -46,6 +48,8 @@ jobs:
           node --check src/ai/race-ai-runtime.js
           node --check src/gameplay/boost-core.js
           node --check src/gameplay/boost-runtime.js
+          node --check src/input/control-camera-core.js
+          node --check src/input/control-camera-runtime.js
           node --check scripts/static-server.js
           node --check scripts/dev-server.js
           node --check scripts/build.js
@@ -59,3 +63,4 @@ jobs:
           test -f dist/src/game/race-manager.js
           test -f dist/src/ai/race-ai-runtime.js
           test -f dist/src/gameplay/boost-runtime.js
+          test -f dist/src/input/control-camera-runtime.js
