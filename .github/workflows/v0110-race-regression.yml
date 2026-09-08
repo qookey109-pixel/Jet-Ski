@@ -6,6 +6,8 @@ on:
       - 'src/game/**'
       - 'src/ui/race-ui.js'
       - 'tests/v0110-*.test.js'
+      - 'scripts/**'
+      - 'package.json'
       - 'index.html'
       - '.github/workflows/v0110-race-regression.yml'
   push:
@@ -14,6 +16,8 @@ on:
       - 'src/game/**'
       - 'src/ui/race-ui.js'
       - 'tests/v0110-*.test.js'
+      - 'scripts/**'
+      - 'package.json'
       - 'index.html'
       - '.github/workflows/v0110-race-regression.yml'
 
@@ -29,10 +33,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Syntax check race runtime
+      - name: Syntax check race and delivery runtime
         run: |
           node --check src/game/race-course.js
           node --check src/ui/race-ui.js
           node --check src/game/race-manager.js
+          node --check scripts/static-server.js
+          node --check scripts/dev-server.js
+          node --check scripts/build.js
+          node --check scripts/preview.js
       - name: Run race progression regression
-        run: node tests/v0110-race-course.test.js
+        run: npm run test:race
+      - name: Verify production build
+        run: |
+          npm run build
+          test -f dist/index.html
+          test -f dist/src/game/race-manager.js
