@@ -120,6 +120,8 @@
   <!-- Reduced-order AI opponents + live ranking. Player physics remains authoritative and unchanged. -->
   <script src="./src/ai/race-ai-core.js"></script>
   <script src="./src/ai/race-ai-runtime.js"></script>
+  <!-- V0.11.16 adapter: keep race-local gates/AI aligned with V0.9.3 floating-origin recentering. -->
+  <script src="./src/game/race-origin-sync.js"></script>
   <!-- Bounded Nitro surge assist + procedural VFX/audio/camera game feel. -->
   <script src="./src/gameplay/boost-core.js"></script>
   <script src="./src/gameplay/boost-runtime.js"></script>
@@ -158,7 +160,7 @@
   <!-- V0.11.15 local save/recovery center. Explicit allowlist excludes API keys/secrets. -->
   <script src="./src/ui/save-recovery-core.js"></script>
   <script src="./src/ui/save-recovery-runtime.js"></script>
-  <!-- V0.11.16 release marker. Browser QA infrastructure only; no gameplay/physics writes. -->
+  <!-- V0.11.16 release marker. -->
   <script src="./src/ui/release-marker-runtime.js"></script>
 </body>
 </html>
