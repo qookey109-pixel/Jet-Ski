@@ -59,7 +59,7 @@
     if (id === 'first-finish') return finished;
     if (id === 'podium') return finished && placement <= 2;
     if (id === 'victory') return finished && placement === 1;
-    if (id === 'pure-water') return finished && boostActivations === 0;
+    if (id === 'pure-water') return finished && r.boostObserved === true && boostActivations === 0;
     if (id === 'pb-breaker') return finished && previousBestMs > 0 && elapsedMs > 0 && elapsedMs < previousBestMs;
     if (id === 'full-tour') return finished && completedEvents >= 4;
     if (id === 'perfect-stars') return finished && totalStars >= 12;
