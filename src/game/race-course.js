@@ -1,27 +1,98 @@
-// V0.11.0 Race Course core. Pure progression logic; no render/physics writes.
+// V0.11.5 Race Course core. Pure progression logic; no render/physics writes.
 (function (root) {
   'use strict';
 
-  const VERSION = 'V0.11.0';
+  const VERSION = 'V0.11.5';
 
-  const OPEN_SEA_CIRCUIT = Object.freeze({
+  function freezeCheckpoint(cp) { return Object.freeze(cp); }
+  function freezeCourse(course) {
+    const copy = Object.assign({}, course);
+    if (copy.checkpoints) copy.checkpoints = Object.freeze(copy.checkpoints.map(freezeCheckpoint));
+    if (copy.route) copy.route = Object.freeze(copy.route.map(point => Object.freeze(Object.assign({}, point))));
+    return Object.freeze(copy);
+  }
+
+  const OPEN_SEA_CIRCUIT = freezeCourse({
     id: 'open-sea-circuit',
     name: 'Open Sea Circuit',
+    shortName: 'OPEN SEA',
+    description: 'Two fast laps through an exposed-ocean ring. Pure racing baseline.',
     worldMode: 'open-sea',
     seaState: 'normal',
     laps: 2,
     checkpointRadiusM: 14,
-    checkpoints: Object.freeze([
-      Object.freeze({ id: 'start', label: 'START / FINISH', x: 0, z: 82 }),
-      Object.freeze({ id: 'cp1', label: 'GATE 1', x: 58, z: 58 }),
-      Object.freeze({ id: 'cp2', label: 'GATE 2', x: 82, z: 0 }),
-      Object.freeze({ id: 'cp3', label: 'GATE 3', x: 58, z: -58 }),
-      Object.freeze({ id: 'cp4', label: 'GATE 4', x: 0, z: -82 }),
-      Object.freeze({ id: 'cp5', label: 'GATE 5', x: -58, z: -58 }),
-      Object.freeze({ id: 'cp6', label: 'GATE 6', x: -82, z: 0 }),
-      Object.freeze({ id: 'cp7', label: 'GATE 7', x: -58, z: 58 })
-    ])
+    unlockIndex: 0,
+    checkpoints: [
+      { id: 'start', label: 'START / FINISH', x: 0, z: 82 },
+      { id: 'cp1', label: 'GATE 1', x: 58, z: 58 },
+      { id: 'cp2', label: 'GATE 2', x: 82, z: 0 },
+      { id: 'cp3', label: 'GATE 3', x: 58, z: -58 },
+      { id: 'cp4', label: 'GATE 4', x: 0, z: -82 },
+      { id: 'cp5', label: 'GATE 5', x: -58, z: -58 },
+      { id: 'cp6', label: 'GATE 6', x: -82, z: 0 },
+      { id: 'cp7', label: 'GATE 7', x: -58, z: 58 }
+    ]
   });
+
+  // Coast routes are expressed in spawn-local coordinates. `forward` follows the
+  // coast runtime's safe water-facing spawn yaw; `side` is perpendicular to it.
+  // They are materialized only after the coast world reports ready.
+  const WAIKIKI_PACIFIC_RUN = freezeCourse({
+    id: 'waikiki-pacific-run',
+    name: 'Waikīkī Pacific Run',
+    shortName: 'WAIKĪKĪ',
+    description: 'Launch from the safe Waikīkī offshore spawn, sweep into the Pacific, then carve back toward the coast.',
+    worldMode: 'hawaii-coast',
+    seaState: 'normal',
+    laps: 2,
+    checkpointRadiusM: 17,
+    unlockIndex: 1,
+    relativeToSpawn: true,
+    route: [
+      { side: 0, forward: 0 },
+      { side: 34, forward: 65 },
+      { side: 82, forward: 125 },
+      { side: 58, forward: 205 },
+      { side: -8, forward: 248 },
+      { side: -75, forward: 205 },
+      { side: -96, forward: 118 },
+      { side: -45, forward: 48 }
+    ]
+  });
+
+  const QIXINGTAN_OCEAN_RUN = freezeCourse({
+    id: 'qixingtan-ocean-run',
+    name: 'Qixingtan Ocean Run',
+    shortName: '七星潭',
+    description: 'A longer offshore loop from Qixingtan, built around the coastline-safe spawn and Pacific-facing heading.',
+    worldMode: 'taiwan-coast',
+    seaState: 'normal',
+    laps: 2,
+    checkpointRadiusM: 17,
+    unlockIndex: 2,
+    relativeToSpawn: true,
+    route: [
+      { side: 0, forward: 0 },
+      { side: 42, forward: 72 },
+      { side: 95, forward: 145 },
+      { side: 72, forward: 235 },
+      { side: 8, forward: 282 },
+      { side: -66, forward: 242 },
+      { side: -104, forward: 150 },
+      { side: -52, forward: 62 }
+    ]
+  });
+
+  const COURSE_DEFINITIONS = Object.freeze([
+    OPEN_SEA_CIRCUIT,
+    WAIKIKI_PACIFIC_RUN,
+    QIXINGTAN_OCEAN_RUN
+  ]);
+
+  const COURSES_BY_ID = Object.freeze(COURSE_DEFINITIONS.reduce((map, course) => {
+    map[course.id] = course;
+    return map;
+  }, {}));
 
   function finite(value, fallback) {
     return Number.isFinite(value) ? value : fallback;
@@ -39,6 +110,47 @@
     const seconds = Math.floor((safe % 60000) / 1000);
     const millis = safe % 1000;
     return `${minutes}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
+  }
+
+  function getCourseDefinition(id) {
+    return COURSES_BY_ID[id] || OPEN_SEA_CIRCUIT;
+  }
+
+  function spawnLocalToWorld(side, forward, origin, yaw) {
+    const heading = finite(yaw, Math.PI);
+    const start = origin || { x: 0, z: 0 };
+    return {
+      x: finite(start.x, 0) + Math.sin(heading) * finite(forward, 0) + Math.cos(heading) * finite(side, 0),
+      z: finite(start.z, 0) + Math.cos(heading) * finite(forward, 0) - Math.sin(heading) * finite(side, 0)
+    };
+  }
+
+  function materializeCourse(definition, origin, yaw) {
+    const def = definition || OPEN_SEA_CIRCUIT;
+    if (!def.relativeToSpawn) return def;
+    const checkpoints = def.route.map((point, index) => {
+      const world = spawnLocalToWorld(point.side, point.forward, origin, yaw);
+      return Object.freeze({
+        id: index === 0 ? 'start' : `cp${index}`,
+        label: index === 0 ? 'START / FINISH' : `GATE ${index}`,
+        x: world.x,
+        z: world.z
+      });
+    });
+    return Object.freeze({
+      id: def.id,
+      name: def.name,
+      shortName: def.shortName,
+      description: def.description,
+      worldMode: def.worldMode,
+      seaState: def.seaState,
+      laps: def.laps,
+      checkpointRadiusM: def.checkpointRadiusM,
+      unlockIndex: def.unlockIndex,
+      relativeToSpawn: false,
+      sourceDefinitionId: def.id,
+      checkpoints: Object.freeze(checkpoints)
+    });
   }
 
   function createRaceState(course) {
@@ -137,6 +249,13 @@
   const api = {
     VERSION,
     OPEN_SEA_CIRCUIT,
+    WAIKIKI_PACIFIC_RUN,
+    QIXINGTAN_OCEAN_RUN,
+    COURSE_DEFINITIONS,
+    COURSES_BY_ID,
+    getCourseDefinition,
+    spawnLocalToWorld,
+    materializeCourse,
     distanceSq2D,
     formatRaceTime,
     createRaceState,
