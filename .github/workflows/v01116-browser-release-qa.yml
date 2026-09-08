@@ -1,0 +1,49 @@
+name: V0.11.16 Browser Release QA
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'index.html'
+      - 'styles.css'
+      - 'package.json'
+      - '.github/workflows/v01116-browser-release-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'index.html'
+      - 'styles.css'
+      - 'package.json'
+      - '.github/workflows/v01116-browser-release-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-release-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build production output
+        run: npm run build
+      - name: Install Playwright 1.63.0 without changing repository manifests
+        run: |
+          npm install --no-save --package-lock=false playwright@1.63.0
+          npx playwright install --with-deps chromium webkit
+      - name: Run Chromium + WebKit desktop/mobile release QA
+        run: npm run test:browser-release
+      - name: Upload browser QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v01116-browser-release-qa
+          path: artifacts/browser-release-qa/
+          if-no-files-found: warn
+          retention-days: 14
