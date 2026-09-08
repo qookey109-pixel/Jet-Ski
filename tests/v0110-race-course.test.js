@@ -1,7 +1,7 @@
 const assert = require('assert');
 const Race = require('../src/game/race-course.js');
 
-assert.equal(Race.VERSION, 'V0.11.0');
+assert.equal(Race.VERSION, 'V0.11.5');
 const course = Race.OPEN_SEA_CIRCUIT;
 assert.equal(course.checkpoints.length, 8);
 assert.equal(course.laps, 2);
@@ -66,4 +66,4 @@ for (let i = 0; i < 20000; i++) {
   assert(d >= 0);
 }
 
-console.log('V0.11.0 race course regression PASS');
+console.log('V0.11.5 race course regression PASS');
