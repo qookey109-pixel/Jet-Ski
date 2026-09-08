@@ -26,6 +26,7 @@
     body.v01114-race-focus .sea-controls,
     body.v01114-race-focus .help,
     body.v01114-race-focus .v01114-dev-overlay{display:none!important}
+    body[data-v01114-phase="menu"] .v01114-dev-overlay{display:none!important}
     body.v01114-race-focus .hud{padding:7px 10px;border-radius:999px;line-height:1.2;background:rgba(2,18,31,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
     body.v01114-race-focus .hud>div{display:none}
     body.v01114-race-focus .hud>div:nth-child(2){display:block;font-size:12px;font-weight:900;white-space:nowrap}
