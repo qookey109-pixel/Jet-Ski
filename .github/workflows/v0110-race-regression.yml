@@ -57,6 +57,8 @@ jobs:
           node --check src/ui/race-ui.js
           node --check src/ui/onboarding-core.js
           node --check src/ui/onboarding-runtime.js
+          node --check src/ui/race-presentation-core.js
+          node --check src/ui/race-presentation-runtime.js
           node --check src/game/race-manager.js
           node --check src/ai/race-ai-core.js
           node --check src/ai/race-ai-runtime.js
@@ -91,6 +93,8 @@ jobs:
           test -f dist/src/game/challenge-runtime.js
           test -f dist/src/ui/onboarding-core.js
           test -f dist/src/ui/onboarding-runtime.js
+          test -f dist/src/ui/race-presentation-core.js
+          test -f dist/src/ui/race-presentation-runtime.js
           test -f dist/src/ai/race-ai-runtime.js
           test -f dist/src/gameplay/boost-runtime.js
           test -f dist/src/input/control-camera-runtime.js
