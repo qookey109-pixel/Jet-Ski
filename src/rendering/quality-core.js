@@ -30,15 +30,17 @@
     const dpr = Math.max(0.5, Number(devicePixelRatio) || 1);
     const scale = clamp(resolutionScale == null ? 1 : resolutionScale, 0.6, 1.0);
     const hardSafariCap = safariDesktop ? 1.15 : Infinity;
+    const hardSafariReflectionCap = safariDesktop ? 256 : Infinity;
     const effectivePixelRatio = Math.min(dpr, preset.pixelRatioCap * scale, hardSafariCap);
     const shadows = typeof shadowOverride === 'boolean' ? shadowOverride : preset.shadows;
     return {
       level,
       effectivePixelRatio,
-      reflectionSize: preset.reflectionSize,
+      reflectionSize: Math.min(preset.reflectionSize, hardSafariReflectionCap),
       shadows,
       resolutionScale: scale,
-      safariHardCap: safariDesktop ? 1.15 : null
+      safariHardCap: safariDesktop ? 1.15 : null,
+      safariReflectionHardCap: safariDesktop ? 256 : null
     };
   }
 
