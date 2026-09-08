@@ -4,8 +4,9 @@ on:
   pull_request:
     paths:
       - 'src/game/**'
+      - 'src/ai/**'
       - 'src/ui/race-ui.js'
-      - 'tests/v0110-*.test.js'
+      - 'tests/v011*.test.js'
       - 'scripts/**'
       - 'package.json'
       - 'index.html'
@@ -14,8 +15,9 @@ on:
     branches: [main]
     paths:
       - 'src/game/**'
+      - 'src/ai/**'
       - 'src/ui/race-ui.js'
-      - 'tests/v0110-*.test.js'
+      - 'tests/v011*.test.js'
       - 'scripts/**'
       - 'package.json'
       - 'index.html'
@@ -33,19 +35,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Syntax check race and delivery runtime
+      - name: Syntax check race, AI and delivery runtime
         run: |
           node --check src/game/race-course.js
           node --check src/ui/race-ui.js
           node --check src/game/race-manager.js
+          node --check src/ai/race-ai-core.js
+          node --check src/ai/race-ai-runtime.js
           node --check scripts/static-server.js
           node --check scripts/dev-server.js
           node --check scripts/build.js
           node --check scripts/preview.js
       - name: Run race progression regression
         run: npm run test:race
+      - name: Run AI race regression
+        run: node tests/v0111-race-ai.test.js
       - name: Verify production build
         run: |
           npm run build
           test -f dist/index.html
           test -f dist/src/game/race-manager.js
+          test -f dist/src/ai/race-ai-runtime.js
