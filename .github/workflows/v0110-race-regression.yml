@@ -44,6 +44,8 @@ jobs:
       - name: Syntax check gameplay and delivery runtime
         run: |
           node --check src/game/race-course.js
+          node --check src/game/progression-core.js
+          node --check src/game/progression-runtime.js
           node --check src/ui/race-ui.js
           node --check src/game/race-manager.js
           node --check src/ai/race-ai-core.js
@@ -65,6 +67,8 @@ jobs:
           npm run build
           test -f dist/index.html
           test -f dist/src/game/race-manager.js
+          test -f dist/src/game/progression-core.js
+          test -f dist/src/game/progression-runtime.js
           test -f dist/src/ai/race-ai-runtime.js
           test -f dist/src/gameplay/boost-runtime.js
           test -f dist/src/input/control-camera-runtime.js
