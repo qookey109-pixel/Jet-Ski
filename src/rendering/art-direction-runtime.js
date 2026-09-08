@@ -17,11 +17,14 @@
   const hulls=new THREE.InstancedMesh(hullGeo,hullMat,boatCount), sails=new THREE.InstancedMesh(sailGeo,sailMat,boatCount);
   hulls.castShadow=sails.castShadow=false; hulls.receiveShadow=sails.receiveShadow=false;
   dressing.add(hulls,sails);
-  const matrix=new THREE.Matrix4(), quat=new THREE.Quaternion(), scaleVec=new THREE.Vector3(), pos=new THREE.Vector3(), euler=new THREE.Euler();
-  const seeds=Array.from({length:boatCount},(_,i)=>({angle:(i/boatCount)*Math.PI*2+.37*(i%3),radius:260+(i%4)*72,scale:.65+(i%3)*.18}));
-  let activeProfile=null,lastKey='',lastApply=0;
 
-  function colorLerp(targetHex,current,t){const target=new THREE.Color(targetHex);current.lerp(target,t);}
+  // Reused temporaries keep this visual layer allocation-free after boot.
+  const matrix=new THREE.Matrix4(), quat=new THREE.Quaternion(), scaleVec=new THREE.Vector3(), pos=new THREE.Vector3(), euler=new THREE.Euler();
+  const targetColor=new THREE.Color();
+  const seeds=Array.from({length:boatCount},(_,i)=>({angle:(i/boatCount)*Math.PI*2+.37*(i%3),radius:260+(i%4)*72,scale:.65+(i%3)*.18}));
+  let activeProfile=null,lastKey='',lastApply=performance.now(),lastDressingAt=0;
+
+  function colorLerp(targetHex,current,t){targetColor.setHex(targetHex);current.lerp(targetColor,t);}
   function qualityScale(){const q=root.JETSKI_QUALITY&&root.JETSKI_QUALITY.state;const level=q&&q.appliedLevel||'high';return level==='low'?.45:level==='medium'?.65:level==='ultra'?1:0.82;}
   function updateDressing(profile){
     const visible=Core.dressingCount(boatCount,qualityScale(),profile);
@@ -46,12 +49,14 @@
 
   function currentKey(){const event=Manager.selectedEvent||{};if(event.id==='pacific-crown-final')return'pacific-crown-final';return root.V097_WORLD_MODES&&root.V097_WORLD_MODES.mode||event.worldMode||'open-sea';}
   function tick(now){
-    const key=currentKey();if(key!==lastKey){lastKey=key;const event=Manager.selectedEvent||{};activeProfile=Core.profileFor(key,event.id);updateDressing(activeProfile);}
-    if(now-lastApply>=100){applyProfile(activeProfile||Core.PROFILES['open-sea'],(now-lastApply)/1000||.1);lastApply=now;if(((now/1000)|0)%2===0)updateDressing(activeProfile);}
+    const key=currentKey();
+    if(key!==lastKey){lastKey=key;const event=Manager.selectedEvent||{};activeProfile=Core.profileFor(key,event.id);updateDressing(activeProfile);lastDressingAt=now;}
+    if(now-lastApply>=100){applyProfile(activeProfile||Core.PROFILES['open-sea'],(now-lastApply)/1000);lastApply=now;}
+    if(now-lastDressingAt>=2000){updateDressing(activeProfile||Core.PROFILES['open-sea']);lastDressingAt=now;}
     dressing.visible=!(root.V01051_REAL_WORLD_3D&&root.V01051_REAL_WORLD_3D.state&&root.V01051_REAL_WORLD_3D.state.active);
     root.requestAnimationFrame(tick);
   }
   root.requestAnimationFrame(tick);
   const versionNode=document.querySelector('#version');if(versionNode)versionNode.textContent=VERSION;document.title=`Swim Ring Racing ${VERSION}`;
-  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true};
+  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true,paletteUpdateHz:10,dressingUpdateMs:2000};
 })(typeof window!=='undefined'?window:globalThis);
