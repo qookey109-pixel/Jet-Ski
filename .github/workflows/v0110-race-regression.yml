@@ -8,6 +8,7 @@ on:
       - 'src/gameplay/**'
       - 'src/input/**'
       - 'src/rendering/**'
+      - 'src/audio/**'
       - 'src/ui/race-ui.js'
       - 'tests/v011*.test.js'
       - 'scripts/**'
@@ -22,6 +23,7 @@ on:
       - 'src/gameplay/**'
       - 'src/input/**'
       - 'src/rendering/**'
+      - 'src/audio/**'
       - 'src/ui/race-ui.js'
       - 'tests/v011*.test.js'
       - 'scripts/**'
@@ -56,6 +58,8 @@ jobs:
           node --check src/input/control-camera-runtime.js
           node --check src/rendering/quality-core.js
           node --check src/rendering/quality-runtime.js
+          node --check src/audio/audio-core.js
+          node --check src/audio/audio-runtime.js
           node --check scripts/static-server.js
           node --check scripts/dev-server.js
           node --check scripts/build.js
@@ -73,3 +77,4 @@ jobs:
           test -f dist/src/gameplay/boost-runtime.js
           test -f dist/src/input/control-camera-runtime.js
           test -f dist/src/rendering/quality-runtime.js
+          test -f dist/src/audio/audio-runtime.js
