@@ -10,6 +10,7 @@
 
   const VERSION = 'V0.11.0';
   const course = Race.OPEN_SEA_CIRCUIT;
+  const CONFIG_MUTATION_KEYS = new Set(['Digit0', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'KeyP']);
   let raceState = Race.createRaceState(course);
   let countdownEndMs = 0;
   let countdownLastValue = null;
@@ -129,6 +130,10 @@
     courseGroup.visible = Boolean(visible);
   }
 
+  function raceBaselineLocked() {
+    return raceState.phase === 'countdown' || raceState.phase === 'racing' || raceState.phase === 'paused';
+  }
+
   function setConfigLocked(locked) {
     for (const button of worldButtons) button.disabled = Boolean(locked);
     for (const button of physicsButtons) button.disabled = Boolean(locked);
@@ -184,6 +189,7 @@
   }
 
   function startRace() {
+    ui.root.style.display = '';
     normalizeRaceConfig();
     setConfigLocked(true);
     setCourseVisible(true);
@@ -206,7 +212,6 @@
     raceState.phase = 'free-ride';
     setConfigLocked(false);
     setCourseVisible(false);
-    ui.showRaceHud();
     ui.root.style.display = 'none';
     launcher.style.display = '';
   }
@@ -339,6 +344,14 @@
     runtimeUpdate(dt, t);
   };
 
+  // Capture phase beats the older global hotkeys registered by existing modules without changing those modules.
+  addEventListener('keydown', event => {
+    if (raceBaselineLocked() && CONFIG_MUTATION_KEYS.has(event.code)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }, true);
+
   addEventListener('keydown', event => {
     if (event.code !== 'Escape') return;
     if (raceState.phase === 'racing') {
@@ -361,6 +374,7 @@
   root.JETSKI_RACE_MANAGER = {
     version: VERSION,
     course,
+    configMutationKeys: [...CONFIG_MUTATION_KEYS],
     get state() { return raceState; },
     startRace,
     enterFreeRide,
