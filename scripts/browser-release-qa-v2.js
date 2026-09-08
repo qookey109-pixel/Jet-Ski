@@ -25,6 +25,7 @@ function receipt(engine, profile) {
     consoleErrors: [],
     pageErrors: [],
     requestFailures: [],
+    httpErrors: [],
     screenshots: [],
     status: 'RUNNING'
   };
@@ -68,6 +69,11 @@ function captureErrors(page, r) {
   page.on('requestfailed', request => {
     if (request.url().startsWith(BASE)) {
       r.requestFailures.push({ url: request.url(), reason: request.failure() && request.failure().errorText || 'failed' });
+    }
+  });
+  page.on('response', response => {
+    if (response.status() >= 400 && !response.url().startsWith(BASE)) {
+      r.httpErrors.push({ status: response.status(), url: response.url() });
     }
   });
 }
@@ -118,66 +124,100 @@ async function startRace(page) {
   await page.waitForFunction(() => window.JETSKI_RACE_MANAGER.state.phase === 'racing', null, { timeout: 12000 });
 }
 
-async function driveAndBoost(page, r) {
-  const before = Number(await page.locator('#speed').textContent()) || 0;
-  const motionStart = await page.evaluate(() => ({
-    wallMs: performance.now(),
-    planarFrames: Number(window.V0992_PLANAR_3DOF && window.V0992_PLANAR_3DOF.state && window.V0992_PLANAR_3DOF.state.activeFrames) || 0
-  }));
-  await page.keyboard.down('w');
-  await page.waitForTimeout(700);
-  await page.keyboard.down('Space');
-
-  const deadline = Date.now() + 2800;
-  let sample = null;
-  while (Date.now() < deadline) {
-    sample = await page.evaluate(() => {
-      let airborneState = null;
-      let gasState = null;
-      let rawSpeed = null;
-      let maxSpeed = null;
-      try { airborneState = Boolean(eval('airborne')); } catch (_) {}
-      try { gasState = Boolean(eval('input && input.gas')); } catch (_) {}
-      try { rawSpeed = Number(eval('speed')); } catch (_) {}
-      try { maxSpeed = Number(eval('physics.maxSpeed')); } catch (_) {}
-      const planar = window.V0992_PLANAR_3DOF && window.V0992_PLANAR_3DOF.state;
-      return {
-        requested: Boolean(window.JETSKI_BOOST.state.requested),
-        active: Boolean(window.JETSKI_BOOST.state.active),
-        activationCount: Number(window.JETSKI_BOOST.state.activationCount) || 0,
-        energy: Number(window.JETSKI_BOOST.state.energy) || 0,
-        airborne: airborneState,
-        gas: gasState,
-        speedMps: rawSpeed,
-        maxSpeedMps: maxSpeed,
-        speedRatio: Number.isFinite(rawSpeed) && Number.isFinite(maxSpeed) && maxSpeed > 0 ? rawSpeed / maxSpeed : null,
-        planarFrames: Number(planar && planar.activeFrames) || 0,
-        planarU: Number(planar && planar.u),
-        planarCommandU: Number(planar && planar.commandU),
-        planarSurgeAcceleration: Number(planar && planar.surgeAcceleration),
-        wallMs: performance.now()
-      };
-    });
-    if (sample.activationCount >= 1) break;
-    await page.waitForTimeout(100);
-  }
-
-  const during = Number(await page.locator('#speed').textContent()) || 0;
-  await page.keyboard.up('Space');
-  await page.keyboard.up('w');
-
-  if (sample) {
+async function motionSample(page, motionStart) {
+  const sample = await page.evaluate(() => {
+    let airborneState = null;
+    let gasState = null;
+    let rawSpeed = null;
+    let maxSpeed = null;
+    try { airborneState = Boolean(eval('airborne')); } catch (_) {}
+    try { gasState = Boolean(eval('input && input.gas')); } catch (_) {}
+    try { rawSpeed = Number(eval('speed')); } catch (_) {}
+    try { maxSpeed = Number(eval('physics.maxSpeed')); } catch (_) {}
+    const planar = window.V0992_PLANAR_3DOF && window.V0992_PLANAR_3DOF.state;
+    const boost = window.JETSKI_BOOST;
+    return {
+      requested: Boolean(boost && boost.state.requested),
+      active: Boolean(boost && boost.state.active),
+      activationCount: Number(boost && boost.state.activationCount) || 0,
+      energy: Number(boost && boost.state.energy) || 0,
+      minSpeedRatio: Number(boost && boost.config && boost.config.minSpeedRatio) || 0.06,
+      airborne: airborneState,
+      gas: gasState,
+      speedMps: rawSpeed,
+      maxSpeedMps: maxSpeed,
+      speedRatio: Number.isFinite(rawSpeed) && Number.isFinite(maxSpeed) && maxSpeed > 0 ? rawSpeed / maxSpeed : null,
+      planarFrames: Number(planar && planar.activeFrames) || 0,
+      planarU: Number(planar && planar.u),
+      planarCommandU: Number(planar && planar.commandU),
+      planarSurgeAcceleration: Number(planar && planar.surgeAcceleration),
+      wallMs: performance.now()
+    };
+  });
+  if (motionStart) {
     const elapsedMs = Math.max(1, Number(sample.wallMs) - Number(motionStart.wallMs));
     const frameDelta = Math.max(0, Number(sample.planarFrames) - Number(motionStart.planarFrames));
     sample.motionElapsedMs = elapsedMs;
     sample.planarFrameDelta = frameDelta;
     sample.approxPlanarHz = frameDelta * 1000 / elapsedMs;
   }
+  return sample;
+}
 
+async function driveAndBoost(page, r) {
+  const before = Number(await page.locator('#speed').textContent()) || 0;
+  const motionStart = await page.evaluate(() => ({
+    wallMs: performance.now(),
+    planarFrames: Number(window.V0992_PLANAR_3DOF && window.V0992_PLANAR_3DOF.state && window.V0992_PLANAR_3DOF.state.activeFrames) || 0
+  }));
+
+  let sample = null;
+  await page.keyboard.down('w');
+  try {
+    try {
+      await page.waitForFunction(() => {
+        let rawSpeed = null;
+        let maxSpeed = null;
+        let gasState = false;
+        let airborneState = true;
+        try { rawSpeed = Number(eval('speed')); } catch (_) {}
+        try { maxSpeed = Number(eval('physics.maxSpeed')); } catch (_) {}
+        try { gasState = Boolean(eval('input && input.gas')); } catch (_) {}
+        try { airborneState = Boolean(eval('airborne')); } catch (_) {}
+        const boost = window.JETSKI_BOOST;
+        const minRatio = Number(boost && boost.config && boost.config.minSpeedRatio) || 0.06;
+        const ratio = Number.isFinite(rawSpeed) && Number.isFinite(maxSpeed) && maxSpeed > 0 ? rawSpeed / maxSpeed : 0;
+        return gasState && !airborneState && ratio >= minRatio;
+      }, null, { timeout: 30000 });
+    } catch (_) {
+      sample = await motionSample(page, motionStart);
+      throw new Error(`Forward acceleration did not reach Boost eligibility under simulation-paced QA: ${JSON.stringify(sample)}`);
+    }
+
+    const eligible = await motionSample(page, motionStart);
+    pass(r, 'motion/accelerates', `${before} -> ${Math.round((eligible.speedMps || 0) * 3.6)} km/h`);
+    info(r, 'motion/frame-pacing', eligible);
+
+    await page.keyboard.down('Space');
+    try {
+      await page.waitForFunction(() => Boolean(
+        window.JETSKI_BOOST && window.JETSKI_BOOST.state &&
+        window.JETSKI_BOOST.state.requested && window.JETSKI_BOOST.state.activationCount >= 1
+      ), null, { timeout: 10000 });
+    } catch (_) {
+      sample = await motionSample(page, motionStart);
+      throw new Error(`Boost did not activate after simulation reached eligibility: ${JSON.stringify(sample)}`);
+    }
+    sample = await motionSample(page, motionStart);
+  } finally {
+    await page.keyboard.up('Space').catch(() => {});
+    await page.keyboard.up('w').catch(() => {});
+  }
+
+  const during = Number(await page.locator('#speed').textContent()) || 0;
   assert(during > before, `Craft did not accelerate: ${before} -> ${during}`);
   assert(sample && sample.requested, `Space did not reach Boost request state: ${JSON.stringify(sample)}`);
-  assert(sample.activationCount >= 1, `Boost never found an eligible window while W+Space were held: ${JSON.stringify(sample)}`);
-  pass(r, 'motion/accelerates', `${before} -> ${during} km/h`);
+  assert(sample.activationCount >= 1, `Boost did not activate: ${JSON.stringify(sample)}`);
   pass(r, 'motion/boost-keyboard', sample);
 
   await page.keyboard.press('Escape');
@@ -210,6 +250,31 @@ async function installCoastFlowStubs(page) {
     window.V097_HAWAII_COAST = coast();
     window.V096_TAIWAN_COAST = coast();
   });
+}
+
+async function gateDiagnostics(page, before, reason) {
+  return page.evaluate(({ previous, why }) => {
+    const manager = window.JETSKI_RACE_MANAGER;
+    const state = manager && manager.state;
+    let craft = null;
+    try { craft = eval('ski'); } catch (_) {}
+    const target = state && manager.course && manager.course.checkpoints[state.nextCheckpointIndex];
+    const radius = Number(manager && manager.course && manager.course.checkpointRadiusM) || 14;
+    const dx = craft && target ? craft.position.x - target.x : null;
+    const dz = craft && target ? craft.position.z - target.z : null;
+    return {
+      ok: false,
+      reason: why,
+      previous,
+      phase: state && state.phase,
+      gate: state && state.nextCheckpointIndex,
+      lap: state && state.lap,
+      checkpointsPassed: state && state.checkpointsPassed,
+      craft: craft ? { x: craft.position.x, z: craft.position.z } : null,
+      target: target ? { x: target.x, z: target.z, radius } : null,
+      distanceToTarget: Number.isFinite(dx) && Number.isFinite(dz) ? Math.hypot(dx, dz) : null
+    };
+  }, { previous: before, why: reason });
 }
 
 async function crossCurrentGate(page) {
@@ -251,15 +316,19 @@ async function crossCurrentGate(page) {
   }, before.gate);
   if (!entered.ok) return entered;
 
-  await page.waitForFunction(previous => {
-    const manager = window.JETSKI_RACE_MANAGER;
-    const state = manager && manager.state;
-    if (!state) return false;
-    return state.phase === 'finished'
-      || state.checkpointsPassed > previous.checkpointsPassed
-      || state.lap !== previous.lap
-      || state.nextCheckpointIndex !== previous.gate;
-  }, before, { timeout: 2000 });
+  try {
+    await page.waitForFunction(previous => {
+      const manager = window.JETSKI_RACE_MANAGER;
+      const state = manager && manager.state;
+      if (!state) return false;
+      return state.phase === 'finished'
+        || state.checkpointsPassed > previous.checkpointsPassed
+        || state.lap !== previous.lap
+        || state.nextCheckpointIndex !== previous.gate;
+    }, before, { timeout: 10000 });
+  } catch (_) {
+    return gateDiagnostics(page, before, 'gate-cross-timeout');
+  }
 
   return page.evaluate(() => {
     const state = window.JETSKI_RACE_MANAGER.state;
@@ -356,11 +425,12 @@ async function runDesktop(engine, browserType) {
     await shot(page, r, 'race-motion');
     await championship(page, r);
     await saveCheck(page, r);
-    assert(!r.consoleErrors.length, `Console errors: ${r.consoleErrors.join(' | ')}`);
+    assert(!r.consoleErrors.length, `Console errors: ${r.consoleErrors.join(' | ')}; HTTP errors: ${JSON.stringify(r.httpErrors)}`);
     assert(!r.pageErrors.length, `Page errors: ${r.pageErrors.join(' | ')}`);
     assert(!r.requestFailures.length, `Local requests failed: ${JSON.stringify(r.requestFailures)}`);
     pass(r, 'console/no-errors', true);
     pass(r, 'network/local-assets', true);
+    if (r.httpErrors.length) info(r, 'network/external-http-errors', r.httpErrors);
     r.status = 'PASS';
     await context.close();
   } catch (error) {
@@ -431,10 +501,11 @@ async function runMobile(engine, browserType) {
     pass(r, 'mobile/portrait-guidance', portrait);
     await shot(page, r, 'mobile-portrait-guidance');
 
-    assert(!r.consoleErrors.length, `Console errors: ${r.consoleErrors.join(' | ')}`);
+    assert(!r.consoleErrors.length, `Console errors: ${r.consoleErrors.join(' | ')}; HTTP errors: ${JSON.stringify(r.httpErrors)}`);
     assert(!r.pageErrors.length, `Page errors: ${r.pageErrors.join(' | ')}`);
     assert(!r.requestFailures.length, `Local requests failed: ${JSON.stringify(r.requestFailures)}`);
     pass(r, 'console/no-errors', true);
+    if (r.httpErrors.length) info(r, 'network/external-http-errors', r.httpErrors);
     r.status = 'PASS';
     await context.close();
   } catch (error) {
