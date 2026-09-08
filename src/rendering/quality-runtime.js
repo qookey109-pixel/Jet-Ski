@@ -35,6 +35,18 @@
     }
   } catch (_) {}
 
+  const motionStyle = document.createElement('style');
+  motionStyle.textContent = `
+    body.v0114-ui-motion-off .jr-countdown{animation:none!important}
+    body.v0114-ui-motion-off .jr-btn,
+    body.v0114-ui-motion-off .jr-toast{transition:none!important}
+  `;
+  document.head.appendChild(motionStyle);
+
+  function applyMotionPreference() {
+    document.body.classList.toggle('v0114-ui-motion-off', !state.motionEffects);
+  }
+
   function persist() {
     try {
       localStorage.setItem(STORAGE, JSON.stringify({
@@ -101,6 +113,7 @@
 
   function setMotionEffects(value) {
     state.motionEffects = Boolean(value);
+    applyMotionPreference();
     persist();
     refreshUi();
   }
@@ -186,13 +199,14 @@
     scaleEl.value = String(state.resolutionScale);
     scaleValueEl.textContent = `${Math.round(state.resolutionScale * 100)}%`;
     shadowButton.textContent = `Shadows: ${state.shadows ? 'ON' : 'OFF'}`;
-    motionButton.textContent = `Motion FX: ${state.motionEffects ? 'ON' : 'OFF'}`;
+    motionButton.textContent = `UI Motion: ${state.motionEffects ? 'ON' : 'OFF'}`;
     const safariNote = safariDesktop ? ' · Safari safety cap 1.15x / reflection 256' : '';
     const modeText = state.mode === 'auto' ? `AUTO → ${String(state.appliedLevel || state.autoLevel).toUpperCase()}` : String(state.appliedLevel || state.mode).toUpperCase();
     statusEl.textContent = `${modeText} · ${state.effectivePixelRatio.toFixed(2)}x · reflection ${state.reflectionSize || '—'} · ${state.shadows ? 'shadows' : 'no shadows'}${safariNote}`;
   }
 
   installSettingsButtons();
+  applyMotionPreference();
   root.addEventListener('resize', () => applyBudget('resize'));
 
   let lastAutoCheck = performance.now();
