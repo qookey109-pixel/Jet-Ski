@@ -22,54 +22,28 @@
   try { selectedId = Core.sanitizeSelection(localStorage.getItem(STORAGE), totalStars()); } catch (_) {}
   let previousUnlockedCount = Core.unlockedLiveries(totalStars()).length;
 
-  const liveryGroup = new THREE.Group();
-  liveryGroup.name = 'V01110LiveryOverlay';
+  // main.js defines these as classic-script lexical bindings. Recolor the existing
+  // craft materials directly so liveries do not add a second overlapping ring mesh.
+  const craftPrimaryMaterial = typeof inflatableMat !== 'undefined' ? inflatableMat : null;
+  const craftAccentMaterial = typeof stripeMat !== 'undefined' ? stripeMat : null;
 
-  const shellMaterial = new THREE.MeshStandardMaterial({
-    color: 0xff9f1c,
-    emissive: 0x3a1800,
-    emissiveIntensity: 0.24,
-    roughness: 0.30,
-    metalness: 0.02,
-    transparent: true,
-    opacity: 0.38,
-    depthWrite: false
+  // A tiny badge is the only additional craft geometry. It appears only for the
+  // championship livery and has no collision/shadow/gameplay role.
+  const crownMaterial = new THREE.MeshStandardMaterial({
+    color: 0xfff0a3,
+    emissive: 0x6b3a00,
+    emissiveIntensity: 0.30,
+    roughness: 0.32,
+    metalness: 0.05
   });
-  const accentMaterial = new THREE.MeshStandardMaterial({
-    color: 0xfff3d6,
-    emissive: 0x3a1800,
-    emissiveIntensity: 0.16,
-    roughness: 0.34,
-    metalness: 0.01,
-    transparent: true,
-    opacity: 0.72,
-    depthWrite: false
-  });
-
-  const shell = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.515, 14, 48), shellMaterial);
-  shell.rotation.x = Math.PI / 2;
-  shell.position.y = 0.46;
-  shell.scale.z = 1.17;
-  shell.castShadow = false;
-  shell.receiveShadow = false;
-  liveryGroup.add(shell);
-
-  for (const angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-    const stripe = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.525, 10, 12, Math.PI / 8), accentMaterial);
-    stripe.rotation.x = Math.PI / 2;
-    stripe.rotation.z = angle;
-    stripe.position.y = 0.46;
-    stripe.scale.z = 1.17;
-    stripe.castShadow = false;
-    stripe.receiveShadow = false;
-    liveryGroup.add(stripe);
-  }
-
-  const crest = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), accentMaterial);
-  crest.position.set(0, 1.10, -1.54);
-  crest.rotation.z = Math.PI / 4;
-  liveryGroup.add(crest);
-  ski.add(liveryGroup);
+  const crownBadge = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), crownMaterial);
+  crownBadge.name = 'V01110PacificCrownBadge';
+  crownBadge.position.set(0, 1.10, -1.54);
+  crownBadge.rotation.z = Math.PI / 4;
+  crownBadge.castShadow = false;
+  crownBadge.receiveShadow = false;
+  crownBadge.visible = false;
+  ski.add(crownBadge);
 
   function persist() {
     try { localStorage.setItem(STORAGE, selectedId); } catch (_) {}
@@ -79,17 +53,28 @@
     return Core.BY_ID[selectedId] || Core.LIVERIES[0];
   }
 
+  function applyMaterial(material, color, emissive, emissiveIntensity) {
+    if (!material) return;
+    if (material.color && typeof material.color.setHex === 'function') material.color.setHex(color);
+    if (material.emissive && typeof material.emissive.setHex === 'function') {
+      material.emissive.setHex(emissive);
+      material.emissiveIntensity = emissiveIntensity;
+    }
+    material.needsUpdate = true;
+  }
+
   function applyLivery(id) {
     const stars = totalStars();
-    const nextId = Core.sanitizeSelection(id, stars);
-    selectedId = nextId;
+    selectedId = Core.sanitizeSelection(id, stars);
     const livery = currentLivery();
-    shellMaterial.color.setHex(livery.primary);
-    shellMaterial.emissive.setHex(livery.emissive);
-    accentMaterial.color.setHex(livery.accent);
-    accentMaterial.emissive.setHex(livery.emissive);
-    shellMaterial.emissiveIntensity = livery.id === 'pacific-crown' ? 0.42 : 0.24;
-    accentMaterial.emissiveIntensity = livery.id === 'pacific-crown' ? 0.30 : 0.16;
+    const crown = livery.id === 'pacific-crown';
+
+    applyMaterial(craftPrimaryMaterial, livery.primary, livery.emissive, crown ? 0.26 : 0.08);
+    applyMaterial(craftAccentMaterial, livery.accent, livery.emissive, crown ? 0.18 : 0.04);
+    crownMaterial.color.setHex(livery.accent);
+    crownMaterial.emissive.setHex(livery.emissive);
+    crownBadge.visible = crown;
+
     persist();
     renderGarage();
     return livery;
@@ -202,6 +187,7 @@
     renderGarage,
     storageKey: STORAGE,
     visualOnly: true,
+    geometryReplaced: false,
     collisionAdded: false,
     massChanged: false,
     cgChanged: false,
