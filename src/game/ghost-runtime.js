@@ -143,7 +143,7 @@
   }
 
   function captureCurrentSample(force) {
-    if (!recording || Manager.state.phase !== 'racing' || !activeFrame) return;
+    if (!recording || !activeFrame || (!force && Manager.state.phase !== 'racing')) return;
     const elapsed = Number(Manager.state.elapsedMs) || 0;
     if (!force && elapsed - lastSampleAt < recording.sampleIntervalMs) return;
     const pose = { x: ski.position.x, z: ski.position.z, yaw: typeof yaw === 'number' ? yaw : ski.rotation.y };
@@ -211,7 +211,7 @@
     persist();
     activeGhost = completed;
     setDeltaText('NEW GHOST', 'ahead');
-    const ui = root.JETSKI_RACE_MANAGER && document.querySelector('.jr-toast');
+    const ui = document.querySelector('.jr-toast');
     if (ui) {
       ui.textContent = 'PERSONAL BEST GHOST SAVED';
       ui.classList.add('show');
