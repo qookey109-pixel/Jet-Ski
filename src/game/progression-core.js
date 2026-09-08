@@ -1,9 +1,9 @@
-// V0.11.5 Multi-race catalog + persistent progression pure core.
+// V0.11.6 Multi-race catalog + championship progression pure core.
 (function (root) {
   'use strict';
 
-  const VERSION = 'V0.11.5';
-  const PROFILE_VERSION = 1;
+  const VERSION = 'V0.11.6';
+  const PROFILE_VERSION = 2;
 
   function freezePoints(points) {
     return Object.freeze(points.map(point => Object.freeze(Object.assign({}, point))));
@@ -69,6 +69,27 @@
         { id: 'cp5', label: 'GATE 5', right: -92, forward: 148 },
         { id: 'cp6', label: 'GATE 6', right: -38, forward: 68 }
       ])
+    }),
+    Object.freeze({
+      id: 'pacific-crown-final',
+      name: 'Pacific Crown Final',
+      subtitle: 'Rough ocean · championship · 3 laps',
+      worldMode: 'open-sea',
+      seaState: 'rough',
+      laps: 3,
+      checkpointRadiusM: 16,
+      relative: false,
+      finale: true,
+      points: freezePoints([
+        { id: 'start', label: 'START / FINISH', x: 0, z: 112 },
+        { id: 'cp1', label: 'CROWN 1', x: 84, z: 86 },
+        { id: 'cp2', label: 'CROWN 2', x: 124, z: 18 },
+        { id: 'cp3', label: 'CROWN 3', x: 96, z: -76 },
+        { id: 'cp4', label: 'CROWN 4', x: 18, z: -126 },
+        { id: 'cp5', label: 'CROWN 5', x: -82, z: -98 },
+        { id: 'cp6', label: 'CROWN 6', x: -126, z: -18 },
+        { id: 'cp7', label: 'CROWN 7', x: -96, z: 74 }
+      ])
     })
   ]);
 
@@ -115,6 +136,7 @@
       seaState: event.seaState,
       laps: event.laps,
       checkpointRadiusM: event.checkpointRadiusM,
+      finale: Boolean(event.finale),
       checkpoints
     };
   }
@@ -160,6 +182,11 @@
     return place === 1 ? 3 : place === 2 ? 2 : 1;
   }
 
+  function totalStars(profile) {
+    const p = sanitizeProfile(profile);
+    return EVENTS.reduce((sum, event) => sum + (p.stars[event.id] || 0), 0);
+  }
+
   function recordResult(profile, result) {
     const p = sanitizeProfile(profile);
     const r = result || {};
@@ -199,6 +226,17 @@
     return EVENTS.every(event => (p.completions[event.id] || 0) > 0);
   }
 
+  function championshipTier(profile) {
+    const p = sanitizeProfile(profile);
+    const final = EVENTS[EVENTS.length - 1];
+    if (!(p.completions[final.id] > 0)) return 'QUALIFYING';
+    const stars = totalStars(p);
+    if (stars >= 11) return 'PACIFIC CROWN';
+    if (stars >= 9) return 'GOLD';
+    if (stars >= 6) return 'SILVER';
+    return 'BRONZE';
+  }
+
   const api = {
     VERSION,
     PROFILE_VERSION,
@@ -211,9 +249,11 @@
     sanitizeProfile,
     isUnlocked,
     starsForPlacement,
+    totalStars,
     recordResult,
     nextEventId,
-    campaignComplete
+    campaignComplete,
+    championshipTier
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
