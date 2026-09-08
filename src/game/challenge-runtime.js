@@ -107,7 +107,8 @@
     const ai = root.JETSKI_RACE_AI;
     const placement = ai && typeof ai.getPlayerRank === 'function' ? ai.getPlayerRank() : 4;
     const boost = root.JETSKI_BOOST && root.JETSKI_BOOST.state;
-    const boostActivations = boost ? Math.max(0, Number(boost.activationCount) || 0) : 0;
+    const boostObserved = Boolean(boost);
+    const boostActivations = boostObserved ? Math.max(0, Number(boost.activationCount) || 0) : 0;
 
     // Progression/Garage process the same finish first. Read the updated Championship
     // profile shortly afterward so all-four / 12-star challenges use repository authority.
@@ -126,6 +127,7 @@
         elapsedMs: Number(detail.elapsedMs) || 0,
         previousBestMs,
         placement,
+        boostObserved,
         boostActivations,
         completedEvents,
         totalStars,
