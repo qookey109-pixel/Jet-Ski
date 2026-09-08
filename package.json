@@ -1,6 +1,6 @@
 {
   "name": "swim-ring-racing",
-  "version": "0.11.12",
+  "version": "0.11.13",
   "private": true,
   "description": "Mobile-first Three.js water racing game with real-world coast, 9-Point+ hydrodynamics and race progression.",
   "scripts": {
@@ -20,7 +20,8 @@
     "test:cosmetics": "node tests/v01110-cosmetics.test.js",
     "test:challenges": "node tests/v01111-challenges.test.js",
     "test:onboarding": "node tests/v01112-onboarding.test.js",
-    "test:v011": "npm run test:race && npm run test:ai && npm run test:boost && npm run test:camera && npm run test:quality && npm run test:progression && npm run test:championship && npm run test:audio && npm run test:art && npm run test:ghost && npm run test:cosmetics && npm run test:challenges && npm run test:onboarding"
+    "test:presentation": "node tests/v01113-race-presentation.test.js",
+    "test:v011": "npm run test:race && npm run test:ai && npm run test:boost && npm run test:camera && npm run test:quality && npm run test:progression && npm run test:championship && npm run test:audio && npm run test:art && npm run test:ghost && npm run test:cosmetics && npm run test:challenges && npm run test:onboarding && npm run test:presentation"
   },
   "engines": { "node": ">=18" }
 }
