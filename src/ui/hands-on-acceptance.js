@@ -45,8 +45,10 @@
     const chromium = /(Chrome|Chromium|CriOS|Edg|OPR)\//.test(ua);
     const appleMobile = /(iPhone|iPad|iPod)/.test(ua);
     const android = /Android/.test(ua);
-    const safariDesktop = safari && !chromium && !appleMobile && !android;
-    const mobileLike = appleMobile || android || touchPoints > 0 || (width > 0 && height > 0 && Math.min(width, height) <= 600);
+    const touchMobileLike = appleMobile || android || touchPoints > 0;
+    const safariDesktop = safari && !chromium && !touchMobileLike;
+    const smallViewport = width > 0 && height > 0 && Math.min(width, height) <= 600;
+    const mobileLike = touchMobileLike || (!safariDesktop && smallViewport);
     return {
       mode: safariDesktop ? 'SAFARI_DESKTOP' : mobileLike ? 'MOBILE' : 'OTHER',
       safariDesktop,
@@ -159,6 +161,7 @@
   const observations = {};
   const samples = [];
   let capturing = false;
+  let collapsed = false;
   let captureTimer = null;
   let finishTimer = null;
 
@@ -174,24 +177,41 @@
   ].join(';');
   document.body.appendChild(panel);
 
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px';
+  panel.appendChild(header);
+
   const title = document.createElement('div');
   title.textContent = `實機驗收 ${VERSION}`;
-  title.style.cssText = 'font-weight:850;font-size:13px;margin-bottom:4px';
-  panel.appendChild(title);
+  title.style.cssText = 'font-weight:850;font-size:13px;white-space:nowrap';
+  header.appendChild(title);
+
+  const collapseButton = document.createElement('button');
+  collapseButton.type = 'button';
+  collapseButton.textContent = '縮小';
+  collapseButton.style.cssText = [
+    'min-height:26px', 'padding:0 7px', 'border-radius:8px', 'border:1px solid rgba(255,255,255,.2)',
+    'background:rgba(255,255,255,.08)', 'color:#fff', 'font:750 11px system-ui', 'cursor:pointer'
+  ].join(';');
+  header.appendChild(collapseButton);
+
+  const content = document.createElement('div');
+  content.style.cssText = 'margin-top:5px';
+  panel.appendChild(content);
 
   const deviceLine = document.createElement('div');
   deviceLine.textContent = `${context.mode} · ${context.orientation} ${context.width}×${context.height} · DPR ${context.dpr.toFixed(2)}`;
   deviceLine.style.cssText = 'opacity:.82;margin-bottom:7px';
-  panel.appendChild(deviceLine);
+  content.appendChild(deviceLine);
 
   const status = document.createElement('div');
   status.textContent = '先完成下方實機檢查，再記錄 30 秒效能。';
   status.style.cssText = 'margin-bottom:8px;color:#d8f4ff';
-  panel.appendChild(status);
+  content.appendChild(status);
 
   const checklist = document.createElement('div');
   checklist.style.cssText = 'display:grid;gap:5px;margin-bottom:8px';
-  panel.appendChild(checklist);
+  content.appendChild(checklist);
 
   const rows = CHECKS[context.mode] || CHECKS.OTHER;
   for (const row of rows) {
@@ -221,7 +241,7 @@
 
   const controls = document.createElement('div');
   controls.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
-  panel.appendChild(controls);
+  content.appendChild(controls);
 
   function addButton(label, handler) {
     const button = document.createElement('button');
@@ -235,6 +255,27 @@
     controls.appendChild(button);
     return button;
   }
+
+  function setCollapsed(next) {
+    collapsed = Boolean(next);
+    content.hidden = collapsed;
+    collapseButton.textContent = collapsed ? '展開' : '縮小';
+    panel.style.width = collapsed ? 'auto' : 'min(430px,calc(100vw - 16px))';
+    panel.style.maxHeight = collapsed ? 'none' : 'min(78vh,560px)';
+    panel.style.overflow = collapsed ? 'visible' : 'auto';
+    panel.style.padding = collapsed ? '6px 8px' : '10px';
+    if (collapsed && context.mode === 'MOBILE') {
+      panel.style.bottom = 'auto';
+      panel.style.top = 'max(8px,env(safe-area-inset-top))';
+      panel.style.right = 'max(8px,env(safe-area-inset-right))';
+    } else {
+      panel.style.top = 'auto';
+      panel.style.bottom = 'max(8px,env(safe-area-inset-bottom))';
+      panel.style.right = 'max(8px,env(safe-area-inset-right))';
+    }
+  }
+
+  collapseButton.addEventListener('click', () => setCollapsed(!collapsed));
 
   function readPerfSample() {
     const state = perfApi && perfApi.state ? perfApi.state : {};
@@ -256,6 +297,8 @@
     capturing = false;
     const perf = summarizePerformance(samples);
     const evaluation = evaluateCandidate(context, perf, observations);
+    title.textContent = `實機驗收 ${VERSION}`;
+    setCollapsed(false);
     status.textContent = `30 秒完成 · ${evaluation.gate} · ${perf.fpsAvg.toFixed(0)} FPS · p95 ${perf.p95MaxMs.toFixed(1)}ms`;
   }
 
@@ -265,6 +308,8 @@
     samples.push(readPerfSample());
     capturing = true;
     status.textContent = '正在記錄 30 秒效能…請正常遊玩，不要切換分頁。';
+    title.textContent = '● 記錄中 30 秒';
+    if (context.mode === 'MOBILE') setCollapsed(true);
     captureTimer = setInterval(() => samples.push(readPerfSample()), SAMPLE_MS);
     finishTimer = setTimeout(stopCapture, CAPTURE_MS);
   }
@@ -278,6 +323,8 @@
       const row = rows.find(entry => entry[0] === key);
       if (row) button.textContent = `○ ${row[1]} · 未確認`;
     });
+    title.textContent = `實機驗收 ${VERSION}`;
+    setCollapsed(false);
     status.textContent = '已重設。';
   }
 
@@ -319,7 +366,9 @@
     stopCapture,
     reset,
     copyReceipt,
+    setCollapsed,
     currentPayload,
-    get capturing() { return capturing; }
+    get capturing() { return capturing; },
+    get collapsed() { return collapsed; }
   });
 })(typeof window !== 'undefined' ? window : globalThis);
