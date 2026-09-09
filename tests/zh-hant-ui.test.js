@@ -14,6 +14,8 @@ assert.strictEqual(I18N.highFrequencyNumericFastPath, true);
 const samples = new Map([
   ['SWIM RING', '泳圈'],
   ['RACING', '競速'],
+  ['PACIFIC', '太平洋'],
+  ['CROWN', '皇冠'],
   ['🏁 Race', '🏁 比賽'],
   ['Start Race', '開始比賽'],
   ['Waikīkī Offshore Sprint', '威基基外海衝刺賽'],
