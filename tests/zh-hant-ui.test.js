@@ -26,7 +26,7 @@ const samples = new Map([
   ['LAP 2 · GATE 4', '第 2 圈 · 檢查點 4'],
   ['Pure ocean · 2 laps. 2 laps against three rivals. Finish to progress; place higher to earn more stars.', '純外海 · 2 圈。2 圈，與三名對手競速。完成賽事即可推進進度；名次越高可獲得更多星星。'],
   ['3★ required', '需 3★'],
-  ['Next: Lagoon Cyan in 2★', '下一個：Lagoon Cyan，還差 2★'],
+  ['Next: Lagoon Cyan in 2★', '下一個：潟湖青，還差 2★'],
   ['AUTO → HIGH · reflection 512 · shadows', '自動 → 高 · 反射解析度 512 · 陰影']
 ]);
 for (const [source, expected] of samples) {
