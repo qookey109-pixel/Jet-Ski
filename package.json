@@ -24,11 +24,12 @@
     "test:mobile-ux": "node tests/v01114-mobile-ux.test.js",
     "test:save": "node tests/v01115-save-recovery.test.js",
     "test:origin-sync": "node tests/v01116-race-origin-sync.test.js",
+    "test:hands-on-acceptance": "node tests/v01116-hands-on-acceptance.test.js",
     "test:zh-hant": "node tests/zh-hant-ui.test.js",
     "test:release-smoke": "node scripts/release-smoke.js . V0.11.16",
     "test:browser-release": "node -r ./scripts/browser-release-overpass-stub.js scripts/browser-release-qa-v2.js",
     "test:zh-hant-browser": "node scripts/zh-hant-browser-qa.js && node scripts/mobile-landscape-menu-qa.js",
-    "test:v011": "npm run test:race && npm run test:ai && npm run test:boost && npm run test:camera && npm run test:quality && npm run test:progression && npm run test:championship && npm run test:audio && npm run test:art && npm run test:ghost && npm run test:cosmetics && npm run test:challenges && npm run test:onboarding && npm run test:presentation && npm run test:mobile-ux && npm run test:save && npm run test:origin-sync && npm run test:zh-hant"
+    "test:v011": "npm run test:race && npm run test:ai && npm run test:boost && npm run test:camera && npm run test:quality && npm run test:progression && npm run test:championship && npm run test:audio && npm run test:art && npm run test:ghost && npm run test:cosmetics && npm run test:challenges && npm run test:onboarding && npm run test:presentation && npm run test:mobile-ux && npm run test:save && npm run test:origin-sync && npm run test:hands-on-acceptance && npm run test:zh-hant"
   },
   "engines": { "node": ">=18" }
 }
