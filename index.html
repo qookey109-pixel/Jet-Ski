@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Swim Ring Racing V0.11.16</title>
+  <title>泳圈競速 V0.11.16</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -11,43 +11,43 @@
   <div id="boot-error" class="boot-error" hidden>3D 引擎沒有載入。請確認網路連線，或雙擊資料夾內的 start.command 啟動。</div>
 
   <div class="hud">
-    <div><strong>SWIM RING RACING</strong> <span id="version">V0.11.16</span></div>
+    <div><strong>泳圈競速</strong> <span id="version">V0.11.16</span></div>
     <div>速度 <span id="speed">0</span> km/h</div>
-    <div>海況 <span id="sea-state">一般 Normal</span></div>
+    <div>海況 <span id="sea-state">一般</span></div>
     <div>海浪 <span id="wave-state">Hs 0.85 m · Tp 6.2 s</span></div>
-    <div>資料 <span id="data-source">Preset</span></div>
-    <div>狀態 <span id="air-state">水面 WATER</span></div>
+    <div>資料 <span id="data-source">預設</span></div>
+    <div>狀態 <span id="air-state">水面</span></div>
   </div>
 
-  <div class="help">W/↑ 加速｜S/↓ 煞車/倒車｜A/D 轉向｜SPACE Boost｜滑鼠/觸控拖曳 Camera｜Gamepad｜ESC 暫停｜PB Ghost｜Garage｜Challenges｜How to Play｜Settings / Audio</div>
+  <div class="help">W/↑ 加速｜S/↓ 煞車/倒車｜A/D 轉向｜空白鍵 瞬間加速｜滑鼠/觸控拖曳 鏡頭｜遊戲控制器｜ESC 暫停｜個人最佳幽靈｜塗裝車庫｜挑戰｜遊玩方式｜設定 / 音效</div>
 
-  <div class="physics-controls" aria-label="marine physics controls">
+  <div class="physics-controls" aria-label="海洋物理控制">
     <button data-hydro-mode="nine-point-plus" class="active">⚓ 9-Point+</button>
-    <button data-hydro-mode="nine-point">⚓ Base</button>
-    <button data-hydro-mode="voxel">🧊 Voxel EXP</button>
+    <button data-hydro-mode="nine-point">⚓ 基礎</button>
+    <button data-hydro-mode="voxel">🧊 體素實驗</button>
   </div>
 
-  <div class="world-controls" aria-label="world mode controls">
+  <div class="world-controls" aria-label="世界模式控制">
     <button data-world-mode="open-sea" class="active">🌊 外海</button>
     <button data-world-mode="taiwan-coast">🇹🇼 七星潭→外海</button>
     <button data-world-mode="hawaii-coast">🌺 Waikīkī→外海</button>
     <button data-world-mode="sun-moon-lake">🏞️ 日月潭</button>
   </div>
 
-  <div class="sea-controls" aria-label="sea condition controls">
-    <button data-sea="calm">1 Calm</button>
-    <button data-sea="normal" class="active">2 Normal</button>
-    <button data-sea="rough">3 Rough</button>
+  <div class="sea-controls" aria-label="海況控制">
+    <button data-sea="calm">1 平靜</button>
+    <button data-sea="normal" class="active">2 一般</button>
+    <button data-sea="rough">3 洶湧</button>
   </div>
 
-  <div class="mobile-controls" aria-label="mobile controls">
+  <div class="mobile-controls" aria-label="行動裝置控制">
     <div class="steer-group">
       <button id="left" aria-label="左轉">◀</button>
       <button id="right" aria-label="右轉">▶</button>
     </div>
     <div class="throttle-group">
-      <button id="brake" aria-label="煞車與倒車">BRAKE / REV</button>
-      <button id="gas" class="gas" aria-label="加速">GAS</button>
+      <button id="brake" aria-label="煞車與倒車">煞車 / 倒車</button>
+      <button id="gas" class="gas" aria-label="加速">油門</button>
     </div>
   </div>
 
@@ -162,5 +162,14 @@
   <script src="./src/ui/save-recovery-runtime.js"></script>
   <!-- V0.11.16 release marker. -->
   <script src="./src/ui/release-marker-runtime.js"></script>
+  <!-- Traditional Chinese player-facing localization. Browser release QA uses ?qa= and remains language-neutral. -->
+  <script>
+    if (!/[?&]qa=/.test(location.search)) {
+      const zhHant = document.createElement('script');
+      zhHant.src = './src/ui/zh-hant-runtime.js';
+      zhHant.async = false;
+      document.body.appendChild(zhHant);
+    }
+  </script>
 </body>
 </html>
