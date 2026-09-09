@@ -32,6 +32,8 @@ async function helperState(page) {
       storageWrites: api && api.storageWrites,
       mode: api && api.context && api.context.mode,
       orientation: api && api.context && api.context.orientation,
+      width: api && api.context && api.context.width,
+      height: api && api.context && api.context.height,
       collapsed: Boolean(api && api.collapsed),
       panelPresent: Boolean(panel)
     };
@@ -54,7 +56,9 @@ async function run() {
     helper: 'V0.11.16-A1',
     normalUrlInactive: false,
     desktop: null,
-    mobile: null,
+    mobileInitialPortrait: null,
+    mobileLandscape: null,
+    mobileRotationRefresh: false,
     mobileCaptureCollapsedNoControlOverlap: false,
     screenshots: []
   };
@@ -91,7 +95,7 @@ async function run() {
     await desktop.close();
 
     const mobile = await browser.newContext({
-      viewport: { width: 844, height: 390 },
+      viewport: { width: 390, height: 844 },
       userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
       hasTouch: true,
       isMobile: true,
@@ -106,13 +110,30 @@ async function run() {
     const mobilePage = await mobile.newPage();
     await waitForGame(mobilePage, `${BASE_URL}/?accept=1`);
     await mobilePage.waitForSelector('#hands-on-acceptance', { state: 'visible' });
-    const mobileState = await helperState(mobilePage);
-    assert(mobileState.available === true, 'mobile accept URL helper unavailable');
-    assert(mobileState.mode === 'MOBILE', `mobile mode expected MOBILE, got ${mobileState.mode}`);
-    assert(mobileState.orientation === 'landscape', `mobile orientation expected landscape, got ${mobileState.orientation}`);
-    receipt.mobile = mobileState;
+    const portraitState = await helperState(mobilePage);
+    assert(portraitState.available === true, 'mobile accept URL helper unavailable');
+    assert(portraitState.mode === 'MOBILE', `mobile mode expected MOBILE, got ${portraitState.mode}`);
+    assert(portraitState.orientation === 'portrait', `initial mobile orientation expected portrait, got ${portraitState.orientation}`);
+    receipt.mobileInitialPortrait = portraitState;
 
-    const mobileExpandedShot = path.join(ARTIFACT_DIR, 'webkit-mobile-acceptance-expanded.png');
+    const portraitShot = path.join(ARTIFACT_DIR, 'webkit-mobile-acceptance-portrait.png');
+    await mobilePage.screenshot({ path: portraitShot, fullPage: true });
+    receipt.screenshots.push(path.basename(portraitShot));
+
+    await mobilePage.setViewportSize({ width: 844, height: 390 });
+    await mobilePage.waitForFunction(() => {
+      const api = window.JETSKI_HANDS_ON_ACCEPTANCE;
+      return api && api.context && api.context.orientation === 'landscape' && api.context.width === 844 && api.context.height === 390;
+    }, null, { timeout: 10000 });
+    await mobilePage.waitForTimeout(250);
+    const landscapeState = await helperState(mobilePage);
+    assert(landscapeState.mode === 'MOBILE', `rotated mobile mode expected MOBILE, got ${landscapeState.mode}`);
+    assert(landscapeState.orientation === 'landscape', `rotated mobile orientation expected landscape, got ${landscapeState.orientation}`);
+    assert(landscapeState.width === 844 && landscapeState.height === 390, `rotated context dimensions stale: ${landscapeState.width}x${landscapeState.height}`);
+    receipt.mobileLandscape = landscapeState;
+    receipt.mobileRotationRefresh = true;
+
+    const mobileExpandedShot = path.join(ARTIFACT_DIR, 'webkit-mobile-acceptance-landscape-expanded.png');
     await mobilePage.screenshot({ path: mobileExpandedShot, fullPage: true });
     receipt.screenshots.push(path.basename(mobileExpandedShot));
 
