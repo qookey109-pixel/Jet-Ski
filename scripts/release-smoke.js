@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const rootDir = path.resolve(process.argv[2] || '.');
-const expectedVersion = process.argv[3] || 'V0.11.15';
+const expectedVersion = process.argv[3] || 'V0.11.16';
 const indexPath = path.join(rootDir, 'index.html');
 
 function fail(message) {
@@ -22,6 +22,7 @@ if (!html.includes(expectedVersion)) fail(`index.html does not contain ${expecte
 if (!html.includes('viewport-fit=cover')) fail('viewport-fit=cover missing');
 if (!html.includes('./src/ui/save-recovery-core.js')) fail('save-recovery core script missing from index');
 if (!html.includes('./src/ui/save-recovery-runtime.js')) fail('save-recovery runtime script missing from index');
+if (!html.includes('./src/ui/release-marker-runtime.js')) fail('release marker script missing from index');
 
 const refs = [];
 for (const match of html.matchAll(/<(?:script|link)\b[^>]+(?:src|href)=["']([^"']+)["']/gi)) {
@@ -45,7 +46,9 @@ for (const ref of refs) {
 
 const coreIndex = html.indexOf('./src/ui/save-recovery-core.js');
 const runtimeIndex = html.indexOf('./src/ui/save-recovery-runtime.js');
+const releaseIndex = html.indexOf('./src/ui/release-marker-runtime.js');
 if (coreIndex < 0 || runtimeIndex < 0 || coreIndex > runtimeIndex) fail('save recovery script order is invalid');
+if (releaseIndex < runtimeIndex) fail('release marker must load after save recovery runtime');
 
 if (/swimRing\.googleMaps3d\.apiKey\s*[=:]\s*["'][^"']+/i.test(html)) {
   fail('possible Google API key literal found in index');

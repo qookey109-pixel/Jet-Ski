@@ -24,7 +24,9 @@
     body.v01114-race-focus .physics-controls,
     body.v01114-race-focus .world-controls,
     body.v01114-race-focus .sea-controls,
-    body.v01114-race-focus .help{display:none!important}
+    body.v01114-race-focus .help,
+    body.v01114-race-focus .v01114-dev-overlay{display:none!important}
+    body[data-v01114-phase="menu"] .v01114-dev-overlay{display:none!important}
     body.v01114-race-focus .hud{padding:7px 10px;border-radius:999px;line-height:1.2;background:rgba(2,18,31,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
     body.v01114-race-focus .hud>div{display:none}
     body.v01114-race-focus .hud>div:nth-child(2){display:block;font-size:12px;font-weight:900;white-space:nowrap}
@@ -90,6 +92,18 @@
     }
   }
 
+  function tagDeveloperOverlays() {
+    const disasterPanel = document.querySelector('[aria-label="natural disaster experimental controls"]');
+    if (disasterPanel) disasterPanel.classList.add('v01114-dev-overlay');
+    for (const node of Array.from(document.body.children)) {
+      if (!node || node === rotateOverlay || node.classList.contains('v01114-dev-overlay')) continue;
+      const text = String(node.textContent || '');
+      const hasCapture = /Capture 8s/.test(text) && /Capture/.test(text);
+      const hasGuided = /Guided Test/.test(text) && /Guided/.test(text);
+      if (hasCapture || hasGuided) node.classList.add('v01114-dev-overlay');
+    }
+  }
+
   function upgradeActionGroup(screen) {
     const actions = document.querySelector(`[data-jr-screen="${screen}"] .jr-actions`);
     if (!actions || actions.dataset.v01114Upgraded === '1') return;
@@ -149,9 +163,11 @@
     rotateOverlay.classList.toggle('show', profile.shouldSuggestRotate);
     document.documentElement.style.setProperty('--jr-touch-target', `${hud.touchTargetsPx}px`);
     tagHudItems();
+    tagDeveloperOverlays();
   }
 
   applyViewport();
+  tagDeveloperOverlays();
   applyPhase();
   refreshActions();
   root.addEventListener('resize', applyViewport, { passive: true });
@@ -163,6 +179,7 @@
   // Race Manager does not currently emit every phase transition. A low-frequency UI-only
   // observer keeps the layout in sync without touching the gameplay/physics RAF path.
   const phaseTimer = root.setInterval(() => {
+    tagDeveloperOverlays();
     applyPhase();
     refreshActions();
     tagHudItems();
@@ -178,6 +195,7 @@
     applyViewport,
     applyPhase,
     refreshActions,
+    tagDeveloperOverlays,
     phasePollMs: 250,
     uiObserverOnly: true,
     physicsUntouched: true,
