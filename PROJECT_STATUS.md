@@ -9,6 +9,7 @@ Status date: `2026-09-09` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
+- Current confirmed `main` after PR #63 merge: `7f1c2242ee6eca764d4d7e11e179c469306c2b31`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -35,36 +36,42 @@ V0.11 currently includes:
 16. Browser Release QA for Chromium/WebKit desktop/mobile.
 17. Floating-origin race-local coordinate sync for checkpoints, gate visuals and reduced-order AI.
 18. Traditional Chinese player-facing UI (`zh-Hant-TW`).
+19. Dedicated Traditional Chinese Browser QA for menu / controls / onboarding / quality / Garage / Challenges / Audio / Save / mobile rotation guidance.
 
 ## V0.11.16 release evidence
 
-The V0.11.16 release candidate passed:
+PR #63 Traditional Chinese inspection / repair / optimization is merged into `main`.
 
-- V0.11 Race Regression
-- Browser Release QA — Chromium desktop
-- Browser Release QA — Chromium mobile landscape
-- Browser Release QA — WebKit desktop
-- Browser Release QA — WebKit mobile landscape
+Validated evidence for that tree includes:
+
+- V0.11 Race Regression #71 — PASS on PR exact head `a0107c0244800244e977772b3a1898b3488ea6b3`
+- Browser Release QA #37 — PASS on the same PR exact head
+- Chromium Desktop — PASS
+- Chromium Mobile Landscape — PASS
+- WebKit Desktop — PASS
+- WebKit Mobile Landscape — PASS
+- Traditional Chinese player UI QA — PASS
 - Championship automated completion path: 12 / 12 stars, 4 finishes
 - Save backup API-key exclusion
-- Browser screenshots manual audit
-- GitHub Pages build + deployment
+- Traditional Chinese screenshots manual audit
+- GitHub Pages #68 build / deploy / report — PASS for merge commit `7f1c2242ee6eca764d4d7e11e179c469306c2b31`
+- main push V0.11 Race Regression — PASS for merge commit `7f1c2242ee6eca764d4d7e11e179c469306c2b31`
 
 Playwright WebKit is a Safari-engine compatibility signal only; it is not a substitute for hands-on macOS Safari acceptance.
 
 ## Current active work
 
-Draft PR #63 — Traditional Chinese UI inspection / repair / optimization.
+Branch: `feature/v01116-mobile-landscape-menu-polish`
 
-Scope:
+Scope is deliberately UI-only:
 
-- detect and remove remaining player-facing English;
-- improve Traditional Chinese wording / layout;
-- reduce unnecessary localization-observer work on high-frequency numeric HUD updates;
-- add dedicated Traditional Chinese browser QA and screenshots;
-- align repository documentation with V0.11.16.
+- improve the 844 × 390 mobile-landscape menu first fold;
+- keep Start Race / Free Ride / More visible without scrolling at initial menu position;
+- compact only the short-landscape menu title, selected-event copy and race cards;
+- preserve race logic, Progression data, touch controls, portrait rotation guidance and desktop layout;
+- add an explicit WebKit 844 × 390 first-fold QA receipt / screenshot.
 
-This work is UI / QA / documentation only. It does not authorize gameplay or physics changes.
+This work does not authorize gameplay or physics changes.
 
 ## Accepted baseline — do not redo
 
@@ -105,14 +112,14 @@ Synthetic coast Browser QA verifies deterministic product flow only and does not
 
 ## Known documentation drift
 
-`README.md` and `TODO.md` contain older V0.11.15 / pre-V0.11 planning text. Until they are reconciled, this `PROJECT_STATUS.md` plus current `main` source/CI evidence are the current status authority.
+`README.md`, `TODO.md` and `CHANGELOG.md` still contain older V0.11.15 / pre-V0.11 historical text. Until they are reconciled without erasing history, this `PROJECT_STATUS.md` plus current `main` source/CI evidence are the status authority.
 
-In particular, any old TODO entry that says Boost, laps/checkpoints, ranking, AI rivals, or livery work is deferred is superseded: those systems are already implemented in V0.11.x.
+Any old TODO entry saying Boost, laps/checkpoints, ranking, AI rivals, or livery work is deferred is superseded: those systems are already implemented in V0.11.x.
 
 ## Next actions
 
-1. Complete PR #63 Traditional Chinese Browser QA and screenshot audit.
-2. Fix any remaining visible English / wording / mobile-layout regressions found by that evidence.
-3. Reconcile README / TODO / CHANGELOG with V0.11.16 without deleting useful historical records.
-4. Perform real Safari + real mobile hands-on acceptance.
+1. Validate mobile-landscape first-fold polish in Chromium/WebKit and inspect the 844 × 390 screenshot.
+2. Merge the mobile UI polish only after Race Regression, Browser Release QA, Traditional Chinese QA and first-fold QA all pass on the exact head.
+3. Reconcile README / TODO / CHANGELOG with V0.11.16 while preserving useful historical records.
+4. Perform real Safari + actual-phone mobile hands-on acceptance.
 5. Perform real Waikīkī / Qixingtan coastline acceptance and audio listening review.
