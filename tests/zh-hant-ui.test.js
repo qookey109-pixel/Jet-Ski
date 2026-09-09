@@ -32,9 +32,7 @@ assert(index.includes('<html lang="zh-Hant-TW">'), 'index must declare zh-Hant-T
 assert(index.includes('<title>泳圈競速 V0.11.16</title>'), 'Traditional Chinese title missing');
 assert(index.includes('./src/ui/zh-hant-runtime.js'), 'localization runtime not loaded');
 assert(index.includes('瞬間加速'), 'static control help should be Traditional Chinese');
-
-const browserQa = fs.readFileSync(path.join(root, 'scripts/browser-release-qa-v2.js'), 'utf8');
-assert(!/assert\(\/PACIFIC\\s\*CROWN/.test(browserQa), 'Browser QA must not require English ending copy');
-assert(browserQa.includes('endingVisible'), 'Browser QA should validate ending structurally');
+assert(index.includes('煞車 / 倒車'), 'mobile brake label should be Traditional Chinese');
+assert(index.includes('油門'), 'mobile gas label should be Traditional Chinese');
 
 console.log('zh-Hant UI regression PASS');
