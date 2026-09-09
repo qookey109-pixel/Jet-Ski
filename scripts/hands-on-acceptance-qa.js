@@ -60,6 +60,7 @@ async function run() {
     mobileLandscape: null,
     mobileRotationRefresh: false,
     mobileCaptureCollapsedNoControlOverlap: false,
+    mobileStaysCollapsedAfterCapture: false,
     screenshots: []
   };
 
@@ -178,7 +179,11 @@ async function run() {
 
     await mobilePage.evaluate(() => window.JETSKI_HANDS_ON_ACCEPTANCE.stopCapture());
     const afterStop = await helperState(mobilePage);
-    assert(afterStop.collapsed === false, 'mobile helper must expand after capture stops');
+    assert(afterStop.collapsed === true, 'mobile helper must stay collapsed after capture stops');
+    receipt.mobileStaysCollapsedAfterCapture = true;
+    await mobilePage.evaluate(() => window.JETSKI_HANDS_ON_ACCEPTANCE.setCollapsed(false));
+    const afterManualExpand = await helperState(mobilePage);
+    assert(afterManualExpand.collapsed === false, 'mobile helper manual expand failed');
     await mobile.close();
 
     fs.writeFileSync(path.join(ARTIFACT_DIR, 'receipt.json'), JSON.stringify(receipt, null, 2));
