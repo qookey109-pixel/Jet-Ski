@@ -130,7 +130,7 @@
       <div style="font-size:11px;font-weight:900;letter-spacing:.24em;color:#8fe9ff;margin-bottom:8px">GRAPHICS</div>
       <div style="font-size:30px;font-weight:950;margin-bottom:20px">Visual Quality</div>
       <div data-quality-modes style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px"></div>
-      <label style="display:block;font-size:12px;font-weight:800;margin:12px 0 6px">Resolution Scale <span data-quality-scale-value></span></label>
+      <label style="display:block;font-size:12px;font-weight:800;margin:12px 0 6px">解析度比例 <span data-quality-scale-value></span></label>
       <input data-quality-scale type="range" min="0.6" max="1" step="0.05" style="width:100%">
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
         <button data-quality-shadow style="min-height:42px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-weight:850"></button>
