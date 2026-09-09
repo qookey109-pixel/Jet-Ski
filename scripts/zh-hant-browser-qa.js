@@ -14,7 +14,7 @@ const VERSION = 'V0.11.16';
 const LOCALE_VERSION = 'zh-Hant-TW-v3';
 
 const ALLOWED_LATIN = new Set([
-  'v', 'km', 'h', 'hs', 'tp', 'm', 'api', 'json', 'safari', 'google', 'maps', 'platform',
+  'v', 'v0', 'km', 'h', 'hs', 'tp', 'm', 'api', 'json', 'safari', 'google', 'maps', 'platform',
   'webgl', 'fps', 'hz', 'ms', 'point', 'osm', 'pb', 'x', 'w', 'a', 's', 'd', 'esc', 'start'
 ]);
 
@@ -114,7 +114,7 @@ async function verifyGarage(page, receipt, engine, profile) {
   recordPanel(receipt, 'garage', text);
   assert(!/\bin\s+\d+★/i.test(text) && !/required/i.test(text), `Garage unlock copy still contains English: ${cleanText(text)}`);
   receipt.screenshots.push(await shot(page, engine, profile, 'garage'));
-  await page.evaluate(() => window.JETSKI_COSMETICS.closeGarage());
+  await page.locator('[data-garage-close]').click();
 }
 
 async function verifyChallenges(page, receipt, engine, profile) {
@@ -196,7 +196,6 @@ async function runMobile() {
     await ready(page);
     await verifyIdentity(page, receipt);
     await verifyMenu(page, receipt, 'webkit', 'mobile-landscape');
-    receipt.screenshots.push(await shot(page, 'webkit', 'mobile-landscape', 'menu-layout'));
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(450);
