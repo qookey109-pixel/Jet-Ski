@@ -102,6 +102,8 @@
     'MANGO': '芒果',
     'QUALIFYING': '資格賽',
     'PACIFIC CROWN': '太平洋皇冠',
+    'PACIFIC': '太平洋',
+    'CROWN': '皇冠',
     'GOLD': '金牌',
     'SILVER': '銀牌',
     'BRONZE': '銅牌',
