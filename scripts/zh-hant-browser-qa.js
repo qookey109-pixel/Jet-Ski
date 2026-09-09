@@ -15,7 +15,7 @@ const LOCALE_VERSION = 'zh-Hant-TW-v3';
 
 const ALLOWED_LATIN = new Set([
   'v', 'v0', 'km', 'h', 'hs', 'tp', 'm', 'api', 'json', 'safari', 'google', 'maps', 'platform',
-  'webgl', 'fps', 'hz', 'ms', 'point', 'osm', 'pb', 'x', 'w', 'a', 's', 'd', 'esc', 'start'
+  'webgl', 'fps', 'hz', 'ms', 'point', 'point+', 'osm', 'pb', 'x', 'w', 'a', 's', 'd', 'esc', 'start'
 ]);
 
 function assert(value, message) {
