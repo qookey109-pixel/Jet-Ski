@@ -3,7 +3,7 @@
 (function (root) {
   'use strict';
 
-  const VERSION = 'zh-Hant-TW-v2';
+  const VERSION = 'zh-Hant-TW-v3';
 
   const EXACT = Object.freeze({
     'SWIM RING RACING': '泳圈競速',
@@ -41,6 +41,8 @@
     'Challenges': '挑戰',
     'HOW TO PLAY': '遊玩方式',
     'How to Play': '遊玩方式',
+    'RIDE THE': '駛向',
+    'HORIZON': '海平線',
     'Start Selected Race': '開始所選比賽',
     'Practice Free Ride': '自由騎乘練習',
     'Got It': '知道了',
@@ -154,6 +156,11 @@
     [/Waikīkī Offshore Sprint/g, '威基基外海衝刺賽'],
     [/Qixingtan Bluewater Run/g, '七星潭藍海賽'],
     [/Pacific Crown Final/g, '太平洋皇冠決賽'],
+    [/Pure ocean · 2 laps/g, '純外海 · 2 圈'],
+    [/Oʻahu coast · blue-water loop/g, '歐胡島海岸 · 藍海外環'],
+    [/Hualien coast · long offshore arc/g, '花蓮海岸 · 長距離外海弧線'],
+    [/Rough ocean · championship · 3 laps/g, '洶湧外海 · 冠軍決賽 · 3 圈'],
+    [/([0-9]+) laps? against three rivals\. Finish to progress; place higher to earn more stars\./gi, '$1 圈，與三名對手競速。完成賽事即可推進進度；名次越高可獲得更多星星。'],
     [/Sunset Orange/g, '夕陽橘'],
     [/Lagoon Cyan/g, '潟湖青'],
     [/Qixingtan Pearl/g, '七星潭珍珠'],
@@ -172,6 +179,11 @@
     [/\bGOLD\b/g, '金牌'],
     [/\bSILVER\b/g, '銀牌'],
     [/\bBRONZE\b/g, '銅牌'],
+    [/\bAUTO\b/g, '自動'],
+    [/\bLOW\b/g, '低'],
+    [/\bMEDIUM\b/g, '中'],
+    [/\bHIGH\b/g, '高'],
+    [/\bULTRA\b/g, '極高'],
     [/Two laps through eight ocean gates\. Read the water, carry momentum, and keep the ring planted through rough sections\./g, '穿越八個海上檢查點完成兩圈。判讀浪況、保持速度，並在洶湧海面穩住泳圈。'],
     [/W \/ ↑ Gas · S \/ ↓ Brake \/ Reverse · A D \/ ← → Steer · ESC Pause/g, 'W / ↑ 加速 · S / ↓ 煞車 / 倒車 · A D / ← → 轉向 · ESC 暫停'],
     [/Pass the glowing gate in order\. Open Sea \/ Normal \/ 9-Point\+ is locked during an active race for a stable baseline\./g, '依序通過發光檢查點。比賽進行時會鎖定「外海 / 一般海況 / 9-Point+」以維持穩定基準。'],
@@ -198,12 +210,14 @@
     [/Next objective:/g, '下一個目標：'],
     [/All liveries unlocked/g, '所有塗裝皆已解鎖'],
     [/liveries unlocked/g, '個塗裝已解鎖'],
+    [/([0-9]+)★ required/g, '需 $1★'],
+    [/ in ([0-9]+)★/g, '，還差 $1★'],
     [/Selected:/g, '目前選擇：'],
     [/Next:/g, '下一個：'],
     [/stars to next/g, '顆星可解鎖下一個'],
     [/stars/g, '顆星'],
     [/medals/g, '面獎牌'],
-    [/required/g, '顆星解鎖'],
+    [/required/g, '解鎖'],
     [/CHAMPIONSHIP TIER/g, '冠軍等級'],
     [/CHAMPIONSHIP COMPLETE/g, '冠軍賽完成'],
     [/Total Stars/g, '總星數'],
@@ -283,12 +297,30 @@
     [/\bOFF\b/g, '關']
   ]);
 
+  const stats = {
+    translateCalls: 0,
+    fastSkipped: 0,
+    replacements: 0
+  };
+  let observer = null;
+
   function translateText(value) {
     const source = value == null ? '' : String(value);
+    stats.translateCalls += 1;
     if (!source) return source;
-    if (Object.prototype.hasOwnProperty.call(EXACT, source)) return EXACT[source];
+    if (Object.prototype.hasOwnProperty.call(EXACT, source)) {
+      stats.replacements += 1;
+      return EXACT[source];
+    }
+    // High-frequency HUD values are mostly numeric. Avoid running the full regex table
+    // for values such as speed, timer, lap fractions and PB deltas when no Latin text exists.
+    if (!/[A-Za-z]/.test(source)) {
+      stats.fastSkipped += 1;
+      return source;
+    }
     let output = source;
     for (const pair of PHRASES) output = output.replace(pair[0], pair[1]);
+    if (output !== source) stats.replacements += 1;
     return output;
   }
 
@@ -334,19 +366,20 @@
 
   function install() {
     if (typeof document === 'undefined') return null;
+    if (observer) return observer;
     document.documentElement.lang = 'zh-Hant-TW';
     const version = String((root.JETSKI_RELEASE && root.JETSKI_RELEASE.version) || (document.querySelector('#version') && document.querySelector('#version').textContent) || '').trim();
     document.title = `泳圈競速 ${version}`.trim();
     translateTree(document.body);
 
-    const observer = new MutationObserver(records => {
+    observer = new MutationObserver(records => {
       for (const record of records) {
         if (record.type === 'characterData') translateTextNode(record.target);
         if (record.type === 'attributes') translateAttributes(record.target);
         for (const node of record.addedNodes || []) translateTree(node);
       }
     });
-    observer.observe(document.documentElement, {
+    observer.observe(document.body || document.documentElement, {
       subtree: true,
       childList: true,
       characterData: true,
@@ -360,12 +393,14 @@
     VERSION,
     EXACT,
     PHRASES,
+    stats,
     translateText,
     translateTree,
     install,
     uiOnly: true,
     physicsUntouched: true,
-    gameplayRulesUntouched: true
+    gameplayRulesUntouched: true,
+    highFrequencyNumericFastPath: true
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.JETSKI_ZH_HANT = api;
