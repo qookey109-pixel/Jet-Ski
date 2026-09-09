@@ -84,6 +84,7 @@ jobs:
           node --check scripts/preview.js
           node --check scripts/release-smoke.js
           node --check scripts/browser-release-qa.js
+          node --check scripts/hands-on-acceptance-qa.js
       - name: Run V0.11 gameplay regressions
         run: npm run test:v011
       - name: Verify source release graph
