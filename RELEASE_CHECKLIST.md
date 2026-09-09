@@ -1,32 +1,43 @@
 # Swim Ring Racing — Release Acceptance Checklist
 
-Current game engineering release: **V0.11.15**  
+Current game engineering release: **V0.11.16**  
 Accepted physics/performance baseline: **V0.10.4**
 
 This checklist separates automated engineering PASS from hands-on browser acceptance.
+
+For real-device acceptance, open:
+
+```text
+https://qookey109-pixel.github.io/Jet-Ski/?accept=1
+```
+
+The query-gated hands-on helper records existing FPS/p95/long-frame telemetry and human observations, then produces a copyable receipt. A helper `CANDIDATE_PASS` is **not** formal repository acceptance until the user reports the real-device result.
 
 ## A. Automated repository gates
 
 Required before merge/release candidate promotion:
 
-- [x] V0.11.0–V0.11.15 pure regression chain
+- [x] V0.11.0–V0.11.16 pure regression chain
 - [x] gameplay/UI runtime syntax checks
 - [x] production build creates `dist/index.html`
 - [x] source release asset graph smoke
 - [x] dist release asset graph smoke
 - [x] repository static server serves production `/` with HTTP 200
-- [x] latest Save/Recovery runtime served with HTTP 200
+- [x] Save/Recovery runtime served with HTTP 200
+- [x] V0.11.16 Chromium/WebKit desktop/mobile Browser Release QA
+- [x] Traditional Chinese player UI Browser QA
+- [x] WebKit 844 × 390 mobile first-fold QA
 
 These gates prove source/build/delivery integrity. They do not prove visual quality or game feel.
 
 ## B. Desktop Safari full playthrough
 
-Run on GitHub Pages using 9-Point+ unless the step explicitly says otherwise.
+Run on GitHub Pages using 9-Point+ unless the step explicitly says otherwise. Use `?accept=1` when collecting the final hands-on receipt.
 
 ### Boot / menu
 
 - [ ] Page loads without fatal console/WebGL errors
-- [ ] V0.11.15 visible
+- [ ] V0.11.16 visible
 - [ ] first-run How to Play works
 - [ ] Settings opens/closes
 - [ ] Garage opens/closes
@@ -66,7 +77,17 @@ Run on GitHub Pages using 9-Point+ unless the step explicitly says otherwise.
 - [ ] PB Breaker does not unlock from the first-ever PB
 - [ ] Pure Water requires zero Boost activations
 
+### Hands-on receipt
+
+- [ ] `?accept=1` panel identifies Safari Desktop
+- [ ] complete the five Safari subjective rows
+- [ ] record 30 seconds during representative gameplay
+- [ ] Copy Receipt retained
+- [ ] user explicitly reports whether the real Safari session is acceptable
+
 ## C. Mobile landscape
+
+Use `?accept=1` on the actual phone when collecting the final mobile receipt.
 
 - [ ] portrait device receives Rotate to Landscape guidance
 - [ ] rotate guidance disappears after landscape rotation
@@ -78,6 +99,11 @@ Run on GitHub Pages using 9-Point+ unless the step explicitly says otherwise.
 - [ ] `More` exposes Settings / Garage / Challenges / How to Play / Save Data
 - [ ] overlays fit short landscape height without trapping controls
 - [ ] no accidental page scroll/zoom during racing
+- [ ] hands-on helper identifies Mobile + landscape
+- [ ] complete the five mobile subjective rows
+- [ ] record 30 seconds during representative racing
+- [ ] Copy Receipt retained
+- [ ] user explicitly reports whether the actual-phone session is acceptable
 
 ## D. Save / Recovery
 
@@ -108,7 +134,7 @@ Before testing, keep the actual Google Maps Platform key private. Do not paste i
 
 ## F. Performance acceptance
 
-Record at least FPS, p95 and long-frame behavior.
+Record at least FPS, p95 and long-frame behavior. The `?accept=1` helper reads the existing V0.9.9.3.1 telemetry; it does not create a second frame-timing authority.
 
 ### Safari desktop
 
@@ -175,6 +201,6 @@ Do not begin another physics-authority migration until this is accepted.
 
 ## Release decision
 
-Only mark the current game release as browser-accepted when the relevant B–F sections are completed without major blocker.
+Only mark the current game release as browser-accepted when the relevant B–F sections are completed without major blocker and the user reports the real-device result.
 
 Keep **V0.10.4** as the formal accepted physics/performance baseline until V0.10.5 receives explicit Safari acceptance.
