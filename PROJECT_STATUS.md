@@ -9,7 +9,7 @@ Status date: `2026-09-09` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current confirmed `main`: `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`
+- Current deployed V0.11.16 gameplay / release tree: `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -43,7 +43,7 @@ V0.11 currently includes:
 
 PR #63 Traditional Chinese inspection / repair / optimization is merged.
 
-PR #64 mobile-landscape first-fold polish is merged into `main` as `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`.
+PR #64 mobile-landscape first-fold polish is merged into the deployed gameplay tree `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`.
 
 Validated PR #64 evidence on exact head `c6bd31d2d4dbd1810692eb4bbaca7b6b564d3a6f`:
 
@@ -60,21 +60,23 @@ Validated PR #64 evidence on exact head `c6bd31d2d4dbd1810692eb4bbaca7b6b564d3a6
 - Save backup API-key exclusion
 - Browser-QA-only isolation for external Overpass and `waternormals.jpg` availability; production coastline and Ocean asset authority remain unchanged.
 
-Post-merge evidence for `main` `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`:
+Post-merge evidence for gameplay/release tree `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`:
 
 - V0.11 Race Regression #79 — PASS
 - GitHub Pages #69 build / deploy / report — PASS
-- V0.11.16 Browser Release QA #45 — **in progress / pending final conclusion**
+- V0.11.16 Browser Release QA #45 — PASS
+- Browser Release QA Chromium/WebKit desktop/mobile step — PASS
+- Traditional Chinese player UI + 844 × 390 first-fold QA step — PASS
 
 Playwright WebKit is a Safari-engine compatibility signal only; it is not a substitute for hands-on macOS Safari acceptance.
 
 ## Current active work
 
-Documentation reconciliation only:
+Repository documentation is reconciled to V0.11.16 in the current document set:
 
-- update `README.md` from V0.11.15 to V0.11.16;
-- remove/supersede stale TODO entries that incorrectly defer systems already shipped in V0.11.x;
-- backfill the recent V0.11 release history in `CHANGELOG.md` without deleting older history.
+- `README.md` reflects V0.11.16 release systems and acceptance boundaries;
+- `TODO.md` no longer defers V0.11 systems that have already shipped;
+- `CHANGELOG.md` backfills the V0.9.3→V0.11.16 release history while retaining older entries.
 
 No gameplay / physics migration is currently authorized.
 
@@ -115,16 +117,10 @@ These are **not** automatically accepted by CI:
 
 Synthetic coast Browser QA verifies deterministic product flow only and does not replace real-world coastline acceptance.
 
-## Known documentation drift
-
-`README.md`, `TODO.md` and `CHANGELOG.md` still contain older V0.11.15 / pre-V0.11 text. This docs-only branch is reconciling those files while preserving useful historical records.
-
-Any old TODO entry saying Boost, laps/checkpoints, ranking, AI rivals, or livery work is deferred is superseded: those systems are already implemented in V0.11.x.
-
 ## Next actions
 
-1. Confirm main push Browser Release QA #45 for `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`.
-2. Reconcile README / TODO / CHANGELOG with V0.11.16 in a docs-only PR.
-3. Perform real Safari + actual-phone mobile hands-on acceptance.
-4. Perform real Waikīkī / Qixingtan coastline acceptance and audio listening review.
-5. Keep V0.10.5 Sway and Natural Disaster acceptance separate from the accepted V0.10.4 baseline.
+1. Perform real macOS Safari full-Championship hands-on acceptance.
+2. Perform actual-phone mobile landscape touch / safe-area acceptance.
+3. Perform real Waikīkī / Qixingtan coastline acceptance and audio listening review.
+4. Keep V0.10.5 Sway acceptance separate from the accepted V0.10.4 baseline.
+5. Keep Natural Disaster EXP acceptance separate until guided hands-on evidence exists.
