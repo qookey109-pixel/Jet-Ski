@@ -1,11 +1,18 @@
 'use strict';
 
 // V0.11.16 Browser Release QA only.
-// Prevent external Overpass availability/rate limits from deciding deterministic
-// Chromium/WebKit product-flow acceptance. Production coastline runtimes are untouched.
+// Prevent external Overpass and water-normal availability/rate limits from deciding
+// deterministic Chromium/WebKit product-flow acceptance. Production coastline and
+// ocean/rendering runtimes are untouched.
 const playwright = require('playwright');
 
 const OVERPASS_HOSTS = new Set(['overpass-api.de', 'overpass.kumi.systems']);
+const WATER_NORMAL_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/r152/examples/textures/waternormals.jpg';
+// Deterministic 2x2 RGB flat-normal PNG (128,128,255), used only inside Browser Release QA.
+const FLAT_NORMAL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGNsaPjPwMDAxMDAwMDAAAAXnwIDVqKEkwAAAABJRU5ErkJggg==',
+  'base64'
+);
 
 function bboxFromRequest(requestUrl) {
   try {
@@ -53,7 +60,7 @@ function syntheticCoastline(requestUrl) {
   };
 }
 
-async function installOverpassIsolation(context) {
+async function installBrowserQaIsolation(context) {
   await context.route(/^https:\/\/(?:overpass-api\.de|overpass\.kumi\.systems)\//, async route => {
     const url = route.request().url();
     let hostname = '';
@@ -65,15 +72,24 @@ async function installOverpassIsolation(context) {
       body: JSON.stringify(syntheticCoastline(url))
     });
   });
+
+  await context.route(WATER_NORMAL_URL, route => route.fulfill({
+    status: 200,
+    contentType: 'image/png',
+    body: FLAT_NORMAL_PNG
+  }));
 }
+
+// Backward-compatible export name retained for any focused tests/tools.
+const installOverpassIsolation = installBrowserQaIsolation;
 
 // This module is loaded with `node -r` before browser-release-qa-v2.js imports
 // Playwright. Patch BrowserType.launch once so every BrowserContext receives the
-// deterministic route before its first page is created.
+// deterministic QA-only routes before its first page is created.
 const browserTypePrototype = Object.getPrototypeOf(playwright.chromium);
-if (browserTypePrototype && !browserTypePrototype.__jetskiOverpassIsolationInstalled) {
+if (browserTypePrototype && !browserTypePrototype.__jetskiBrowserQaIsolationInstalled) {
   const originalLaunch = browserTypePrototype.launch;
-  Object.defineProperty(browserTypePrototype, '__jetskiOverpassIsolationInstalled', {
+  Object.defineProperty(browserTypePrototype, '__jetskiBrowserQaIsolationInstalled', {
     value: true,
     configurable: false,
     enumerable: false,
@@ -83,9 +99,9 @@ if (browserTypePrototype && !browserTypePrototype.__jetskiOverpassIsolationInsta
   browserTypePrototype.launch = async function jetskiBrowserQaLaunch(...args) {
     const browser = await originalLaunch.apply(this, args);
     const browserPrototype = Object.getPrototypeOf(browser);
-    if (browserPrototype && !browserPrototype.__jetskiOverpassIsolationInstalled) {
+    if (browserPrototype && !browserPrototype.__jetskiBrowserQaIsolationInstalled) {
       const originalNewContext = browserPrototype.newContext;
-      Object.defineProperty(browserPrototype, '__jetskiOverpassIsolationInstalled', {
+      Object.defineProperty(browserPrototype, '__jetskiBrowserQaIsolationInstalled', {
         value: true,
         configurable: false,
         enumerable: false,
@@ -93,7 +109,7 @@ if (browserTypePrototype && !browserTypePrototype.__jetskiOverpassIsolationInsta
       });
       browserPrototype.newContext = async function jetskiBrowserQaNewContext(...contextArgs) {
         const context = await originalNewContext.apply(this, contextArgs);
-        await installOverpassIsolation(context);
+        await installBrowserQaIsolation(context);
         return context;
       };
     }
@@ -102,7 +118,10 @@ if (browserTypePrototype && !browserTypePrototype.__jetskiOverpassIsolationInsta
 }
 
 module.exports = {
+  WATER_NORMAL_URL,
+  FLAT_NORMAL_PNG,
   bboxFromRequest,
   syntheticCoastline,
+  installBrowserQaIsolation,
   installOverpassIsolation
 };

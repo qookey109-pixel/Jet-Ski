@@ -168,6 +168,64 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   .world-controls button, .sea-controls button { min-height: 30px; }
 }
 
+/* V0.11.16 mobile-first menu first-fold polish. UI-only; no gameplay authority. */
+@media (orientation: landscape) and (max-height: 420px) {
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-card {
+    padding: 10px 14px 10px;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-kicker {
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-title {
+    font-size: 28px;
+    line-height: .95;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-title br {
+    display: none;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-sub {
+    margin: 5px 0 7px;
+    font-size: 10px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-tour-status {
+    margin: 0 0 4px;
+    font-size: 9px;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-event-select {
+    gap: 5px;
+    margin: 6px 0 8px;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-event-card {
+    min-height: 66px;
+    padding: 7px 9px;
+    border-radius: 13px;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-event-name {
+    margin-bottom: 2px;
+    font-size: 11px;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-event-sub {
+    min-height: 0;
+    font-size: 8.5px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-event-meta {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+  body.v01114-compact-landscape[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-actions {
+    gap: 6px;
+  }
+}
+
 .boot-error {
   position: fixed;
   left: 50%;
