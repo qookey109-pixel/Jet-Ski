@@ -99,6 +99,14 @@ async function verifyMenu(page, receipt, engine, profile) {
   receipt.screenshots.push(await shot(page, engine, profile, 'menu'));
 }
 
+async function verifyControls(page, receipt, engine, profile) {
+  await page.locator('[data-jr-screen="menu"] [data-jr-action="controls"]').click();
+  const text = await panelText(page, '[data-jr-controls].show');
+  recordPanel(receipt, 'controls', text);
+  receipt.screenshots.push(await shot(page, engine, profile, 'controls'));
+  await page.locator('[data-jr-screen="menu"] [data-jr-action="controls"]').click();
+}
+
 async function verifyOnboarding(page, receipt, engine, profile) {
   await page.evaluate(() => window.JETSKI_ONBOARDING.openTutorial());
   const text = await panelText(page, '.jr-onboarding.show .jr-onboarding-card');
@@ -163,6 +171,7 @@ async function runDesktop(engine, browserType, fullPanels) {
     await ready(page);
     await verifyIdentity(page, receipt);
     await verifyMenu(page, receipt, engine, 'desktop');
+    await verifyControls(page, receipt, engine, 'desktop');
     await verifyOnboarding(page, receipt, engine, 'desktop');
     await verifyQuality(page, receipt, engine, 'desktop');
     if (fullPanels) {
