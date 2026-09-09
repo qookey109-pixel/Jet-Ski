@@ -1,17 +1,18 @@
-# Swim Ring Racing — V0.11.15
+# Swim Ring Racing — V0.11.16
 
 Mobile-landscape-first 3D Web water racing game built with Three.js. The player drives a procedural swim-ring craft across an irregular ocean, real-world coast modes and a four-event Pacific championship.
 
 - Repository: `qookey109-pixel/Jet-Ski`
 - GitHub Pages: `https://qookey109-pixel.github.io/Jet-Ski/`
-- Current game engineering release: **V0.11.15**
+- Current game engineering release: **V0.11.16**
+- Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics/performance baseline: **V0.10.4**
 
-> Important: the gameplay/product release and the accepted physics baseline are intentionally separate. V0.11.x adds Race, AI, Boost, progression, UI, audio, art direction and delivery systems without silently promoting unverified physics changes.
+> Important: the gameplay/product release and the accepted physics baseline are intentionally separate. V0.11.x adds Race, AI, Boost, progression, UI, audio, art direction, save/recovery and delivery systems without silently promoting unverified physics changes.
 
 ## Current Game
 
-V0.11.15 now provides a complete playable championship loop:
+V0.11.16 provides a complete playable championship loop:
 
 ```text
 Start / How to Play
@@ -55,6 +56,9 @@ Waikīkī and Qixingtan race routes are materialized relative to the existing OS
 - **V0.11.13 Race Presentation** — event intro, Victory/Podium presentation and P1–P4 recap.
 - **V0.11.14 Mobile UX** — safe-area support, compact race HUD and secondary-action `More` grouping.
 - **V0.11.15 Save / Recovery** — profile export/import, safe reset and production release-smoke gate.
+- **V0.11.16 Release QA / Delivery** — Chromium/WebKit desktop/mobile Browser Release QA, production asset/build checks and floating-origin race-local sync for checkpoints, gate visuals and reduced-order AI.
+- **V0.11.16 Traditional Chinese UI** — normal player-facing pages use `zh-Hant-TW`, with dedicated Traditional Chinese browser QA.
+- **V0.11.16 Mobile First-Fold Polish** — WebKit 844 × 390 menu QA requires Start Race / Free Ride / More to remain visible without initial scrolling.
 
 ## Existing Ocean / World Stack
 
@@ -94,7 +98,7 @@ npm run preview
 
 `npm run build` creates `dist/`.
 
-The CI delivery gate also checks the generated production asset graph and starts the repository static server against `dist/` for HTTP smoke verification.
+The CI delivery gate checks the generated production asset graph and starts the repository static server against `dist/` for HTTP smoke verification.
 
 ## Controls
 
@@ -126,6 +130,8 @@ The game is designed mobile-landscape first:
 
 Safe-area layout is enabled with `viewport-fit=cover`.
 
+On short mobile-landscape screens, the main menu compacts title/copy/race cards so Start Race / Free Ride / More stay visible in the initial 844 × 390 first fold.
+
 ### Gamepad
 
 - Left Stick — movement/steering
@@ -135,6 +141,8 @@ Safe-area layout is enabled with `viewport-fit=cover`.
 - Start — Pause / Resume
 
 ## UI / Progression
+
+Normal public/player pages use Traditional Chinese (`zh-Hant-TW`). Internal `?qa=` Browser Release QA remains language-neutral so the existing deterministic Championship runner is not coupled to translated copy.
 
 Start and Pause menus expose:
 
@@ -273,12 +281,17 @@ Race
 → Race Presentation
 → Mobile UX
 → Save / Recovery
+→ Floating-Origin Race Sync
+→ Traditional Chinese UI
 → Production Build
 → Release Asset Graph
 → Static-server HTTP Smoke
+→ Chromium/WebKit Browser Release QA
+→ Traditional Chinese Browser QA
+→ WebKit 844 × 390 First-Fold QA
 ```
 
-Run the full V0.11 pure regression chain locally with:
+Run the pure regression / build checks locally with:
 
 ```bash
 npm run test:v011
@@ -286,29 +299,33 @@ npm run test:release-smoke
 npm run build
 ```
 
+Browser QA additionally requires Playwright 1.63.0 with Chromium and WebKit installed.
+
+Browser Release QA isolates external Overpass availability and the remote `waternormals.jpg` dependency only inside the deterministic QA process. Production OSM/coastline and Ocean asset sources are unchanged.
+
 ## Browser Acceptance Status
 
-Automated CI/build PASS does **not** equal browser-feel acceptance.
+Automated CI/build PASS does **not** equal hands-on browser-feel acceptance.
 
-Accepted:
+Engineering evidence currently includes:
 
-- V0.10.4 physics/performance baseline — Safari user acceptance PASS.
+- V0.10.4 physics/performance baseline — prior Safari user acceptance PASS.
+- V0.11.16 Chromium/WebKit automated desktop/mobile product-flow QA — PASS on the validated release tree.
+- Traditional Chinese player UI browser QA — PASS.
+- WebKit 844 × 390 first-fold menu visibility QA — PASS.
 
-Still requiring fresh hands-on browser verification:
+Still requiring fresh hands-on verification:
 
-- V0.10.5 Sway source migration
-- Google Photorealistic 3D EXP
-- Natural Disaster EXP
-- V0.11 Race/AI/Boost/Camera feel
-- V0.11 Audio mix
-- V0.11 Art Direction readability
-- PB Ghost / Garage / Challenges
-- Onboarding / Podium presentation
-- mobile safe-area / `More` UX
-- Save/Recovery real browser round-trip
-- Safari/mobile FPS, p95 and long-frame behavior
+- full macOS Safari Championship playthrough
+- actual-phone mobile landscape touch / safe-area feel
+- audio mix / perceived listening quality
+- real Waikīkī and Qixingtan OSM/Overpass geography loading and route feel
+- Google Photorealistic 3D visual alignment / memory / performance
+- Safari FPS, p95 and long-frame behavior on the V0.11.16 product tree
+- V0.10.5 Sway migration acceptance
+- Natural Disaster guided acceptance
 
-Until those checks are explicitly completed, they remain engineering candidates rather than browser acceptance PASS.
+Playwright WebKit is a Safari-engine compatibility signal only; it is not a substitute for real Safari hands-on acceptance.
 
 ## Known Limitations
 
@@ -339,7 +356,7 @@ Any future external/generated asset must record source, author/provider, license
 - Do not use Google 3D mesh as deterministic gameplay collision authority.
 - Do not store unrestricted API keys in the repository.
 - Do not claim CI PASS when there is no CI evidence.
-- Do not promote browser acceptance without actual browser/user evidence.
+- Do not promote hands-on browser acceptance without actual browser/user evidence.
 - Keep Base A/B fallback and Safari telemetry when changing physics authority.
 
 ## Next Release Gates
@@ -347,11 +364,10 @@ Any future external/generated asset must record source, author/provider, license
 The project is feature-rich enough that the next priority is **hands-on release acceptance**, not adding more unrelated systems:
 
 1. Safari desktop full Championship playthrough.
-2. Mobile landscape race/HUD/touch acceptance.
-3. Save export/import/reset round-trip.
-4. Audio balance and Art Direction visual inspection.
-5. Waikīkī/Qixingtan coast-route and Google 3D overlap verification.
-6. Natural Disaster Guided Acceptance receipts.
-7. V0.10.5 Sway feel/frame-time acceptance.
+2. Actual-phone mobile landscape race/HUD/touch acceptance.
+3. Audio balance and Art Direction visual inspection.
+4. Waikīkī/Qixingtan real coast-route and Google 3D overlap verification.
+5. Natural Disaster Guided Acceptance receipts.
+6. V0.10.5 Sway feel/frame-time acceptance.
 
-Only after these are stable should the accepted release/baseline labels be promoted further.
+Only after those checks are stable should the accepted release/baseline labels be promoted further.

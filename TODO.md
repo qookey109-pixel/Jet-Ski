@@ -77,8 +77,16 @@
 - [x] V0.10.5.2.1 診斷層固定 4 Hz、無 physics/water writes；pure diagnostic 20,000-step finite/equality regression
 - [x] V0.10.5.2.2 observer-only Acceptance Capture：8 秒記錄既有 sync / FPS / p95 / long-frame / craft-water telemetry
 - [x] V0.10.5.2.2 產生 Baseline / Rogue / Tsunami PASS-or-REVIEW receipt；不自動觸發事件、不寫 physics/water
+- [x] **V0.11.0–V0.11.16 完整產品層**：Race、AI、Boost、Controls/Camera、Graphics、Progression、Championship、Audio、Art、PB Ghost、Garage、Challenges、Onboarding、Race Presentation、Mobile UX、Save/Recovery、Browser Release QA
+- [x] V0.11.16 floating-origin race-local sync：checkpoint、gate visuals、reduced-order AI 跟隨 world recenter
+- [x] V0.11.16 玩家介面繁中化 `zh-Hant-TW`，並加入專用 Traditional Chinese Browser QA
+- [x] V0.11.16 WebKit 844 × 390 mobile-landscape first-fold：開始比賽 / 自由騎乘 / 更多在初始位置不需捲動即可看見
 
 ## 下一階段
+- [ ] **V0.11.16 macOS Safari hands-on acceptance**：完整跑完四場 Championship，確認 Start / race / pause / results / ending / Save / Garage / Challenges / More 流程
+- [ ] **V0.11.16 actual-phone mobile acceptance**：橫向 safe-area、觸控 steering / GAS / BRAKE / BOOST、844×390 類似短螢幕 first-fold 與直向旋轉提示
+- [ ] **V0.11.16 audio listening acceptance**：海浪 / 風 / 音樂 / Boost / 比賽提示的實際聽感與平衡
+- [ ] **V0.11.16 real coast acceptance**：Waikīkī / Qixingtan 使用真實 OSM / Overpass 資料驗路線、岸線方向與靠岸碰撞；Synthetic Browser QA 不取代此驗收
 - [ ] **V0.10.5 Safari acceptance**：Normal / Rough 測快速 A/D、連續左右擺、GAS/BRAKE/REV，確認 Sway 手感與 frame-time 不退步
 - [ ] **V0.10.5.1 Real-World 3D browser acceptance**：GitHub Pages + restricted Map Tiles API key，先驗 Waikīkī，再驗七星潭
 - [ ] V0.10.5.1 驗收 Google 3D terrain/建物方位、OSM 碰撞重合、custom ocean 不被 Google water mesh 明顯遮蔽、Safari FPS/p95/memory
@@ -100,4 +108,3 @@
 - [ ] 近岸 wave shoaling / breaking / attenuation（保持 visual/gameplay sync）
 - [ ] CWA / NOAA 實站與 cached real-sea feed
 - [ ] CFD/SPH calibration cases + PhysicsNeMo offline surrogate dataset
-- [ ] Nitro / Boost、圈數 / Checkpoint / 排名、AI 對手、游泳圈顏色（延後）

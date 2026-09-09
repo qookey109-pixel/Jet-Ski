@@ -1,5 +1,47 @@
 # Changelog
 
+## V0.11.16
+- Added Chromium/WebKit desktop/mobile Browser Release QA for the full playable Championship path.
+- Added floating-origin race-local synchronization so checkpoints, gate visuals and reduced-order AI remain aligned after V0.9.3 world recentering.
+- Added Traditional Chinese player-facing UI (`zh-Hant-TW`) with dedicated Traditional Chinese browser QA.
+- Added WebKit 844 × 390 mobile-landscape first-fold QA; Start Race / Free Ride / More must be visible at initial scroll position.
+- Added short-landscape menu compaction for title, selected-event copy and race cards without changing Progression or race rules.
+- Isolated external Overpass availability and the remote `waternormals.jpg` dependency only inside deterministic Browser Release QA; production coastline/Ocean sources remain unchanged.
+- Preserved the accepted **V0.10.4** physics/performance baseline and existing Safari GPU safety budget.
+
+## V0.11.15
+- Added Save / Recovery export, import and reset flows for explicit browser-local game-data allowlists.
+- Excluded the Google Maps Platform API key from exported backups.
+- Added two-step progress reset while preserving Graphics/Audio preferences and the Google API key.
+- Added production release-smoke / generated asset-graph checks.
+
+## V0.11.0–V0.11.14
+- Added the complete race game loop: start, countdown, ordered gates, laps, finish, results, restart and Free Ride.
+- Added reduced-order AI rivals (CORAL / TIDE / MANGO) and live ranking.
+- Added bounded Boost / Nitro energy, recharge, jet VFX/audio and camera feedback without changing the accepted max-speed/physics baseline.
+- Added mouse/touch/gamepad controls and follow/orbit camera polish.
+- Added Graphics presets and Auto Quality while retaining the established Safari GPU budget.
+- Added four-event Championship progression, stars, PBs, unlock chain and Pacific Crown final/ending.
+- Added procedural ocean/wind/music audio and world-specific art-direction/atmosphere polish.
+- Added browser-local PB Ghost replay, Garage liveries, Challenges, onboarding and race presentation.
+- Added mobile safe-area support, compact race HUD and secondary-action `More` grouping.
+
+## V0.10.0–V0.10.5.2.2
+- Added observer-first Unified 6DOF state/acceleration/load contracts without taking pose/physics authority from the existing runtime.
+- Added canonical Calibration sources for Yaw and Surge, with identity-cached immutable config to avoid per-frame resolver/allocation regressions.
+- Established **V0.10.4** as the accepted physics/performance baseline after Safari hands-on acceptance.
+- Added V0.10.5 canonical Sway migration as an engineering candidate; it remains outside accepted authority pending fresh Safari acceptance.
+- Added Google Photorealistic 3D visual preview scaffolding for Taiwan/Hawaii coast modes while preserving OSM coastline/collision authority.
+- Added Natural Disaster EXP (Rogue Wave / Tsunami / Rain / Lightning), observer diagnostics and 8-second acceptance-capture receipts without replacing normal ocean/physics authority.
+
+## V0.9.3–V0.9.9.3.2
+- Added irregular infinite ocean / floating-origin recentering and expanded real-world world modes.
+- Added Sun Moon Lake, Qixingtan→offshore and Waikīkī→Pacific world flows, reverse control and OSM cache/world-mode support.
+- Added Voxel research mode, then retained 9-Point / 9-Point+ as the preferred mainline hydrodynamic authority while Voxel remained EXP.
+- Added 9-Point+ explicit heave gravity/inertia and pitch/roll/yaw inertia support.
+- Added Plus-only water-relative lateral force, planar Surge/Sway/Yaw state, bounded steering force and stern-lever-arm yaw moment authority.
+- Added frame telemetry and Safari reflection/pixel-ratio/shadow budgets that later became the retained performance baseline.
+
 ## V0.9.2
 - Added `src/v092-xorxor-atmosphere.js` as a composition overlay on top of V0.9.1 reflective water.
 - Replaced the old V0.7.1 visible sky/haze with one GPU atmosphere dome so the reflection target sees a single coherent sky.
