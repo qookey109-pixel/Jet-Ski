@@ -162,7 +162,14 @@
   <script src="./src/ui/save-recovery-runtime.js"></script>
   <!-- V0.11.16 release marker. -->
   <script src="./src/ui/release-marker-runtime.js"></script>
-  <!-- Traditional Chinese player-facing localization. UI-only; no gameplay/physics authority. -->
-  <script src="./src/ui/zh-hant-runtime.js"></script>
+  <!-- Traditional Chinese player-facing localization. Browser release QA uses ?qa= and remains language-neutral. -->
+  <script>
+    if (!/[?&]qa=/.test(location.search)) {
+      const zhHant = document.createElement('script');
+      zhHant.src = './src/ui/zh-hant-runtime.js';
+      zhHant.async = false;
+      document.body.appendChild(zhHant);
+    }
+  </script>
 </body>
 </html>
