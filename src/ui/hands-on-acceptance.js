@@ -324,8 +324,9 @@
     refreshContext();
     const perf = summarizePerformance(samples);
     const evaluation = evaluateCandidate(context, perf, observations);
-    title.textContent = `實機驗收 ${VERSION}`;
-    setCollapsed(false);
+    const isMobile = context.mode === 'MOBILE';
+    title.textContent = isMobile ? `✓ 30秒完成 · ${evaluation.gate}` : `實機驗收 ${VERSION}`;
+    setCollapsed(isMobile);
     status.textContent = `30 秒完成 · ${evaluation.gate} · ${perf.fpsAvg.toFixed(0)} FPS · p95 ${perf.p95MaxMs.toFixed(1)}ms`;
   }
 
