@@ -150,13 +150,17 @@
     return;
   }
 
-  const context = detectDeviceContext({
-    userAgent: root.navigator && root.navigator.userAgent,
-    width: root.innerWidth,
-    height: root.innerHeight,
-    dpr: root.devicePixelRatio,
-    touchPoints: root.navigator && root.navigator.maxTouchPoints
-  });
+  function currentDeviceSnapshot() {
+    return detectDeviceContext({
+      userAgent: root.navigator && root.navigator.userAgent,
+      width: root.innerWidth,
+      height: root.innerHeight,
+      dpr: root.devicePixelRatio,
+      touchPoints: root.navigator && root.navigator.maxTouchPoints
+    });
+  }
+
+  const context = currentDeviceSnapshot();
   const perfApi = root.V09931_SAFARI_PERFORMANCE;
   const observations = {};
   const samples = [];
@@ -200,9 +204,13 @@
   panel.appendChild(content);
 
   const deviceLine = document.createElement('div');
-  deviceLine.textContent = `${context.mode} · ${context.orientation} ${context.width}×${context.height} · DPR ${context.dpr.toFixed(2)}`;
   deviceLine.style.cssText = 'opacity:.82;margin-bottom:7px';
   content.appendChild(deviceLine);
+
+  function renderDeviceLine() {
+    deviceLine.textContent = `${context.mode} · ${context.orientation} ${context.width}×${context.height} · DPR ${context.dpr.toFixed(2)}`;
+  }
+  renderDeviceLine();
 
   const status = document.createElement('div');
   status.textContent = '先完成下方實機檢查，再記錄 30 秒效能。';
@@ -213,31 +221,37 @@
   checklist.style.cssText = 'display:grid;gap:5px;margin-bottom:8px';
   content.appendChild(checklist);
 
-  const rows = CHECKS[context.mode] || CHECKS.OTHER;
-  for (const row of rows) {
-    const key = row[0];
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.dataset.acceptanceKey = key;
-    item.style.cssText = [
-      'min-height:34px', 'padding:5px 8px', 'text-align:left', 'border-radius:9px',
-      'border:1px solid rgba(255,255,255,.2)', 'background:rgba(255,255,255,.07)',
-      'color:#fff', 'font:700 12px system-ui', 'cursor:pointer'
-    ].join(';');
-    function render() {
-      const value = observations[key];
-      const prefix = value === true ? '✓' : value === false ? '⚠' : '○';
-      const suffix = value === true ? '正常' : value === false ? '有問題' : '未確認';
-      item.textContent = `${prefix} ${row[1]} · ${suffix}`;
-    }
-    item.addEventListener('click', () => {
-      const value = observations[key];
-      observations[key] = value === undefined ? true : value === true ? false : undefined;
+  let rows = CHECKS[context.mode] || CHECKS.OTHER;
+
+  function renderChecklist() {
+    checklist.textContent = '';
+    rows = CHECKS[context.mode] || CHECKS.OTHER;
+    for (const row of rows) {
+      const key = row[0];
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.dataset.acceptanceKey = key;
+      item.style.cssText = [
+        'min-height:34px', 'padding:5px 8px', 'text-align:left', 'border-radius:9px',
+        'border:1px solid rgba(255,255,255,.2)', 'background:rgba(255,255,255,.07)',
+        'color:#fff', 'font:700 12px system-ui', 'cursor:pointer'
+      ].join(';');
+      function render() {
+        const value = observations[key];
+        const prefix = value === true ? '✓' : value === false ? '⚠' : '○';
+        const suffix = value === true ? '正常' : value === false ? '有問題' : '未確認';
+        item.textContent = `${prefix} ${row[1]} · ${suffix}`;
+      }
+      item.addEventListener('click', () => {
+        const value = observations[key];
+        observations[key] = value === undefined ? true : value === true ? false : undefined;
+        render();
+      });
       render();
-    });
-    render();
-    checklist.appendChild(item);
+      checklist.appendChild(item);
+    }
   }
+  renderChecklist();
 
   const controls = document.createElement('div');
   controls.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
@@ -277,6 +291,18 @@
 
   collapseButton.addEventListener('click', () => setCollapsed(!collapsed));
 
+  function refreshContext() {
+    const previousMode = context.mode;
+    Object.assign(context, currentDeviceSnapshot());
+    renderDeviceLine();
+    if (context.mode !== previousMode) renderChecklist();
+    if (collapsed) setCollapsed(true);
+    return context;
+  }
+
+  root.addEventListener('resize', refreshContext, { passive: true });
+  root.addEventListener('orientationchange', () => root.setTimeout(refreshContext, 120), { passive: true });
+
   function readPerfSample() {
     const state = perfApi && perfApi.state ? perfApi.state : {};
     return {
@@ -295,6 +321,7 @@
     finishTimer = null;
     samples.push(readPerfSample());
     capturing = false;
+    refreshContext();
     const perf = summarizePerformance(samples);
     const evaluation = evaluateCandidate(context, perf, observations);
     title.textContent = `實機驗收 ${VERSION}`;
@@ -304,6 +331,7 @@
 
   function startCapture() {
     if (capturing) return;
+    refreshContext();
     samples.length = 0;
     samples.push(readPerfSample());
     capturing = true;
@@ -318,21 +346,19 @@
     if (capturing) stopCapture();
     samples.length = 0;
     for (const key of Object.keys(observations)) delete observations[key];
-    checklist.querySelectorAll('button').forEach(button => {
-      const key = button.dataset.acceptanceKey;
-      const row = rows.find(entry => entry[0] === key);
-      if (row) button.textContent = `○ ${row[1]} · 未確認`;
-    });
     title.textContent = `實機驗收 ${VERSION}`;
+    refreshContext();
+    renderChecklist();
     setCollapsed(false);
     status.textContent = '已重設。';
   }
 
   function currentPayload() {
+    refreshContext();
     const performance = summarizePerformance(samples);
     return {
       releaseVersion: root.JETSKI_RELEASE && root.JETSKI_RELEASE.version || 'V0.11.16',
-      context,
+      context: Object.assign({}, context),
       performance,
       observations: Object.assign({}, observations),
       evaluation: evaluateCandidate(context, performance, observations)
@@ -367,6 +393,7 @@
     reset,
     copyReceipt,
     setCollapsed,
+    refreshContext,
     currentPayload,
     get capturing() { return capturing; },
     get collapsed() { return collapsed; }
