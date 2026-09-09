@@ -29,6 +29,19 @@ const Acceptance = require('../src/ui/hands-on-acceptance.js');
   assert.equal(context.orientation, 'landscape');
 })();
 
+(function testIPadDesktopLikeUaStillCountsAsMobile() {
+  const context = Acceptance.detectDeviceContext({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+    width: 1180,
+    height: 820,
+    dpr: 2,
+    touchPoints: 5
+  });
+  assert.equal(context.mode, 'MOBILE');
+  assert.equal(context.safariDesktop, false);
+  assert.equal(context.mobileLike, true);
+})();
+
 (function testPerformanceSummary() {
   const perf = Acceptance.summarizePerformance([
     { fps: 60, p95Ms: 18, maxMs: 26, longFrames: 1 },
