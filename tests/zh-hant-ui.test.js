@@ -62,4 +62,8 @@ assert(index.includes('瞬間加速'), 'static control help should be Traditiona
 assert(index.includes('煞車 / 倒車'), 'mobile brake label should be Traditional Chinese');
 assert(index.includes('油門'), 'mobile gas label should be Traditional Chinese');
 
+const qualityRuntime = fs.readFileSync(path.join(root, 'src/rendering/quality-runtime.js'), 'utf8');
+assert(qualityRuntime.includes('解析度比例 <span data-quality-scale-value>'), 'quality resolution scale label should be Traditional Chinese');
+assert(!qualityRuntime.includes('>Resolution Scale <span data-quality-scale-value>'), 'quality resolution scale label must not regress to English');
+
 console.log('zh-Hant UI regression PASS');
