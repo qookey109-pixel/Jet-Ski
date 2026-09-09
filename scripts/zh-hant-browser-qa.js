@@ -100,11 +100,26 @@ async function verifyMenu(page, receipt, engine, profile) {
 }
 
 async function verifyControls(page, receipt, engine, profile) {
-  await page.locator('[data-jr-screen="menu"] [data-jr-action="controls"]').click();
+  // V0.11.14 intentionally moves Controls into the secondary More panel.
+  // Exercise the same player-visible path instead of clicking the hidden original slot.
+  const more = page.locator('[data-jr-screen="menu"] .v01114-more-toggle');
+  await more.scrollIntoViewIfNeeded();
+  await more.click();
+  await page.waitForFunction(() => {
+    const toggle = document.querySelector('[data-jr-screen="menu"] .v01114-more-toggle');
+    const panel = document.querySelector('[data-v01114-more-panel="menu"]');
+    return Boolean(toggle && toggle.getAttribute('aria-expanded') === 'true' && panel && panel.classList.contains('show'));
+  }, null, { timeout: 5000 });
+
+  const controlsButton = page.locator('[data-v01114-more-panel="menu"] [data-jr-action="controls"]');
+  await controlsButton.scrollIntoViewIfNeeded();
+  await controlsButton.click();
   const text = await panelText(page, '[data-jr-controls].show');
   recordPanel(receipt, 'controls', text);
   receipt.screenshots.push(await shot(page, engine, profile, 'controls'));
-  await page.locator('[data-jr-screen="menu"] [data-jr-action="controls"]').click();
+
+  await controlsButton.click();
+  await more.click();
 }
 
 async function verifyOnboarding(page, receipt, engine, profile) {
