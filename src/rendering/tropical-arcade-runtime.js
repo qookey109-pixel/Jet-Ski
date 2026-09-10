@@ -23,6 +23,7 @@
     lastCameraHeightExtra: 0,
     lastNearestGateScale: 1,
     boostSkinAttached: false,
+    legacyGateVisualSuppressed: false,
     visualOnly: true,
     physicsWrites: false,
     gameplayWrites: false,
@@ -36,6 +37,8 @@
   gateLayer.name = 'V01116TropicalArcadeGates';
   rootGroup.add(gateLayer);
   scene.add(rootGroup);
+
+  const legacyCourseGroup = scene.getObjectByName('V0115RaceCourse') || null;
 
   const redMaterial = new THREE.MeshStandardMaterial({
     color: 0xff3b30,
@@ -88,6 +91,13 @@
   const cameraFocus = new THREE.Vector3();
   const cameraAppliedOffset = new THREE.Vector3();
   let lastBuoyUpdateMs = -Infinity;
+
+  function suppressLegacyGateVisuals() {
+    if (!legacyCourseGroup) return false;
+    legacyCourseGroup.visible = false;
+    state.legacyGateVisualSuppressed = true;
+    return true;
+  }
 
   function clearGateLayer() {
     gateLayer.clear();
@@ -183,6 +193,7 @@
     const visible = phase === 'countdown' || phase === 'racing' || phase === 'paused' || phase === 'finished';
     rootGroup.visible = visible;
     if (visible) {
+      suppressLegacyGateVisuals();
       updateVisualHeights(nowMs, false);
       updateGateFocus();
     }
@@ -300,7 +311,10 @@
     root.setTimeout(() => observer.disconnect(), 5000);
   }
 
-  root.addEventListener('jetski:race-ready', rebuildCourseVisuals);
+  root.addEventListener('jetski:race-ready', () => {
+    rebuildCourseVisuals();
+    suppressLegacyGateVisuals();
+  });
   root.addEventListener('jetski:race-origin-shift', rebuildCourseVisuals);
   root.addEventListener('jetski:race-selected', () => { rootGroup.visible = false; });
   installArcadeSkin();
@@ -311,6 +325,7 @@
   const initialPhase = Manager.state && Manager.state.phase;
   if (initialPhase === 'countdown' || initialPhase === 'racing' || initialPhase === 'paused') {
     rebuildCourseVisuals();
+    suppressLegacyGateVisuals();
     updateVisibility(performance.now());
   }
 
@@ -322,6 +337,7 @@
     buoyMesh,
     rebuildCourseVisuals,
     attachBoostSkin,
+    suppressLegacyGateVisuals,
     visualOnly: true,
     physicsUntouched: true,
     raceRulesUntouched: true,
@@ -329,6 +345,7 @@
     existingCameraOrbitPreserved: true,
     cameraOffsetAccumulationPrevented: true,
     localizationSafeBoostSkin: true,
-    proximityScaledGates: true
+    proximityScaledGates: true,
+    legacyGateRendererSuppressed: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
