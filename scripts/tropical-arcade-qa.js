@@ -131,7 +131,6 @@ async function main() {
       assert(data.buoyCount >= 12, `${profile.name}: too few lane buoys ${data.buoyCount}`);
       assert(data.state.lastCameraDistanceExtra >= 2.5, `${profile.name}: camera pull-back missing ${data.state.lastCameraDistanceExtra}`);
       assert(data.state.lastCameraHeightExtra >= 0.65, `${profile.name}: camera lift missing ${data.state.lastCameraHeightExtra}`);
-      assert(document !== null || true);
       assert(data.hudVisible === true, `${profile.name}: race HUD hidden`);
       assert(data.boostArcadeClass === true, `${profile.name}: Boost skin not attached`);
 
