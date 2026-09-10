@@ -21,6 +21,7 @@
     lastPhase: Manager.state && Manager.state.phase || 'menu',
     lastCameraDistanceExtra: 0,
     lastCameraHeightExtra: 0,
+    lastNearestGateScale: 1,
     boostSkinAttached: false,
     visualOnly: true,
     physicsWrites: false,
@@ -65,7 +66,7 @@
     20,
     Math.PI / 2
   );
-  const buoyGeometry = new THREE.SphereGeometry(0.72, 12, 8);
+  const buoyGeometry = new THREE.SphereGeometry(Core.DEFAULTS.buoyRadius, 12, 8);
   const buoyMesh = new THREE.InstancedMesh(buoyGeometry, buoyMaterial, maxBuoys);
   buoyMesh.name = 'V01116TropicalArcadeBuoys';
   buoyMesh.castShadow = false;
@@ -79,7 +80,7 @@
   const matrix = new THREE.Matrix4();
   const quaternion = new THREE.Quaternion();
   const position = new THREE.Vector3();
-  const scale = new THREE.Vector3(1.38, 0.72, 0.9);
+  const scale = new THREE.Vector3(1.28, 0.78, 0.9);
   const euler = new THREE.Euler();
   const worldUp = new THREE.Vector3(0, 1, 0);
   const cameraHorizontal = new THREE.Vector3();
@@ -104,7 +105,7 @@
     for (let quarter = 0; quarter < 4; quarter++) {
       const mesh = new THREE.Mesh(quarterGateGeometry, quarter % 2 === 0 ? redMaterial : yellowMaterial);
       mesh.rotation.z = quarter * Math.PI / 2;
-      mesh.position.y = 7.35;
+      mesh.position.y = Core.DEFAULTS.gateCenterY;
       mesh.castShadow = false;
       mesh.receiveShadow = false;
       group.add(mesh);
@@ -146,7 +147,7 @@
     lastBuoyUpdateMs = nowMs;
     for (let i = 0; i < buoyMesh.count; i++) {
       const marker = markers[i];
-      const y = getWaveHeight(marker.x, marker.z, t) + 0.38;
+      const y = getWaveHeight(marker.x, marker.z, t) + 0.34;
       position.set(marker.x, y, marker.z);
       euler.set(0, marker.yaw, 0);
       quaternion.setFromEuler(euler);
@@ -161,10 +162,19 @@
     const activeIndex = raceState.phase === 'racing' || raceState.phase === 'countdown'
       ? Number(raceState.nextCheckpointIndex)
       : -1;
+    let nearestScale = 1;
+    let nearestDistance = Infinity;
     for (const entry of gateEntries) {
       const active = entry.index === activeIndex;
-      entry.group.scale.setScalar(active ? 1.055 : 1);
+      const distance = Math.hypot(entry.x - ski.position.x, entry.z - ski.position.z);
+      const visualScale = Core.gateVisualScale(distance, active);
+      entry.group.scale.setScalar(visualScale);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestScale = visualScale;
+      }
     }
+    state.lastNearestGateScale = nearestScale;
   }
 
   function updateVisibility(nowMs) {
@@ -318,6 +328,7 @@
     boostAuthorityUntouched: true,
     existingCameraOrbitPreserved: true,
     cameraOffsetAccumulationPrevented: true,
-    localizationSafeBoostSkin: true
+    localizationSafeBoostSkin: true,
+    proximityScaledGates: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
