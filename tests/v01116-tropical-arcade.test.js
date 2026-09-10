@@ -21,6 +21,17 @@ assert(slowCamera.height > 0.5, 'camera should lift');
 assert(fastCamera.distance > slowCamera.distance, 'speed should add modest pull-back');
 assert(fastCamera.height > slowCamera.height, 'speed should add modest height');
 
+const nearGate = Arcade.gateVisualScale(10, false);
+const midGate = Arcade.gateVisualScale(36, false);
+const farGate = Arcade.gateVisualScale(80, false);
+const activeNearGate = Arcade.gateVisualScale(10, true);
+assert(nearGate >= 0.55 && nearGate <= 0.7, 'near gate should shrink enough to preserve forward visibility');
+assert(midGate > nearGate && midGate < farGate, 'gate scale should recover smoothly with distance');
+assert(Math.abs(farGate - 1) < 0.001, 'far gate should return to authored visual scale');
+assert(activeNearGate > nearGate && activeNearGate < 0.75, 'active emphasis must remain subtle near the camera');
+assert(Arcade.DEFAULTS.buoySpacing >= 16, 'lane buoys should not crowd the forward view');
+assert(Arcade.DEFAULTS.gateRadius <= 6, 'visual gate radius should stay below the first-pass oversized value');
+
 const course = {
   checkpoints: [
     { x: 0, z: 0 },
