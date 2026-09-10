@@ -84,6 +84,7 @@
   const cameraHorizontal = new THREE.Vector3();
   const cameraView = new THREE.Vector3();
   const cameraFocus = new THREE.Vector3();
+  const cameraAppliedOffset = new THREE.Vector3();
   let lastBuoyUpdateMs = -Infinity;
 
   function clearGateLayer() {
@@ -161,8 +162,7 @@
       : -1;
     for (const entry of gateEntries) {
       const active = entry.index === activeIndex;
-      const targetScale = active ? 1.055 : 1;
-      entry.group.scale.setScalar(targetScale);
+      entry.group.scale.setScalar(active ? 1.055 : 1);
     }
   }
 
@@ -179,7 +179,13 @@
 
   const previousUpdateCamera = updateCamera;
   updateCamera = function v01116TropicalArcadeCamera(dt) {
+    // Remove only the visual offset applied on the previous frame before handing control
+    // back to the validated orbit camera. This prevents the presentation offset from
+    // accumulating through the base camera's smoothing lerp.
+    camera.position.sub(cameraAppliedOffset);
+    cameraAppliedOffset.set(0, 0, 0);
     previousUpdateCamera(dt);
+
     const phase = Manager.state && Manager.state.phase;
     if (!Core.isDrivingPhase(phase)) {
       state.lastCameraDistanceExtra = 0;
@@ -205,8 +211,8 @@
       cameraHorizontal.normalize();
     }
 
-    camera.position.addScaledVector(cameraHorizontal, offsets.distance);
-    camera.position.addScaledVector(worldUp, offsets.height);
+    cameraAppliedOffset.copy(cameraHorizontal).multiplyScalar(offsets.distance).addScaledVector(worldUp, offsets.height);
+    camera.position.add(cameraAppliedOffset);
     camera.lookAt(cameraFocus);
     state.lastCameraDistanceExtra = offsets.distance;
     state.lastCameraHeightExtra = offsets.height;
@@ -259,6 +265,14 @@
   installArcadeSkin();
   rootGroup.visible = false;
 
+  // If the asynchronous visual loader finishes after a very fast race start, catch up
+  // from the authoritative live course instead of depending on a missed race-ready event.
+  const initialPhase = Manager.state && Manager.state.phase;
+  if (initialPhase === 'countdown' || initialPhase === 'racing' || initialPhase === 'paused') {
+    rebuildCourseVisuals();
+    updateVisibility(performance.now());
+  }
+
   root.JETSKI_TROPICAL_ARCADE = {
     version: VERSION,
     state,
@@ -270,6 +284,7 @@
     physicsUntouched: true,
     raceRulesUntouched: true,
     boostAuthorityUntouched: true,
-    existingCameraOrbitPreserved: true
+    existingCameraOrbitPreserved: true,
+    cameraOffsetAccumulationPrevented: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
