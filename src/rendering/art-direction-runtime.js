@@ -56,7 +56,28 @@
     dressing.visible=!(root.V01051_REAL_WORLD_3D&&root.V01051_REAL_WORLD_3D.state&&root.V01051_REAL_WORLD_3D.state.active);
     root.requestAnimationFrame(tick);
   }
+
+  // V0.11.16 Tropical Arcade T1 is loaded from the existing visual-only layer so the
+  // validated gameplay script order remains untouched. build.js copies all src files.
+  function loadTropicalArcade(){
+    if(root.JETSKI_TROPICAL_ARCADE||document.querySelector('script[data-v01116-tropical-core]'))return;
+    const coreScript=document.createElement('script');
+    coreScript.src='./src/rendering/tropical-arcade-core.js';
+    coreScript.async=false;
+    coreScript.dataset.v01116TropicalCore='1';
+    coreScript.onload=()=>{
+      if(root.JETSKI_TROPICAL_ARCADE)return;
+      const runtimeScript=document.createElement('script');
+      runtimeScript.src='./src/rendering/tropical-arcade-runtime.js';
+      runtimeScript.async=false;
+      runtimeScript.dataset.v01116TropicalRuntime='1';
+      document.body.appendChild(runtimeScript);
+    };
+    document.body.appendChild(coreScript);
+  }
+
   root.requestAnimationFrame(tick);
+  loadTropicalArcade();
   const versionNode=document.querySelector('#version');if(versionNode)versionNode.textContent=VERSION;document.title=`Swim Ring Racing ${VERSION}`;
-  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true,paletteUpdateHz:10,dressingUpdateMs:2000};
+  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true,paletteUpdateHz:10,dressingUpdateMs:2000,tropicalArcadeLoader:true};
 })(typeof window!=='undefined'?window:globalThis);
