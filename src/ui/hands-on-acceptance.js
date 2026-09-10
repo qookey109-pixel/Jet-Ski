@@ -380,7 +380,7 @@
   addButton('Copy Receipt', copyReceipt);
   addButton('↻ 重設', reset);
 
-  root.JETSKI_HANDS_ON_ACCEPTANCE = Object.assign({}, pureApi, {
+  const runtimeApi = Object.assign({}, pureApi, {
     available: true,
     observerOnly: true,
     physicsWrites: false,
@@ -395,8 +395,11 @@
     copyReceipt,
     setCollapsed,
     refreshContext,
-    currentPayload,
-    get capturing() { return capturing; },
-    get collapsed() { return collapsed; }
+    currentPayload
   });
+  Object.defineProperties(runtimeApi, {
+    capturing: { enumerable: true, get() { return capturing; } },
+    collapsed: { enumerable: true, get() { return collapsed; } }
+  });
+  root.JETSKI_HANDS_ON_ACCEPTANCE = runtimeApi;
 })(typeof window !== 'undefined' ? window : globalThis);
