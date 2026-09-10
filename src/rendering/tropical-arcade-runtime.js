@@ -13,6 +13,7 @@
   const mobileLike = Math.min(root.innerWidth || 9999, root.innerHeight || 9999) < 620
     || /iPhone|iPad|iPod|Android/i.test((root.navigator && root.navigator.userAgent) || '');
   const maxBuoys = mobileLike ? Core.DEFAULTS.maxBuoysMobile : Core.DEFAULTS.maxBuoysDesktop;
+  const nearbyNonTargetHideDistance = 18;
 
   const state = {
     gateCount: 0,
@@ -24,6 +25,7 @@
     lastNearestGateScale: 1,
     boostSkinAttached: false,
     legacyGateVisualSuppressed: false,
+    nearNonActiveGateSuppressed: false,
     visualOnly: true,
     physicsWrites: false,
     gameplayWrites: false,
@@ -174,17 +176,22 @@
       : -1;
     let nearestScale = 1;
     let nearestDistance = Infinity;
+    let suppressedNearNonActive = false;
     for (const entry of gateEntries) {
       const active = entry.index === activeIndex;
       const distance = Math.hypot(entry.x - ski.position.x, entry.z - ski.position.z);
       const visualScale = Core.gateVisualScale(distance, active);
       entry.group.scale.setScalar(visualScale);
+      const renderGate = active || distance >= nearbyNonTargetHideDistance;
+      entry.group.visible = renderGate;
+      if (!renderGate) suppressedNearNonActive = true;
       if (distance < nearestDistance) {
         nearestDistance = distance;
         nearestScale = visualScale;
       }
     }
     state.lastNearestGateScale = nearestScale;
+    state.nearNonActiveGateSuppressed = suppressedNearNonActive;
   }
 
   function updateVisibility(nowMs) {
@@ -346,6 +353,7 @@
     cameraOffsetAccumulationPrevented: true,
     localizationSafeBoostSkin: true,
     proximityScaledGates: true,
-    legacyGateRendererSuppressed: true
+    legacyGateRendererSuppressed: true,
+    nearbyNonTargetGatesSuppressed: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);
