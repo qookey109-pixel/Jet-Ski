@@ -53,6 +53,7 @@ async function collect(page) {
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
+    const legacyCourse = typeof scene !== 'undefined' ? scene.getObjectByName('V0115RaceCourse') : null;
     const body = document.body;
     const hud = document.querySelector('.jr-hud');
     const gas = document.querySelector('#gas');
@@ -70,6 +71,8 @@ async function collect(page) {
       rootVisible: Boolean(ringRoot && ringRoot.visible),
       gateChildren: gateLayer ? gateLayer.children.length : -1,
       buoyCount: buoyMesh ? buoyMesh.count : -1,
+      legacyCourseFound: Boolean(legacyCourse),
+      legacyCourseVisible: legacyCourse ? legacyCourse.visible : null,
       hudVisible: hud ? getComputedStyle(hud).display !== 'none' : false,
       gasVisible: gas ? getComputedStyle(gas).display !== 'none' : false,
       boostArcadeClass: Boolean(boost),
@@ -140,6 +143,8 @@ async function main() {
         `${profile.name}: first-pass gate/buoy density returned`);
       assert(data.state.lastNearestGateScale >= 0.55 && data.state.lastNearestGateScale <= 0.75,
         `${profile.name}: near gate still obstructs forward view ${data.state.lastNearestGateScale}`);
+      assert(data.legacyCourseFound === true && data.legacyCourseVisible === false && data.state.legacyGateVisualSuppressed === true,
+        `${profile.name}: duplicate legacy gate renderer is still visible`);
       assert(data.state.lastCameraDistanceExtra >= 2.5, `${profile.name}: camera pull-back missing ${data.state.lastCameraDistanceExtra}`);
       assert(data.state.lastCameraHeightExtra >= 0.65, `${profile.name}: camera lift missing ${data.state.lastCameraHeightExtra}`);
       assert(Number.isFinite(data.cameraDistance) && data.cameraDistance < 30,
