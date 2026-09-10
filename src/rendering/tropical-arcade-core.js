@@ -9,11 +9,17 @@
     cameraExtraHeight: 0.72,
     cameraSpeedHeight: 0.24,
     laneHalfWidth: 7.6,
-    buoySpacing: 12.5,
-    gateRadius: 7.05,
-    gateTube: 0.62,
-    maxBuoysDesktop: 72,
-    maxBuoysMobile: 48
+    buoySpacing: 16.5,
+    buoyRadius: 0.58,
+    gateRadius: 6.0,
+    gateTube: 0.52,
+    gateCenterY: 6.25,
+    gateNearScale: 0.62,
+    gateNearDistance: 22,
+    gateFarDistance: 52,
+    gateActiveScale: 1.03,
+    maxBuoysDesktop: 60,
+    maxBuoysMobile: 40
   });
 
   function finite(value, fallback) {
@@ -36,6 +42,19 @@
       distance: finite(cfg.cameraExtraDistance) + finite(cfg.cameraSpeedDistance) * ratio,
       height: finite(cfg.cameraExtraHeight) + finite(cfg.cameraSpeedHeight) * ratio
     };
+  }
+
+  function gateVisualScale(distance, active, options) {
+    const cfg = Object.assign({}, DEFAULTS, options || {});
+    const d = Math.max(0, finite(distance, 0));
+    const nearScale = Math.max(0.45, Math.min(1, finite(cfg.gateNearScale, DEFAULTS.gateNearScale)));
+    const nearDistance = Math.max(1, finite(cfg.gateNearDistance, DEFAULTS.gateNearDistance));
+    const farDistance = Math.max(nearDistance + 1, finite(cfg.gateFarDistance, DEFAULTS.gateFarDistance));
+    const activeScale = active ? Math.max(1, finite(cfg.gateActiveScale, DEFAULTS.gateActiveScale)) : 1;
+    if (d <= nearDistance) return nearScale * activeScale;
+    if (d >= farDistance) return activeScale;
+    const t = clamp01((d - nearDistance) / (farDistance - nearDistance));
+    return (nearScale + (1 - nearScale) * t) * activeScale;
   }
 
   function gatePose(checkpoint, nextCheckpoint) {
@@ -97,6 +116,7 @@
     clamp01,
     isDrivingPhase,
     cameraOffsets,
+    gateVisualScale,
     gatePose,
     sampleLaneMarkers,
     visualOnly: true,
