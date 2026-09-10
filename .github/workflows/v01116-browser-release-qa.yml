@@ -41,6 +41,8 @@ jobs:
         run: npm run test:browser-release
       - name: Run Traditional Chinese player UI QA
         run: npm run test:zh-hant-browser
+      - name: Run query-gated hands-on acceptance helper QA
+        run: npm run test:hands-on-browser
       - name: Upload browser QA evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,5 +57,13 @@ jobs:
         with:
           name: v01116-zh-hant-ui-qa
           path: artifacts/zh-hant-ui-qa/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload hands-on acceptance helper evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v01116-hands-on-acceptance-qa
+          path: artifacts/hands-on-acceptance-qa/
           if-no-files-found: warn
           retention-days: 14

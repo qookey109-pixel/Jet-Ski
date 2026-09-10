@@ -64,6 +64,7 @@ jobs:
           node --check src/ui/save-recovery-core.js
           node --check src/ui/save-recovery-runtime.js
           node --check src/ui/release-marker-runtime.js
+          node --check src/ui/hands-on-acceptance.js
           node --check src/game/race-manager.js
           node --check src/ai/race-ai-core.js
           node --check src/ai/race-ai-runtime.js
@@ -83,6 +84,7 @@ jobs:
           node --check scripts/preview.js
           node --check scripts/release-smoke.js
           node --check scripts/browser-release-qa.js
+          node --check scripts/hands-on-acceptance-qa.js
       - name: Run V0.11 gameplay regressions
         run: npm run test:v011
       - name: Verify source release graph
@@ -109,6 +111,7 @@ jobs:
           test -f dist/src/ui/save-recovery-core.js
           test -f dist/src/ui/save-recovery-runtime.js
           test -f dist/src/ui/release-marker-runtime.js
+          test -f dist/src/ui/hands-on-acceptance.js
           test -f dist/src/ai/race-ai-runtime.js
           test -f dist/src/gameplay/boost-runtime.js
           test -f dist/src/input/control-camera-runtime.js
@@ -126,3 +129,4 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/src/ui/save-recovery-core.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/ui/save-recovery-runtime.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/ui/release-marker-runtime.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/src/ui/hands-on-acceptance.js >/dev/null

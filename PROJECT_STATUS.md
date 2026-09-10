@@ -72,13 +72,21 @@ Playwright WebKit is a Safari-engine compatibility signal only; it is not a subs
 
 ## Current active work
 
-Repository documentation is reconciled to V0.11.16 in the current document set:
+Branch: `feature/v01116-hands-on-acceptance`
 
-- `README.md` reflects V0.11.16 release systems and acceptance boundaries;
-- `TODO.md` no longer defers V0.11 systems that have already shipped;
-- `CHANGELOG.md` backfills the V0.9.3→V0.11.16 release history while retaining older entries.
+Scope is acceptance tooling only:
 
-No gameplay / physics migration is currently authorized.
+- add an observer-only real-device helper gated behind `?accept=1`;
+- reuse existing `V09931_SAFARI_PERFORMANCE` FPS / p95 / long-frame telemetry rather than creating a second timing authority;
+- record device context and explicit human observations;
+- produce a copyable receipt whose best automated result is `CANDIDATE_PASS`, never formal acceptance;
+- keep the helper inactive on normal player URLs and existing `?qa=` Browser Release QA;
+- on mobile, auto-collapse the helper while recording so it does not cover steering / throttle / race HUD;
+- add pure regression plus WebKit tool-QA/screenshots for query gating and panel interference.
+
+This work does **not** mark Safari or actual-phone acceptance PASS. Formal acceptance still requires a real-device user report.
+
+No gameplay / physics migration is authorized by this work.
 
 ## Accepted baseline — do not redo
 
@@ -119,8 +127,9 @@ Synthetic coast Browser QA verifies deterministic product flow only and does not
 
 ## Next actions
 
-1. Perform real macOS Safari full-Championship hands-on acceptance.
-2. Perform actual-phone mobile landscape touch / safe-area acceptance.
-3. Perform real Waikīkī / Qixingtan coastline acceptance and audio listening review.
-4. Keep V0.10.5 Sway acceptance separate from the accepted V0.10.4 baseline.
-5. Keep Natural Disaster EXP acceptance separate until guided hands-on evidence exists.
+1. Validate the query-gated hands-on helper without changing normal Browser Release QA behavior.
+2. Inspect helper screenshots for desktop and 844 × 390 mobile, including the collapsed recording state.
+3. After helper delivery is stable, perform real macOS Safari full-Championship hands-on acceptance using `?accept=1`.
+4. Perform actual-phone mobile landscape touch / safe-area acceptance using `?accept=1`.
+5. Perform real Waikīkī / Qixingtan coastline acceptance and audio listening review.
+6. Keep V0.10.5 Sway and Natural Disaster EXP acceptance separate from the accepted V0.10.4 baseline.
