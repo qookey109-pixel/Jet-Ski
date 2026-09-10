@@ -135,6 +135,11 @@ async function main() {
       assert(data.rootVisible === true, `${profile.name}: tropical course layer not visible`);
       assert(data.gateChildren >= 4, `${profile.name}: too few decorated gates ${data.gateChildren}`);
       assert(data.buoyCount >= 12, `${profile.name}: too few lane buoys ${data.buoyCount}`);
+      assert(data.buoyCount <= (profile.mobile ? 40 : 60), `${profile.name}: lane buoy density exceeded visual budget ${data.buoyCount}`);
+      assert(data.coreDefaults.gateRadius <= 6 && data.coreDefaults.buoySpacing >= 16,
+        `${profile.name}: first-pass gate/buoy density returned`);
+      assert(data.state.lastNearestGateScale >= 0.55 && data.state.lastNearestGateScale <= 0.75,
+        `${profile.name}: near gate still obstructs forward view ${data.state.lastNearestGateScale}`);
       assert(data.state.lastCameraDistanceExtra >= 2.5, `${profile.name}: camera pull-back missing ${data.state.lastCameraDistanceExtra}`);
       assert(data.state.lastCameraHeightExtra >= 0.65, `${profile.name}: camera lift missing ${data.state.lastCameraHeightExtra}`);
       assert(Number.isFinite(data.cameraDistance) && data.cameraDistance < 30,
