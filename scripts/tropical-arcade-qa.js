@@ -58,6 +58,10 @@ async function collect(page) {
     const hud = document.querySelector('.jr-hud');
     const gas = document.querySelector('#gas');
     const boost = document.querySelector('.v01116-arcade-boost');
+    const gates = gateLayer ? gateLayer.children : [];
+    const activeIndex = manager && manager.state ? Number(manager.state.nextCheckpointIndex) : -1;
+    const startGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === 0) || null;
+    const activeGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === activeIndex) || null;
     return {
       phase: manager && manager.state && manager.state.phase,
       version: arcade && arcade.version,
@@ -70,6 +74,10 @@ async function collect(page) {
       coreDefaults: core && Object.assign({}, core.DEFAULTS),
       rootVisible: Boolean(ringRoot && ringRoot.visible),
       gateChildren: gateLayer ? gateLayer.children.length : -1,
+      visibleGateCount: gateLayer ? [...gateLayer.children].filter(gate => gate.visible).length : -1,
+      activeIndex,
+      startGateVisible: startGate ? startGate.visible : null,
+      activeGateVisible: activeGate ? activeGate.visible : null,
       buoyCount: buoyMesh ? buoyMesh.count : -1,
       legacyCourseFound: Boolean(legacyCourse),
       legacyCourseVisible: legacyCourse ? legacyCourse.visible : null,
@@ -137,12 +145,18 @@ async function main() {
         `${profile.name}: visual layer reports forbidden writes`);
       assert(data.rootVisible === true, `${profile.name}: tropical course layer not visible`);
       assert(data.gateChildren >= 4, `${profile.name}: too few decorated gates ${data.gateChildren}`);
+      assert(data.visibleGateCount >= 3, `${profile.name}: too few visible tropical gates ${data.visibleGateCount}`);
+      assert(data.activeGateVisible === true, `${profile.name}: current target gate was hidden`);
+      if (data.activeIndex !== 0) {
+        assert(data.startGateVisible === false && data.state.nearNonActiveGateSuppressed === true,
+          `${profile.name}: nearby non-target start/finish gate still obstructs the launch view`);
+      }
       assert(data.buoyCount >= 12, `${profile.name}: too few lane buoys ${data.buoyCount}`);
       assert(data.buoyCount <= (profile.mobile ? 40 : 60), `${profile.name}: lane buoy density exceeded visual budget ${data.buoyCount}`);
       assert(data.coreDefaults.gateRadius <= 6 && data.coreDefaults.buoySpacing >= 16,
         `${profile.name}: first-pass gate/buoy density returned`);
       assert(data.state.lastNearestGateScale >= 0.55 && data.state.lastNearestGateScale <= 0.75,
-        `${profile.name}: near gate still obstructs forward view ${data.state.lastNearestGateScale}`);
+        `${profile.name}: near gate scale left the guarded readability range ${data.state.lastNearestGateScale}`);
       assert(data.legacyCourseFound === true && data.legacyCourseVisible === false && data.state.legacyGateVisualSuppressed === true,
         `${profile.name}: duplicate legacy gate renderer is still visible`);
       assert(data.state.lastCameraDistanceExtra >= 2.5, `${profile.name}: camera pull-back missing ${data.state.lastCameraDistanceExtra}`);
