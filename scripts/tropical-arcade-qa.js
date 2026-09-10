@@ -41,6 +41,7 @@ async function startOpenSeaRace(page) {
       (manager.state.phase === 'countdown' || manager.state.phase === 'racing') &&
       arcade.state.gateCount > 0 && arcade.state.buoyCount > 0 && arcade.rootGroup.visible;
   }, null, { timeout: 20000 });
+  await page.waitForFunction(() => Boolean(document.querySelector('.v01116-arcade-boost')), null, { timeout: 5000 });
   await page.waitForTimeout(700);
 }
 
@@ -55,7 +56,7 @@ async function collect(page) {
     const body = document.body;
     const hud = document.querySelector('.jr-hud');
     const gas = document.querySelector('#gas');
-    const boost = document.querySelector('[aria-label="Boost / Nitro"]');
+    const boost = document.querySelector('.v01116-arcade-boost');
     return {
       phase: manager && manager.state && manager.state.phase,
       version: arcade && arcade.version,
@@ -71,7 +72,8 @@ async function collect(page) {
       buoyCount: buoyMesh ? buoyMesh.count : -1,
       hudVisible: hud ? getComputedStyle(hud).display !== 'none' : false,
       gasVisible: gas ? getComputedStyle(gas).display !== 'none' : false,
-      boostArcadeClass: Boolean(boost && boost.classList.contains('v01116-arcade-boost')),
+      boostArcadeClass: Boolean(boost),
+      boostLabel: boost ? (boost.getAttribute('aria-label') || boost.textContent || '').trim() : '',
       fov: typeof camera !== 'undefined' ? camera.fov : null,
       cameraDistance: typeof camera !== 'undefined' && typeof ski !== 'undefined' ? camera.position.distanceTo(ski.position) : null,
       cameraHeightDelta: typeof camera !== 'undefined' && typeof ski !== 'undefined' ? camera.position.y - ski.position.y : null
@@ -119,6 +121,10 @@ async function main() {
       await startOpenSeaRace(page);
       const data = await collect(page);
 
+      const screenshot = `${profile.name}.png`;
+      await page.screenshot({ path: path.join(OUT, screenshot), fullPage: false });
+      receipt.screenshots.push(screenshot);
+
       assert(data.version === 'V0.11.16-T1', `${profile.name}: wrong Tropical Arcade version ${data.version}`);
       assert(data.visualOnly === true && data.physicsUntouched === true && data.raceRulesUntouched === true,
         `${profile.name}: authority boundary changed`);
@@ -131,12 +137,12 @@ async function main() {
       assert(data.buoyCount >= 12, `${profile.name}: too few lane buoys ${data.buoyCount}`);
       assert(data.state.lastCameraDistanceExtra >= 2.5, `${profile.name}: camera pull-back missing ${data.state.lastCameraDistanceExtra}`);
       assert(data.state.lastCameraHeightExtra >= 0.65, `${profile.name}: camera lift missing ${data.state.lastCameraHeightExtra}`);
+      assert(Number.isFinite(data.cameraDistance) && data.cameraDistance < 30,
+        `${profile.name}: camera framing drifted too far ${data.cameraDistance}`);
       assert(data.hudVisible === true, `${profile.name}: race HUD hidden`);
-      assert(data.boostArcadeClass === true, `${profile.name}: Boost skin not attached`);
+      assert(data.boostArcadeClass === true && data.state.boostSkinAttached === true,
+        `${profile.name}: localization-safe Boost skin not attached`);
 
-      const screenshot = `${profile.name}.png`;
-      await page.screenshot({ path: path.join(OUT, screenshot), fullPage: false });
-      receipt.screenshots.push(screenshot);
       receipt.profiles.push({ name: profile.name, status: 'PASS', metrics: data });
       await context.close();
     }
