@@ -20,8 +20,9 @@ jobs:
       - name: Install Blender
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender
+          sudo apt-get install -y blender python3-numpy
           blender --version
+          blender --background --python-expr "import numpy as np; print('BLENDER_NUMPY_OK', np.__version__)"
 
       - name: Generate GLB and preview
         env:
