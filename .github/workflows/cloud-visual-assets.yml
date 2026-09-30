@@ -17,19 +17,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Blender
+      - name: Install Blender headless dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender python3-numpy
+          sudo apt-get install -y blender python3-numpy xvfb libegl1 libgl1-mesa-dri libglx-mesa0
           blender --version
-          blender --background --python-expr "import numpy as np; print('BLENDER_NUMPY_OK', np.__version__)"
+          xvfb-run -a blender --background --python-expr "import numpy as np; print('BLENDER_NUMPY_OK', np.__version__)"
 
       - name: Generate GLB and preview
         env:
           JETSKI_ASSET_OUT: ${{ github.workspace }}/artifacts/cloud-visual-assets
         run: |
           mkdir -p artifacts/cloud-visual-assets
-          blender --background --python scripts/blender/generate_tropical_assets.py
+          xvfb-run -a blender --background --python scripts/blender/generate_tropical_assets.py
           test -s artifacts/cloud-visual-assets/tropical_island_kit.glb
           test -s artifacts/cloud-visual-assets/tropical_island_preview.png
 
