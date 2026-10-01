@@ -30,7 +30,8 @@ assert(midGate > nearGate && midGate < farGate, 'gate scale should recover smoot
 assert(Math.abs(farGate - 1) < 0.001, 'far gate should return to authored visual scale');
 assert(activeNearGate > nearGate && activeNearGate < 0.75, 'active emphasis must remain subtle near the camera');
 assert(Arcade.DEFAULTS.buoySpacing >= 16, 'lane buoys should not crowd the forward view');
-assert(Arcade.DEFAULTS.gateRadius <= 6, 'visual gate radius should stay below the first-pass oversized value');
+assert(Arcade.DEFAULTS.gateRadius >= 7 && Arcade.DEFAULTS.gateRadius <= 7.5, 'T5 gate should be wider without becoming oversized');
+assert(Arcade.DEFAULTS.laneHalfWidth >= 11 && Arcade.DEFAULTS.laneHalfWidth <= 12, 'T5 lane corridor should be visibly wider');
 
 const course = {
   checkpoints: [
@@ -41,7 +42,7 @@ const course = {
   ]
 };
 const snapshot = JSON.stringify(course);
-const markers = Arcade.sampleLaneMarkers(course, { maxBuoys: 40, buoySpacing: 12, laneHalfWidth: 7.5 });
+const markers = Arcade.sampleLaneMarkers(course, { maxBuoys: 40, buoySpacing: 12, laneHalfWidth: Arcade.DEFAULTS.laneHalfWidth });
 assert(markers.length > 8, 'course should receive visible lane buoys');
 assert(markers.length <= 40, 'buoy budget must be bounded');
 assert.equal(JSON.stringify(course), snapshot, 'visual sampling must not mutate race course');
@@ -52,7 +53,7 @@ assert(markers.some(marker => marker.side === 1));
 const firstPair = markers.filter(marker => marker.segment === 0).slice(0, 2);
 assert.equal(firstPair.length, 2);
 const separation = Math.hypot(firstPair[0].x - firstPair[1].x, firstPair[0].z - firstPair[1].z);
-assert(Math.abs(separation - 15) < 0.001, 'lane pair must preserve configured width');
+assert(Math.abs(separation - Arcade.DEFAULTS.laneHalfWidth * 2) < 0.001, 'lane pair must preserve widened configured width');
 
 const pose = Arcade.gatePose(course.checkpoints[0], course.checkpoints[1]);
 assert.equal(pose.x, 0);

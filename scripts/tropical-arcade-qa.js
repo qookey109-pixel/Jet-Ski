@@ -24,7 +24,8 @@ async function preparePage(context, viewport) {
     window.JETSKI_RACE_MANAGER && window.JETSKI_TROPICAL_ARCADE && window.JETSKI_TROPICAL_ARCADE_CORE &&
     window.JETSKI_TROPICAL_ISLANDS && window.JETSKI_TROPICAL_ISLAND_CORE &&
     window.JETSKI_TROPICAL_POLISH && window.JETSKI_TROPICAL_POLISH_CORE &&
-    window.JETSKI_ARCADE_FEEDBACK && window.JETSKI_ARCADE_FEEDBACK_CORE
+    window.JETSKI_ARCADE_FEEDBACK && window.JETSKI_ARCADE_FEEDBACK_CORE &&
+    window.JETSKI_RACE_AI
   ), null, { timeout: 30000 });
   return page;
 }
@@ -65,6 +66,7 @@ async function collect(page) {
     const polishCore = window.JETSKI_TROPICAL_POLISH_CORE;
     const feedback = window.JETSKI_ARCADE_FEEDBACK;
     const feedbackCore = window.JETSKI_ARCADE_FEEDBACK_CORE;
+    const ai = window.JETSKI_RACE_AI;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -132,7 +134,12 @@ async function collect(page) {
       feedbackCameraUntouched: feedback && feedback.cameraUntouched,
       feedbackCollisionAdded: feedback && feedback.collisionAdded,
       feedbackState: feedback && Object.assign({}, feedback.state),
-      feedbackDefaults: feedbackCore && Object.assign({}, feedbackCore.DEFAULTS)
+      feedbackDefaults: feedbackCore && Object.assign({}, feedbackCore.DEFAULTS),
+      aiRiderVisuals: ai && ai.riderVisuals,
+      aiRiderCount: ai && ai.riderCount,
+      aiVisualRidersPresent: Boolean(ai && Array.isArray(ai.racers) && ai.racers.length === 3 &&
+        ai.racers.every(entry => entry.visual && entry.visual.userData && entry.visual.userData.rider)),
+      aiPlayerPhysicsRewritten: ai && ai.playerPhysicsRewritten
     };
   });
 }
@@ -141,7 +148,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade Visual Pass T1 + T2 Islands + T3 Environment/Water Polish + T4 Race Feedback',
+    feature: 'Tropical Arcade T1-T4 + T5 Wider Course / AI Riders',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -236,8 +243,10 @@ async function main() {
       }
       assert(data.buoyCount >= 12, `${profile.name}: too few lane buoys ${data.buoyCount}`);
       assert(data.buoyCount <= (profile.mobile ? 40 : 60), `${profile.name}: lane buoy density exceeded visual budget ${data.buoyCount}`);
-      assert(data.coreDefaults.gateRadius <= 6 && data.coreDefaults.buoySpacing >= 16,
-        `${profile.name}: first-pass gate/buoy density returned`);
+      assert(data.coreDefaults.gateRadius >= 7 && data.coreDefaults.gateRadius <= 7.5 &&
+        data.coreDefaults.laneHalfWidth >= 11 && data.coreDefaults.laneHalfWidth <= 12 &&
+        data.coreDefaults.buoySpacing >= 16,
+        `${profile.name}: T5 widened course defaults outside guarded range`);
       assert(data.state.lastNearestGateScale >= 0.55 && data.state.lastNearestGateScale <= 0.75,
         `${profile.name}: near gate scale left the guarded readability range ${data.state.lastNearestGateScale}`);
       assert(data.legacyCourseFound === true && data.legacyCourseVisible === false && data.state.legacyGateVisualSuppressed === true,
@@ -318,6 +327,11 @@ async function main() {
         stateBeforePreview.lap === feedbackPreview.race.lap &&
         stateBeforePreview.nextCheckpointIndex === feedbackPreview.race.nextCheckpointIndex,
         `${profile.name}: T4 preview mutated race progress`);
+
+      assert(data.aiRiderVisuals === true && data.aiRiderCount === 3 && data.aiVisualRidersPresent === true,
+        `${profile.name}: T5 AI rider visuals missing`);
+      assert(data.aiPlayerPhysicsRewritten === false,
+        `${profile.name}: T5 AI visual pass rewrote player physics`);
 
       receipt.profiles.push({ name: profile.name, status: 'PASS', metrics: data });
       await context.close();

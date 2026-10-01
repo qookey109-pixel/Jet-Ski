@@ -8,9 +8,9 @@
 
   const VERSION = 'V0.11.5';
   const configs = [
-    { id: 'coral', name: 'CORAL', speedMps: 10.1, steeringResponse: 2.8, color: 0xff6b6b, lane: -4.5 },
+    { id: 'coral', name: 'CORAL', speedMps: 10.1, steeringResponse: 2.8, color: 0xff6b6b, lane: -6.4 },
     { id: 'tide', name: 'TIDE', speedMps: 10.7, steeringResponse: 3.0, color: 0x67e8f9, lane: 0 },
-    { id: 'mango', name: 'MANGO', speedMps: 9.7, steeringResponse: 2.65, color: 0xffc857, lane: 4.5 }
+    { id: 'mango', name: 'MANGO', speedMps: 9.7, steeringResponse: 2.65, color: 0xffc857, lane: 6.4 }
   ];
 
   const group = new THREE.Group();
@@ -39,7 +39,47 @@
       new THREE.MeshStandardMaterial({ color: 0x243142, roughness: 0.68 })
     );
     seat.position.y = 0.58;
-    g.add(ring, seat);
+
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xf2c39c, roughness: 0.82 });
+    const vestMat = new THREE.MeshStandardMaterial({
+      color: config.color,
+      roughness: 0.56,
+      metalness: 0.01
+    });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x243142, roughness: 0.72 });
+
+    const rider = new THREE.Group();
+    rider.name = `V01116AIRider-${config.id}`;
+
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.44, 0.92, 8), vestMat);
+    torso.position.y = 1.34;
+    torso.rotation.x = -0.12;
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 7), skinMat);
+    head.position.set(0, 1.98, 0.06);
+
+    const hips = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.24, 0.40), darkMat);
+    hips.position.set(0, 0.93, 0.03);
+
+    const armGeo = new THREE.CylinderGeometry(0.085, 0.095, 0.72, 7);
+    const leftArm = new THREE.Mesh(armGeo, skinMat);
+    const rightArm = new THREE.Mesh(armGeo, skinMat);
+    leftArm.position.set(-0.39, 1.34, 0.24);
+    rightArm.position.set(0.39, 1.34, 0.24);
+    leftArm.rotation.set(0.68, 0, -0.58);
+    rightArm.rotation.set(0.68, 0, 0.58);
+
+    const handBar = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.08, 0.08), darkMat);
+    handBar.position.set(0, 1.11, 0.48);
+
+    for (const mesh of [torso, head, hips, leftArm, rightArm, handBar]) {
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+    }
+    rider.add(torso, head, hips, leftArm, rightArm, handBar);
+
+    g.userData.rider = rider;
+    g.add(ring, seat, rider);
     return g;
   }
 
@@ -165,6 +205,8 @@
     getPlayerRank,
     rankedEntries,
     reducedOrderAI: true,
-    playerPhysicsRewritten: false
+    playerPhysicsRewritten: false,
+    riderVisuals: true,
+    riderCount: configs.length
   };
 })(typeof window !== 'undefined' ? window : globalThis);
