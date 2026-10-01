@@ -181,6 +181,9 @@ async function main() {
       await page.screenshot({ path: path.join(OUT, screenshot), fullPage: false });
       receipt.screenshots.push(screenshot);
 
+      await page.waitForFunction(() => window.JETSKI_RACE_MANAGER &&
+        window.JETSKI_RACE_MANAGER.state.phase === 'racing', null, { timeout: 5000 });
+      await page.waitForTimeout(220);
       const stateBeforePreview = await page.evaluate(() => {
         const manager = window.JETSKI_RACE_MANAGER;
         return manager ? {
@@ -191,10 +194,7 @@ async function main() {
         } : null;
       });
       await page.evaluate(() => window.JETSKI_ARCADE_FEEDBACK.preview('checkpoint'));
-      await page.waitForTimeout(90);
-      const feedbackScreenshot = `${profile.name}-feedback.png`;
-      await page.screenshot({ path: path.join(OUT, feedbackScreenshot), fullPage: false });
-      receipt.screenshots.push(feedbackScreenshot);
+      await page.waitForTimeout(70);
       const feedbackPreview = await page.evaluate(() => {
         const manager = window.JETSKI_RACE_MANAGER;
         const feedback = window.JETSKI_ARCADE_FEEDBACK;
@@ -211,6 +211,9 @@ async function main() {
           } : null
         };
       });
+      const feedbackScreenshot = `${profile.name}-feedback.png`;
+      await page.screenshot({ path: path.join(OUT, feedbackScreenshot), fullPage: false });
+      receipt.screenshots.push(feedbackScreenshot);
 
       assert(data.version === 'V0.11.16-T1', `${profile.name}: wrong Tropical Arcade version ${data.version}`);
       assert(data.visualOnly === true && data.physicsUntouched === true && data.raceRulesUntouched === true,
