@@ -19,6 +19,7 @@
     "test:tropical-arcade": "node tests/v01116-tropical-arcade.test.js",
     "test:tropical-island": "node tests/v01116-tropical-island.test.js",
     "test:tropical-polish": "node tests/v01116-tropical-polish.test.js",
+    "test:arcade-feedback": "node tests/v01116-arcade-feedback.test.js",
     "test:ghost": "node tests/v0119-ghost.test.js",
     "test:cosmetics": "node tests/v01110-cosmetics.test.js",
     "test:challenges": "node tests/v01111-challenges.test.js",
@@ -34,7 +35,7 @@
     "test:zh-hant-browser": "node scripts/zh-hant-browser-qa.js && node scripts/mobile-landscape-menu-qa.js",
     "test:hands-on-browser": "node -r ./scripts/browser-release-overpass-stub.js scripts/hands-on-acceptance-qa.js",
     "test:tropical-browser": "node -r ./scripts/browser-release-overpass-stub.js scripts/tropical-arcade-qa.js",
-    "test:v011": "npm run test:race && npm run test:ai && npm run test:boost && npm run test:camera && npm run test:quality && npm run test:progression && npm run test:championship && npm run test:audio && npm run test:art && npm run test:tropical-arcade && npm run test:tropical-island && npm run test:tropical-polish && npm run test:ghost && npm run test:cosmetics && npm run test:challenges && npm run test:onboarding && npm run test:presentation && npm run test:mobile-ux && npm run test:save && npm run test:origin-sync && npm run test:hands-on-acceptance && npm run test:zh-hant"
+    "test:v011": "npm run test:race && npm run test:ai && npm run test:boost && npm run test:camera && npm run test:quality && npm run test:progression && npm run test:championship && npm run test:audio && npm run test:art && npm run test:tropical-arcade && npm run test:tropical-island && npm run test:tropical-polish && npm run test:arcade-feedback && npm run test:ghost && npm run test:cosmetics && npm run test:challenges && npm run test:onboarding && npm run test:presentation && npm run test:mobile-ux && npm run test:save && npm run test:origin-sync && npm run test:hands-on-acceptance && npm run test:zh-hant"
   },
   "engines": {
     "node": ">=18"
