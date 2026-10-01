@@ -183,7 +183,11 @@ async function main() {
 
       await page.waitForFunction(() => window.JETSKI_RACE_MANAGER &&
         window.JETSKI_RACE_MANAGER.state.phase === 'racing', null, { timeout: 5000 });
-      await page.waitForTimeout(220);
+      await page.waitForFunction(() => {
+        const countdown = document.querySelector('.jr-countdown');
+        return !countdown || !countdown.classList.contains('show');
+      }, null, { timeout: 2500 });
+      await page.waitForTimeout(100);
       const stateBeforePreview = await page.evaluate(() => {
         const manager = window.JETSKI_RACE_MANAGER;
         return manager ? {
