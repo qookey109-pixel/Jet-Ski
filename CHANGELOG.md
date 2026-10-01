@@ -1,6 +1,8 @@
 # Changelog
 
 ## V0.11.16
+- Added T8 award-presentation menu pass: engineering/debug HUD, physics/world/sea controls and mobile driving controls are hidden behind the public menu/pause/results presentation; desktop/mobile Browser QA guards the clean presentation.
+- Added T7 racer character polish: player and CORAL/TIDE/MANGO now use complete stylized rider silhouettes with helmets, visors, life vests, arms/hands, hips and legs; player physics and reduced-order AI movement remain unchanged.
 - Added T6 Open Sea Grand Loop: the opening event is now a 734.56 m asymmetric course per lap with a 240 × 234 m footprint and a 16 m checkpoint radius; checkpoint ordering and physics remain unchanged.
 - Added T5 wider race presentation: 23 m visual corridor, 7.2 m checkpoint rings and complete rider figures on CORAL / TIDE / MANGO without changing reduced-order AI or player physics.
 - Added Tropical Arcade T4 observer-only race feedback: checkpoint world-ring/banner, lap/final-lap banners, finish burst and subtle Boost screen pulse with bounded desktop/mobile burst pools.
