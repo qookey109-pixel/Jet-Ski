@@ -8,9 +8,9 @@
 
   const VERSION = 'V0.11.5';
   const configs = [
-    { id: 'coral', name: 'CORAL', speedMps: 10.1, steeringResponse: 2.8, color: 0xff6b6b, lane: -4.5 },
+    { id: 'coral', name: 'CORAL', speedMps: 10.1, steeringResponse: 2.8, color: 0xff6b6b, lane: -6.4 },
     { id: 'tide', name: 'TIDE', speedMps: 10.7, steeringResponse: 3.0, color: 0x67e8f9, lane: 0 },
-    { id: 'mango', name: 'MANGO', speedMps: 9.7, steeringResponse: 2.65, color: 0xffc857, lane: 4.5 }
+    { id: 'mango', name: 'MANGO', speedMps: 9.7, steeringResponse: 2.65, color: 0xffc857, lane: 6.4 }
   ];
 
   const group = new THREE.Group();
