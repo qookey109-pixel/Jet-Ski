@@ -9,7 +9,7 @@ Status date: `2026-10-01` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current award-quality gameplay tree (T6): `84c578d062f92d352891d2cd64b07d748292af05`
+- Current award-quality gameplay tree (T8): `e3e4622248bd638e06eb651c05aea764855f40de`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -45,6 +45,8 @@ V0.11 currently includes:
 25. Tropical Arcade T4: observer-only checkpoint, lap/final-lap, finish and Boost visual feedback with bounded desktop/mobile burst pools.
 26. T5: widened 23 m visual race corridor, 7.2 m checkpoint gates and full AI rider figures for CORAL / TIDE / MANGO.
 27. T6: redesigned Open Sea Circuit as a 734.56 m-per-lap asymmetric Grand Loop with 240 × 234 m footprint and 16 m checkpoint acceptance radius.
+28. T7: award-quality player/AI rider character polish with helmets, visors, life vests, articulated arms/hands/hips/legs and matching visual-version QA.
+29. T8: award-presentation menu pass that hides engineering/debug chrome outside active play and strengthens desktop/mobile menu hierarchy.
 
 ## V0.11.16 release evidence
 
@@ -146,6 +148,23 @@ The first award-quality gameplay pass is merged to `main`.
 - T6 Race Regression #123 — PASS; Browser Release QA #89 — PASS.
 - T6 WebKit visual QA measured 734.559 m per lap, 240 m × 234 m footprint and 16 m checkpoint radius on both desktop and 844×390 mobile.
 - T6 desktop/mobile screenshots were manually inspected; HUD, controls, AI riders and T1–T5 presentation remain readable.
+- Accepted physics/performance baseline remains V0.10.4.
+
+
+## T7 / T8 award-presentation evidence
+
+The character and public-menu presentation passes are merged to `main`.
+
+- PR #79 — T7 Racer Character Polish — merged as `e47187c9283d9f7626aea83b803bfbd1f35a6a01`.
+- T7 exact head `17212818da0bf8b85b2c234f5d12a7c1ca30daf6`.
+- T7 Race Regression #125 — PASS; Browser Release QA #91 — PASS.
+- WebKit visual QA confirms one polished player rider and three polished AI riders, each with at least 13 visual child meshes.
+- T7 retains the 734.559 m T6 Grand Loop and does not rewrite player physics or reduced-order AI movement.
+- PR #80 — T8 Award Presentation Pass — merged as `e3e4622248bd638e06eb651c05aea764855f40de`.
+- T8 exact head `8c560c3281142c835f508a11c55ca83bc2732f38`.
+- T8 Race Regression #127 — PASS; Browser Release QA #93 — PASS.
+- Traditional Chinese desktop and 844×390 mobile screenshots were manually inspected.
+- Main menu now hides engineering HUD/help/physics/world/sea/mobile-driving chrome and preserves the compact first-fold primary actions.
 - Accepted physics/performance baseline remains V0.10.4.
 
 ## Current active work
