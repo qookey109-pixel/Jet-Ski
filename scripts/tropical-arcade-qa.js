@@ -23,7 +23,8 @@ async function preparePage(context, viewport) {
     window.JETSKI_RELEASE && window.JETSKI_RELEASE.version === 'V0.11.16' &&
     window.JETSKI_RACE_MANAGER && window.JETSKI_TROPICAL_ARCADE && window.JETSKI_TROPICAL_ARCADE_CORE &&
     window.JETSKI_TROPICAL_ISLANDS && window.JETSKI_TROPICAL_ISLAND_CORE &&
-    window.JETSKI_TROPICAL_POLISH && window.JETSKI_TROPICAL_POLISH_CORE
+    window.JETSKI_TROPICAL_POLISH && window.JETSKI_TROPICAL_POLISH_CORE &&
+    window.JETSKI_ARCADE_FEEDBACK && window.JETSKI_ARCADE_FEEDBACK_CORE
   ), null, { timeout: 30000 });
   return page;
 }
@@ -41,11 +42,13 @@ async function startOpenSeaRace(page) {
     const arcade = window.JETSKI_TROPICAL_ARCADE;
     const islands = window.JETSKI_TROPICAL_ISLANDS;
     const polish = window.JETSKI_TROPICAL_POLISH;
-    return manager && arcade && islands && polish &&
+    const feedback = window.JETSKI_ARCADE_FEEDBACK;
+    return manager && arcade && islands && polish && feedback &&
       (manager.state.phase === 'countdown' || manager.state.phase === 'racing') &&
       arcade.state.gateCount > 0 && arcade.state.buoyCount > 0 && arcade.rootGroup.visible &&
       islands.state.islandCount > 0 && islands.state.palmCount > 0 && islands.group.visible &&
-      polish.state.rockCount > 0 && polish.state.foamCount > 0 && polish.state.shallowCount > 0 && polish.group.visible;
+      polish.state.rockCount > 0 && polish.state.foamCount > 0 && polish.state.shallowCount > 0 && polish.group.visible &&
+      feedback.visualOnly === true;
   }, null, { timeout: 20000 });
   await page.waitForFunction(() => Boolean(document.querySelector('.v01116-arcade-boost')), null, { timeout: 5000 });
   await page.waitForTimeout(700);
@@ -60,6 +63,8 @@ async function collect(page) {
     const islandCore = window.JETSKI_TROPICAL_ISLAND_CORE;
     const polish = window.JETSKI_TROPICAL_POLISH;
     const polishCore = window.JETSKI_TROPICAL_POLISH_CORE;
+    const feedback = window.JETSKI_ARCADE_FEEDBACK;
+    const feedbackCore = window.JETSKI_ARCADE_FEEDBACK_CORE;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -117,7 +122,17 @@ async function collect(page) {
       polishGoogle3DRespected: polish && polish.google3DRespected,
       polishState: polish && Object.assign({}, polish.state),
       polishDefaults: polishCore && Object.assign({}, polishCore.DEFAULTS),
-      polishGroupVisible: Boolean(polish && polish.group && polish.group.visible)
+      polishGroupVisible: Boolean(polish && polish.group && polish.group.visible),
+      feedbackVersion: feedback && feedback.version,
+      feedbackVisualOnly: feedback && feedback.visualOnly,
+      feedbackPhysicsUntouched: feedback && feedback.physicsUntouched,
+      feedbackGameplayUntouched: feedback && feedback.gameplayUntouched,
+      feedbackRaceRulesUntouched: feedback && feedback.raceRulesUntouched,
+      feedbackBoostAuthorityUntouched: feedback && feedback.boostAuthorityUntouched,
+      feedbackCameraUntouched: feedback && feedback.cameraUntouched,
+      feedbackCollisionAdded: feedback && feedback.collisionAdded,
+      feedbackState: feedback && Object.assign({}, feedback.state),
+      feedbackDefaults: feedbackCore && Object.assign({}, feedbackCore.DEFAULTS)
     };
   });
 }
@@ -126,7 +141,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade Visual Pass T1 + T2 Islands + T3 Environment/Water Polish',
+    feature: 'Tropical Arcade Visual Pass T1 + T2 Islands + T3 Environment/Water Polish + T4 Race Feedback',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -165,6 +180,37 @@ async function main() {
       const screenshot = `${profile.name}.png`;
       await page.screenshot({ path: path.join(OUT, screenshot), fullPage: false });
       receipt.screenshots.push(screenshot);
+
+      const stateBeforePreview = await page.evaluate(() => {
+        const manager = window.JETSKI_RACE_MANAGER;
+        return manager ? {
+          phase: manager.state.phase,
+          lap: manager.state.lap,
+          nextCheckpointIndex: manager.state.nextCheckpointIndex,
+          elapsedMs: manager.state.elapsedMs
+        } : null;
+      });
+      await page.evaluate(() => window.JETSKI_ARCADE_FEEDBACK.preview('checkpoint'));
+      await page.waitForTimeout(90);
+      const feedbackScreenshot = `${profile.name}-feedback.png`;
+      await page.screenshot({ path: path.join(OUT, feedbackScreenshot), fullPage: false });
+      receipt.screenshots.push(feedbackScreenshot);
+      const feedbackPreview = await page.evaluate(() => {
+        const manager = window.JETSKI_RACE_MANAGER;
+        const feedback = window.JETSKI_ARCADE_FEEDBACK;
+        const banner = document.querySelector('.v01116-feedback-banner');
+        return {
+          state: feedback && Object.assign({}, feedback.state),
+          bannerText: banner ? banner.textContent : '',
+          bannerVisible: banner ? banner.classList.contains('show') && Number(getComputedStyle(banner).opacity) > 0 : false,
+          race: manager ? {
+            phase: manager.state.phase,
+            lap: manager.state.lap,
+            nextCheckpointIndex: manager.state.nextCheckpointIndex,
+            elapsedMs: manager.state.elapsedMs
+          } : null
+        };
+      });
 
       assert(data.version === 'V0.11.16-T1', `${profile.name}: wrong Tropical Arcade version ${data.version}`);
       assert(data.visualOnly === true && data.physicsUntouched === true && data.raceRulesUntouched === true,
@@ -241,6 +287,30 @@ async function main() {
         `${profile.name}: T3 distant island silhouettes missing ${data.polishState.distantIslandCount}`);
       assert(data.polishState.drawSurfaces <= 4,
         `${profile.name}: T3 draw-surface budget exceeded ${data.polishState.drawSurfaces}`);
+
+      assert(data.feedbackVersion === 'V0.11.16-T4', `${profile.name}: wrong T4 feedback version ${data.feedbackVersion}`);
+      assert(data.feedbackVisualOnly === true && data.feedbackPhysicsUntouched === true &&
+        data.feedbackGameplayUntouched === true && data.feedbackRaceRulesUntouched === true &&
+        data.feedbackBoostAuthorityUntouched === true && data.feedbackCameraUntouched === true &&
+        data.feedbackCollisionAdded === false,
+        `${profile.name}: T4 feedback authority boundary changed`);
+      assert(data.feedbackState.physicsWrites === false && data.feedbackState.gameplayWrites === false &&
+        data.feedbackState.raceRuleWrites === false && data.feedbackState.boostWrites === false &&
+        data.feedbackState.cameraWrites === false,
+        `${profile.name}: T4 feedback reports forbidden writes`);
+      assert(data.feedbackDefaults.worldBurstPoolDesktop <= 5 && data.feedbackDefaults.worldBurstPoolMobile <= 3,
+        `${profile.name}: T4 world-burst pool exceeded budget`);
+      assert(feedbackPreview.state.previewCount >= 1 && feedbackPreview.state.lastType === 'checkpoint',
+        `${profile.name}: T4 visual preview did not fire`);
+      assert(feedbackPreview.state.activeWorldBursts >= 1,
+        `${profile.name}: T4 checkpoint world burst not active`);
+      assert(feedbackPreview.bannerVisible === true && feedbackPreview.bannerText === 'CHECKPOINT',
+        `${profile.name}: T4 checkpoint banner not visible`);
+      assert(stateBeforePreview && feedbackPreview.race &&
+        stateBeforePreview.phase === feedbackPreview.race.phase &&
+        stateBeforePreview.lap === feedbackPreview.race.lap &&
+        stateBeforePreview.nextCheckpointIndex === feedbackPreview.race.nextCheckpointIndex,
+        `${profile.name}: T4 preview mutated race progress`);
 
       receipt.profiles.push({ name: profile.name, status: 'PASS', metrics: data });
       await context.close();
