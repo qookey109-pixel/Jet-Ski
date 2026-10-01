@@ -1,6 +1,6 @@
 # Jet Ski / 泳圈競速 — Project Status
 
-Status date: `2026-09-09` (`Asia/Taipei`)
+Status date: `2026-10-01` (`Asia/Taipei`)
 
 ## Authority
 
@@ -9,7 +9,7 @@ Status date: `2026-09-09` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current deployed V0.11.16 gameplay / release tree: `e2893ea0ac3f5c88e03f68e04d87ec6a72191340`
+- Current Tropical Arcade T2 merge tree: `384e6471a95bcd961b06f6fb1d5e61601b3baa8a`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -38,6 +38,9 @@ V0.11 currently includes:
 18. Traditional Chinese player-facing UI (`zh-Hant-TW`).
 19. Dedicated Traditional Chinese Browser QA for menu / controls / onboarding / quality / Garage / Challenges / Audio / Save / mobile rotation guidance.
 20. 844 × 390 mobile-landscape first-fold menu polish with explicit WebKit visibility QA.
+21. Tropical Arcade T1: higher follow camera, red/yellow arcade gates, bounded course buoys and arcade HUD/control skin.
+22. Tropical Arcade T2: deterministic visual-only tropical islands, sandbars and palms outside the guarded course corridor.
+23. Free cloud visual-asset pipeline: GitHub Actions + Blender headless generates a GLB kit and 1280×720 preview without requiring a local Mac.
 
 ## V0.11.16 release evidence
 
@@ -69,6 +72,26 @@ Post-merge evidence for gameplay/release tree `e2893ea0ac3f5c88e03f68e04d87ec6a7
 - Traditional Chinese player UI + 844 × 390 first-fold QA step — PASS
 
 Playwright WebKit is a Safari-engine compatibility signal only; it is not a substitute for hands-on macOS Safari acceptance.
+
+
+## Tropical Arcade T1/T2 release evidence
+
+Tropical Arcade visual work is now merged to `main`.
+
+- PR #67 — Tropical Arcade T1 — merged.
+- PR #68 — Free Cloud Visual Asset Pipeline — merged.
+- PR #70 — Cloud Tropical Asset Quality Pass V2 — merged.
+- PR #69 — Tropical Arcade T2 Islands & Palms — merged as `384e6471a95bcd961b06f6fb1d5e61601b3baa8a`.
+- T2 exact head `5c31b91667ee75e40c9fcec233125f4f29f74d43`.
+- V0.11 Race Regression #108 — PASS.
+- V0.11.16 Browser Release QA #74 — PASS.
+- WebKit desktop 1280×720 Tropical Arcade screenshot — manually inspected.
+- WebKit mobile landscape 844×390 Tropical Arcade screenshot — manually inspected.
+- T2 authority boundary remains presentation-only: no collision, physics, gameplay or race-rule writes.
+- Google/real-world 3D authority is respected; T2 dressing hides when the real-world visual layer is active.
+- Accepted physics/performance baseline remains V0.10.4.
+
+The Cloud Blender V2 artifact also passed Cloud Visual Assets #8 and produces an irregular shoreline / rock / varied-palm stylized island kit. The generated GLB is a visual asset only and is not collision authority.
 
 ## Current active work
 

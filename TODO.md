@@ -81,6 +81,11 @@
 - [x] V0.11.16 floating-origin race-local sync：checkpoint、gate visuals、reduced-order AI 跟隨 world recenter
 - [x] V0.11.16 玩家介面繁中化 `zh-Hant-TW`，並加入專用 Traditional Chinese Browser QA
 - [x] V0.11.16 WebKit 844 × 390 mobile-landscape first-fold：開始比賽 / 自由騎乘 / 更多在初始位置不需捲動即可看見
+- [x] Tropical Arcade T1：追尾鏡頭、紅黃 checkpoint、course buoys、Arcade HUD / mobile controls / Boost skin
+- [x] Tropical Arcade T2：deterministic 熱帶小島、沙洲、棕櫚、course-clearance guard、floating-origin rebuild
+- [x] T2 exact-head Race Regression #108 + Browser Release QA #74 PASS；desktop / 844×390 WebKit screenshots 人工驗收完成
+- [x] Free Cloud Visual Asset Pipeline：GitHub Actions + Blender headless 產生 GLB + 1280×720 preview
+- [x] Cloud tropical asset V2：不規則岸線、乾濕沙、岩石、棕櫚 variation；Cloud Visual Assets #8 PASS
 
 ## 下一階段
 - [ ] **V0.11.16 macOS Safari hands-on acceptance**：完整跑完四場 Championship，確認 Start / race / pause / results / ending / Save / Garage / Challenges / More 流程

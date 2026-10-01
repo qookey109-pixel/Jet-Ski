@@ -1,6 +1,10 @@
 # Changelog
 
 ## V0.11.16
+- Added Tropical Arcade T1 visual pass: elevated follow camera, red/yellow checkpoint rings, bounded race-course buoys and arcade HUD/control/Boost presentation.
+- Added Tropical Arcade T2 visual-only tropical islands, sandbars and palms with deterministic course-relative placement, guarded course clearance, floating-origin rebuild and mobile/desktop budgets.
+- Added cloud-only Blender asset generation on GitHub Actions with GLB + 1280×720 preview artifacts; V2 adds irregular shorelines, dry/wet sand, rocks and varied palms.
+- Tropical Arcade T2 exact-head Race Regression #108 and Browser Release QA #74 passed; desktop 1280×720 and mobile 844×390 WebKit screenshots were manually inspected.
 - Added Chromium/WebKit desktop/mobile Browser Release QA for the full playable Championship path.
 - Added floating-origin race-local synchronization so checkpoints, gate visuals and reduced-order AI remain aligned after V0.9.3 world recentering.
 - Added Traditional Chinese player-facing UI (`zh-Hant-TW`) with dedicated Traditional Chinese browser QA.
