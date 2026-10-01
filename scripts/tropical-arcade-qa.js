@@ -22,7 +22,8 @@ async function preparePage(context, viewport) {
   await page.waitForFunction(() => Boolean(
     window.JETSKI_RELEASE && window.JETSKI_RELEASE.version === 'V0.11.16' &&
     window.JETSKI_RACE_MANAGER && window.JETSKI_TROPICAL_ARCADE && window.JETSKI_TROPICAL_ARCADE_CORE &&
-    window.JETSKI_TROPICAL_ISLANDS && window.JETSKI_TROPICAL_ISLAND_CORE
+    window.JETSKI_TROPICAL_ISLANDS && window.JETSKI_TROPICAL_ISLAND_CORE &&
+    window.JETSKI_TROPICAL_POLISH && window.JETSKI_TROPICAL_POLISH_CORE
   ), null, { timeout: 30000 });
   return page;
 }
@@ -39,10 +40,12 @@ async function startOpenSeaRace(page) {
     const manager = window.JETSKI_RACE_MANAGER;
     const arcade = window.JETSKI_TROPICAL_ARCADE;
     const islands = window.JETSKI_TROPICAL_ISLANDS;
-    return manager && arcade && islands &&
+    const polish = window.JETSKI_TROPICAL_POLISH;
+    return manager && arcade && islands && polish &&
       (manager.state.phase === 'countdown' || manager.state.phase === 'racing') &&
       arcade.state.gateCount > 0 && arcade.state.buoyCount > 0 && arcade.rootGroup.visible &&
-      islands.state.islandCount > 0 && islands.state.palmCount > 0 && islands.group.visible;
+      islands.state.islandCount > 0 && islands.state.palmCount > 0 && islands.group.visible &&
+      polish.state.rockCount > 0 && polish.state.foamCount > 0 && polish.state.shallowCount > 0 && polish.group.visible;
   }, null, { timeout: 20000 });
   await page.waitForFunction(() => Boolean(document.querySelector('.v01116-arcade-boost')), null, { timeout: 5000 });
   await page.waitForTimeout(700);
@@ -55,6 +58,8 @@ async function collect(page) {
     const manager = window.JETSKI_RACE_MANAGER;
     const islands = window.JETSKI_TROPICAL_ISLANDS;
     const islandCore = window.JETSKI_TROPICAL_ISLAND_CORE;
+    const polish = window.JETSKI_TROPICAL_POLISH;
+    const polishCore = window.JETSKI_TROPICAL_POLISH_CORE;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -101,7 +106,18 @@ async function collect(page) {
       islandGoogle3DRespected: islands && islands.google3DRespected,
       islandState: islands && Object.assign({}, islands.state),
       islandDefaults: islandCore && Object.assign({}, islandCore.DEFAULTS),
-      islandGroupVisible: Boolean(islands && islands.group && islands.group.visible)
+      islandGroupVisible: Boolean(islands && islands.group && islands.group.visible),
+      polishVersion: polish && polish.version,
+      polishVisualOnly: polish && polish.visualOnly,
+      polishCollisionAdded: polish && polish.collisionAdded,
+      polishPhysicsUntouched: polish && polish.physicsUntouched,
+      polishGameplayUntouched: polish && polish.gameplayUntouched,
+      polishRaceRulesUntouched: polish && polish.raceRulesUntouched,
+      polishWaterPhysicsUntouched: polish && polish.waterPhysicsUntouched,
+      polishGoogle3DRespected: polish && polish.google3DRespected,
+      polishState: polish && Object.assign({}, polish.state),
+      polishDefaults: polishCore && Object.assign({}, polishCore.DEFAULTS),
+      polishGroupVisible: Boolean(polish && polish.group && polish.group.visible)
     };
   });
 }
@@ -110,7 +126,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade Visual Pass T1 + T2 Islands',
+    feature: 'Tropical Arcade Visual Pass T1 + T2 Islands + T3 Environment/Water Polish',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -202,6 +218,29 @@ async function main() {
         `${profile.name}: tropical island draw-surface budget exceeded ${data.islandState.drawSurfaces}`);
       assert(data.islandState.minCourseClearance >= data.islandDefaults.minCourseClearance,
         `${profile.name}: island encroached on guarded race corridor ${data.islandState.minCourseClearance}`);
+
+      assert(data.polishVersion === 'V0.11.16-T3', `${profile.name}: wrong T3 polish version ${data.polishVersion}`);
+      assert(data.polishVisualOnly === true && data.polishCollisionAdded === false &&
+        data.polishPhysicsUntouched === true && data.polishGameplayUntouched === true &&
+        data.polishRaceRulesUntouched === true && data.polishWaterPhysicsUntouched === true,
+        `${profile.name}: T3 visual authority boundary changed`);
+      assert(data.polishGoogle3DRespected === true && data.polishState.realWorldCoastUntouched === true,
+        `${profile.name}: T3 no longer respects real-world visual authority`);
+      assert(data.polishState.physicsWrites === false && data.polishState.gameplayWrites === false &&
+        data.polishState.raceRuleWrites === false && data.polishState.waterPhysicsWrites === false,
+        `${profile.name}: T3 reports forbidden writes`);
+      assert(data.polishGroupVisible === true && data.polishState.visible === true,
+        `${profile.name}: T3 polish group not visible`);
+      assert(data.polishState.rockCount >= data.islandState.islandCount * 3,
+        `${profile.name}: T3 rock shoreline detail missing ${data.polishState.rockCount}`);
+      assert(data.polishState.foamCount === data.islandState.islandCount,
+        `${profile.name}: T3 shoreline foam count mismatch ${data.polishState.foamCount}`);
+      assert(data.polishState.shallowCount === data.islandState.islandCount,
+        `${profile.name}: T3 shallow-water count mismatch ${data.polishState.shallowCount}`);
+      assert(data.polishState.distantIslandCount >= (profile.mobile ? 2 : 4),
+        `${profile.name}: T3 distant island silhouettes missing ${data.polishState.distantIslandCount}`);
+      assert(data.polishState.drawSurfaces <= 4,
+        `${profile.name}: T3 draw-surface budget exceeded ${data.polishState.drawSurfaces}`);
 
       receipt.profiles.push({ name: profile.name, status: 'PASS', metrics: data });
       await context.close();
