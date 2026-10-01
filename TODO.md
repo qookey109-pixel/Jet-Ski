@@ -86,6 +86,8 @@
 - [x] T2 exact-head Race Regression #108 + Browser Release QA #74 PASS；desktop / 844×390 WebKit screenshots 人工驗收完成
 - [x] Free Cloud Visual Asset Pipeline：GitHub Actions + Blender headless 產生 GLB + 1280×720 preview
 - [x] Cloud tropical asset V2：不規則岸線、乾濕沙、岩石、棕櫚 variation；Cloud Visual Assets #8 PASS
+- [x] Tropical Arcade T3：岸線岩石、淺水 turquoise 色帶、foam edge、遠景熱帶島 silhouette、mobile/desktop budget
+- [x] T3 exact-head Race Regression #113 + Browser Release QA #79 PASS；desktop 1280×720 / mobile 844×390 WebKit screenshots 人工驗收完成
 
 ## 下一階段
 - [ ] **V0.11.16 macOS Safari hands-on acceptance**：完整跑完四場 Championship，確認 Start / race / pause / results / ending / Save / Garage / Challenges / More 流程
