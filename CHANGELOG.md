@@ -1,6 +1,8 @@
 # Changelog
 
 ## V0.11.16
+- Added Tropical Arcade T4 observer-only race feedback: checkpoint world-ring/banner, lap/final-lap banners, finish burst and subtle Boost screen pulse with bounded desktop/mobile burst pools.
+- Tropical Arcade T4 exact-head Race Regression #117 and Browser Release QA #83 passed; desktop 1280×720 and mobile 844×390 feedback screenshots were manually inspected.
 - Added Tropical Arcade T3 visual-only environment/water polish: shoreline rocks, shallow-water turquoise bands, foam edges and distant tropical island silhouettes with separate mobile/desktop budgets.
 - Tropical Arcade T3 exact-head Race Regression #113 and Browser Release QA #79 passed; WebKit 1280×720 and 844×390 screenshots were manually inspected.
 - Added Tropical Arcade T1 visual pass: elevated follow camera, red/yellow checkpoint rings, bounded race-course buoys and arcade HUD/control/Boost presentation.
