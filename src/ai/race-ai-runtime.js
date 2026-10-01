@@ -40,23 +40,43 @@
     );
     seat.position.y = 0.58;
 
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xf2c39c, roughness: 0.82 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xf2c39c, roughness: 0.78 });
     const vestMat = new THREE.MeshStandardMaterial({
       color: config.color,
-      roughness: 0.56,
+      roughness: 0.50,
       metalness: 0.01
     });
+    const vestLightMat = new THREE.MeshStandardMaterial({ color: 0xfff1bd, roughness: 0.56 });
     const darkMat = new THREE.MeshStandardMaterial({ color: 0x243142, roughness: 0.72 });
+    const helmetMat = new THREE.MeshStandardMaterial({
+      color: config.color,
+      roughness: 0.34,
+      metalness: 0.04
+    });
+    const visorMat = new THREE.MeshStandardMaterial({ color: 0x162633, roughness: 0.24, metalness: 0.20 });
 
     const rider = new THREE.Group();
     rider.name = `V01116AIRider-${config.id}`;
+    rider.userData.visualVersion = 'V0.11.16-T7';
 
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.44, 0.92, 8), vestMat);
     torso.position.y = 1.34;
     torso.rotation.x = -0.12;
 
+    const vestPanel = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.52, 0.14), vestLightMat);
+    vestPanel.position.set(0, 1.35, 0.37);
+    vestPanel.rotation.x = -0.12;
+
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 7), skinMat);
     head.position.set(0, 1.98, 0.06);
+
+    const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.288, 10, 7), helmetMat);
+    helmet.position.set(0, 2.07, 0.075);
+    helmet.scale.set(1.04, 0.62, 1.05);
+
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.08, 0.05), visorMat);
+    visor.position.set(0, 2.00, 0.31);
+    visor.rotation.x = 0.04;
 
     const hips = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.24, 0.40), darkMat);
     hips.position.set(0, 0.93, 0.03);
@@ -69,16 +89,37 @@
     leftArm.rotation.set(0.68, 0, -0.58);
     rightArm.rotation.set(0.68, 0, 0.58);
 
+    const handGeo = new THREE.SphereGeometry(0.095, 7, 5);
+    const leftHand = new THREE.Mesh(handGeo, skinMat);
+    const rightHand = new THREE.Mesh(handGeo, skinMat);
+    leftHand.position.set(-0.48, 1.12, 0.49);
+    rightHand.position.set(0.48, 1.12, 0.49);
+
+    const thighGeo = new THREE.CylinderGeometry(0.11, 0.14, 0.48, 7);
+    const leftThigh = new THREE.Mesh(thighGeo, darkMat);
+    const rightThigh = new THREE.Mesh(thighGeo, darkMat);
+    leftThigh.position.set(-0.24, 0.79, 0.02);
+    rightThigh.position.set(0.24, 0.79, 0.02);
+    leftThigh.rotation.z = -0.68;
+    rightThigh.rotation.z = 0.68;
+
     const handBar = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.08, 0.08), darkMat);
     handBar.position.set(0, 1.11, 0.48);
 
-    for (const mesh of [torso, head, hips, leftArm, rightArm, handBar]) {
+    for (const mesh of [
+      torso, vestPanel, head, helmet, visor, hips, leftArm, rightArm,
+      leftHand, rightHand, leftThigh, rightThigh, handBar
+    ]) {
       mesh.castShadow = false;
       mesh.receiveShadow = false;
     }
-    rider.add(torso, head, hips, leftArm, rightArm, handBar);
+    rider.add(
+      torso, vestPanel, head, helmet, visor, hips, leftArm, rightArm,
+      leftHand, rightHand, leftThigh, rightThigh, handBar
+    );
 
     g.userData.rider = rider;
+    g.userData.riderVisualVersion = 'V0.11.16-T7';
     g.add(ring, seat, rider);
     return g;
   }
@@ -207,6 +248,7 @@
     reducedOrderAI: true,
     playerPhysicsRewritten: false,
     riderVisuals: true,
+    riderVisualVersion: 'V0.11.16-T7',
     riderCount: configs.length
   };
 })(typeof window !== 'undefined' ? window : globalThis);
