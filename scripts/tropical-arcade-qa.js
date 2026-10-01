@@ -79,6 +79,8 @@ async function collect(page) {
     const activeIndex = manager && manager.state ? Number(manager.state.nextCheckpointIndex) : -1;
     const startGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === 0) || null;
     const activeGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === activeIndex) || null;
+    const playerRider = typeof ski !== 'undefined' && ski.getObjectByName
+      ? ski.getObjectByName('V01116PlayerRiderT7') : null;
     const coursePoints = manager && manager.course && Array.isArray(manager.course.checkpoints)
       ? manager.course.checkpoints : [];
     let courseLengthM = 0;
@@ -152,10 +154,22 @@ async function collect(page) {
       feedbackCollisionAdded: feedback && feedback.collisionAdded,
       feedbackState: feedback && Object.assign({}, feedback.state),
       feedbackDefaults: feedbackCore && Object.assign({}, feedbackCore.DEFAULTS),
+      playerRiderVisualVersion: typeof ski !== 'undefined' && ski.userData ? ski.userData.riderVisualVersion : null,
+      playerRiderPresent: Boolean(playerRider),
+      playerRiderChildCount: playerRider ? playerRider.children.length : 0,
       aiRiderVisuals: ai && ai.riderVisuals,
+      aiRiderVisualVersion: ai && ai.riderVisualVersion,
       aiRiderCount: ai && ai.riderCount,
       aiVisualRidersPresent: Boolean(ai && Array.isArray(ai.racers) && ai.racers.length === 3 &&
         ai.racers.every(entry => entry.visual && entry.visual.userData && entry.visual.userData.rider)),
+      aiRiderMinChildCount: ai && Array.isArray(ai.racers) && ai.racers.length
+        ? Math.min(...ai.racers.map(entry => entry.visual && entry.visual.userData && entry.visual.userData.rider
+          ? entry.visual.userData.rider.children.length : 0))
+        : 0,
+      aiRiderVersionsMatch: Boolean(ai && Array.isArray(ai.racers) && ai.racers.length === 3 &&
+        ai.racers.every(entry => entry.visual && entry.visual.userData &&
+          entry.visual.userData.riderVisualVersion === 'V0.11.16-T7' &&
+          entry.visual.userData.rider && entry.visual.userData.rider.userData.visualVersion === 'V0.11.16-T7')),
       aiPlayerPhysicsRewritten: ai && ai.playerPhysicsRewritten
     };
   });
@@ -355,6 +369,15 @@ async function main() {
         `${profile.name}: T5 AI rider visuals missing`);
       assert(data.aiPlayerPhysicsRewritten === false,
         `${profile.name}: T5 AI visual pass rewrote player physics`);
+
+      assert(data.playerRiderVisualVersion === 'V0.11.16-T7' && data.playerRiderPresent === true,
+        `${profile.name}: T7 player rider polish missing`);
+      assert(data.playerRiderChildCount >= 12,
+        `${profile.name}: T7 player rider silhouette incomplete ${data.playerRiderChildCount}`);
+      assert(data.aiRiderVisualVersion === 'V0.11.16-T7' && data.aiRiderVersionsMatch === true,
+        `${profile.name}: T7 AI rider polish version missing`);
+      assert(data.aiRiderMinChildCount >= 12,
+        `${profile.name}: T7 AI rider silhouette incomplete ${data.aiRiderMinChildCount}`);
 
       receipt.profiles.push({ name: profile.name, status: 'PASS', metrics: data });
       await context.close();
