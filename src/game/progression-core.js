@@ -13,21 +13,21 @@
     Object.freeze({
       id: 'open-sea-circuit',
       name: 'Open Sea Circuit',
-      subtitle: 'Pure ocean · 2 laps',
+      subtitle: 'Grand ocean loop · 2 laps',
       worldMode: 'open-sea',
       seaState: 'normal',
       laps: 2,
-      checkpointRadiusM: 14,
+      checkpointRadiusM: 16,
       relative: false,
       points: freezePoints([
-        { id: 'start', label: 'START / FINISH', x: 0, z: 82 },
-        { id: 'cp1', label: 'GATE 1', x: 58, z: 58 },
-        { id: 'cp2', label: 'GATE 2', x: 82, z: 0 },
-        { id: 'cp3', label: 'GATE 3', x: 58, z: -58 },
-        { id: 'cp4', label: 'GATE 4', x: 0, z: -82 },
-        { id: 'cp5', label: 'GATE 5', x: -58, z: -58 },
-        { id: 'cp6', label: 'GATE 6', x: -82, z: 0 },
-        { id: 'cp7', label: 'GATE 7', x: -58, z: 58 }
+        { id: 'start', label: 'START / FINISH', x: 0, z: 115 },
+        { id: 'cp1', label: 'GATE 1', x: 70, z: 94 },
+        { id: 'cp2', label: 'GATE 2', x: 119, z: 34 },
+        { id: 'cp3', label: 'GATE 3', x: 106, z: -52 },
+        { id: 'cp4', label: 'GATE 4', x: 29, z: -119 },
+        { id: 'cp5', label: 'GATE 5', x: -65, z: -106 },
+        { id: 'cp6', label: 'GATE 6', x: -121, z: -31 },
+        { id: 'cp7', label: 'GATE 7', x: -92, z: 68 }
       ])
     }),
     Object.freeze({
