@@ -1,6 +1,8 @@
 # Changelog
 
 ## V0.11.16
+- Added T6 Open Sea Grand Loop: the opening event is now a 734.56 m asymmetric course per lap with a 240 × 234 m footprint and a 16 m checkpoint radius; checkpoint ordering and physics remain unchanged.
+- Added T5 wider race presentation: 23 m visual corridor, 7.2 m checkpoint rings and complete rider figures on CORAL / TIDE / MANGO without changing reduced-order AI or player physics.
 - Added Tropical Arcade T4 observer-only race feedback: checkpoint world-ring/banner, lap/final-lap banners, finish burst and subtle Boost screen pulse with bounded desktop/mobile burst pools.
 - Tropical Arcade T4 exact-head Race Regression #117 and Browser Release QA #83 passed; desktop 1280×720 and mobile 844×390 feedback screenshots were manually inspected.
 - Added Tropical Arcade T3 visual-only environment/water polish: shoreline rocks, shallow-water turquoise bands, foam edges and distant tropical island silhouettes with separate mobile/desktop budgets.
