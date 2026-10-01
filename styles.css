@@ -241,3 +241,58 @@ body { background: linear-gradient(#87d7ff, #0c5c7d); }
   text-align: center;
   box-shadow: 0 12px 40px rgba(0,0,0,.28);
 }
+
+
+/* V0.11.16 T8 award-presentation pass. UI-only; hides engineering chrome outside active play. */
+body[data-v01114-phase="menu"] > .hud,
+body[data-v01114-phase="menu"] > .help,
+body[data-v01114-phase="menu"] > .physics-controls,
+body[data-v01114-phase="menu"] > .world-controls,
+body[data-v01114-phase="menu"] > .sea-controls,
+body[data-v01114-phase="menu"] > .mobile-controls,
+body[data-v01114-phase="paused"] > .hud,
+body[data-v01114-phase="paused"] > .mobile-controls,
+body[data-v01114-phase="finished"] > .hud,
+body[data-v01114-phase="finished"] > .mobile-controls {
+  display: none !important;
+}
+
+body[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] {
+  background:
+    radial-gradient(circle at 50% 36%, rgba(40, 187, 224, .16), transparent 36%),
+    linear-gradient(180deg, rgba(2, 15, 25, .34), rgba(1, 9, 18, .80));
+  backdrop-filter: blur(10px) saturate(1.12);
+  -webkit-backdrop-filter: blur(10px) saturate(1.12);
+}
+
+body[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-card {
+  border-color: rgba(153, 235, 255, .24);
+  background:
+    linear-gradient(145deg, rgba(5, 30, 48, .92), rgba(3, 18, 33, .80));
+  box-shadow:
+    0 34px 110px rgba(0, 0, 0, .46),
+    0 0 0 1px rgba(107, 224, 255, .045) inset,
+    0 1px 0 rgba(255,255,255,.13) inset;
+}
+
+body[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-title {
+  text-shadow:
+    0 10px 36px rgba(0,0,0,.42),
+    0 0 32px rgba(111, 226, 255, .08);
+}
+
+body[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-kicker {
+  color: #9ceeff;
+}
+
+body[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-btn.primary {
+  box-shadow:
+    0 14px 34px rgba(37, 154, 255, .34),
+    0 0 0 1px rgba(255,255,255,.10) inset;
+}
+
+@media (min-width: 900px) and (min-height: 560px) {
+  body[data-v01114-phase="menu"] .jr-screen[data-jr-screen="menu"] .jr-card {
+    width: min(680px, 86vw);
+  }
+}
