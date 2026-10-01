@@ -4,7 +4,7 @@
 
   const VERSION = 'V0.11.16-T4';
   const DEFAULTS = Object.freeze({
-    checkpointBannerMs: 360,
+    checkpointBannerMs: 500,
     lapBannerMs: 860,
     finalLapBannerMs: 1080,
     finishBannerMs: 1320,
