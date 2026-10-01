@@ -1,6 +1,8 @@
 # Changelog
 
 ## V0.11.16
+- Added Tropical Arcade T3 visual-only environment/water polish: shoreline rocks, shallow-water turquoise bands, foam edges and distant tropical island silhouettes with separate mobile/desktop budgets.
+- Tropical Arcade T3 exact-head Race Regression #113 and Browser Release QA #79 passed; WebKit 1280×720 and 844×390 screenshots were manually inspected.
 - Added Tropical Arcade T1 visual pass: elevated follow camera, red/yellow checkpoint rings, bounded race-course buoys and arcade HUD/control/Boost presentation.
 - Added Tropical Arcade T2 visual-only tropical islands, sandbars and palms with deterministic course-relative placement, guarded course clearance, floating-origin rebuild and mobile/desktop budgets.
 - Added cloud-only Blender asset generation on GitHub Actions with GLB + 1280×720 preview artifacts; V2 adds irregular shorelines, dry/wet sand, rocks and varied palms.

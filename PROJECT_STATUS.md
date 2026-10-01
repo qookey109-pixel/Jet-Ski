@@ -9,7 +9,7 @@ Status date: `2026-10-01` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current Tropical Arcade T2 merge tree: `384e6471a95bcd961b06f6fb1d5e61601b3baa8a`
+- Current Tropical Arcade T3 merge tree: `4950d8877b0fda5a87aa88dbee525f8c935f6a20`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -41,6 +41,7 @@ V0.11 currently includes:
 21. Tropical Arcade T1: higher follow camera, red/yellow arcade gates, bounded course buoys and arcade HUD/control skin.
 22. Tropical Arcade T2: deterministic visual-only tropical islands, sandbars and palms outside the guarded course corridor.
 23. Free cloud visual-asset pipeline: GitHub Actions + Blender headless generates a GLB kit and 1280×720 preview without requiring a local Mac.
+24. Tropical Arcade T3: visual-only shoreline rocks, shallow-water turquoise bands, foam edges and distant tropical silhouettes with mobile/desktop budgets.
 
 ## V0.11.16 release evidence
 
@@ -92,6 +93,25 @@ Tropical Arcade visual work is now merged to `main`.
 - Accepted physics/performance baseline remains V0.10.4.
 
 The Cloud Blender V2 artifact also passed Cloud Visual Assets #8 and produces an irregular shoreline / rock / varied-palm stylized island kit. The generated GLB is a visual asset only and is not collision authority.
+
+
+## Tropical Arcade T3 release evidence
+
+T3 environment / water polish is merged to `main`.
+
+- PR #72 — Tropical Arcade T3 Environment & Water Polish — merged as `4950d8877b0fda5a87aa88dbee525f8c935f6a20`.
+- T3 exact head `ea51c60706d7ef313c31a19fa547ad185263b7c8`.
+- V0.11 Race Regression #113 — PASS.
+- V0.11.16 Browser Release QA #79 — PASS.
+- Chromium + WebKit desktop/mobile Championship flow — PASS.
+- Traditional Chinese UI QA — PASS.
+- Query-gated hands-on acceptance helper QA — PASS.
+- Tropical Arcade visual QA — PASS.
+- WebKit desktop 1280×720 and mobile 844×390 screenshots — manually inspected.
+- Desktop T3 budget: 16 shoreline rocks / 4 foam rings / 4 shallow-water bands / 5 distant silhouettes.
+- Mobile T3 budget: 12 shoreline rocks / 3 foam rings / 3 shallow-water bands / 3 distant silhouettes.
+- T3 remains presentation-only: no collision, physics, gameplay, race-rule or water-physics writes.
+- Accepted physics/performance baseline remains V0.10.4.
 
 ## Current active work
 
