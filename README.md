@@ -59,7 +59,7 @@ Waikīkī and Qixingtan race routes are materialized relative to the existing OS
 - **V0.11.16 Release QA / Delivery** — Chromium/WebKit desktop/mobile Browser Release QA, production asset/build checks and floating-origin race-local sync for checkpoints, gate visuals and reduced-order AI.
 - **V0.11.16 Traditional Chinese UI** — normal player-facing pages use `zh-Hant-TW`, with dedicated Traditional Chinese browser QA.
 - **V0.11.16 Mobile First-Fold Polish** — WebKit 844 × 390 menu QA requires Start Race / Free Ride / More to remain visible without initial scrolling.
-- **V0.11.16 Tropical Arcade T1–T3** — elevated chase framing, arcade gates/buoys, tropical islands/palms, shoreline rocks, shallow-water color bands, foam edges and distant island silhouettes; all presentation-only.
+- **V0.11.16 Tropical Arcade T1–T4** — elevated chase framing, arcade gates/buoys, tropical islands/palms, shoreline rocks, shallow-water color bands, foam edges, distant island silhouettes and observer-only checkpoint/lap/finish/Boost feedback; all presentation-only.
 
 ## Existing Ocean / World Stack
 

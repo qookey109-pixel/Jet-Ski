@@ -9,7 +9,7 @@ Status date: `2026-10-01` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current Tropical Arcade T3 merge tree: `4950d8877b0fda5a87aa88dbee525f8c935f6a20`
+- Current Tropical Arcade T4 merge tree: `3ebde1d3ee61dbfa907e111bd5e065a1dade5ff2`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -42,6 +42,7 @@ V0.11 currently includes:
 22. Tropical Arcade T2: deterministic visual-only tropical islands, sandbars and palms outside the guarded course corridor.
 23. Free cloud visual-asset pipeline: GitHub Actions + Blender headless generates a GLB kit and 1280×720 preview without requiring a local Mac.
 24. Tropical Arcade T3: visual-only shoreline rocks, shallow-water turquoise bands, foam edges and distant tropical silhouettes with mobile/desktop budgets.
+25. Tropical Arcade T4: observer-only checkpoint, lap/final-lap, finish and Boost visual feedback with bounded desktop/mobile burst pools.
 
 ## V0.11.16 release evidence
 
@@ -111,6 +112,20 @@ T3 environment / water polish is merged to `main`.
 - Desktop T3 budget: 16 shoreline rocks / 4 foam rings / 4 shallow-water bands / 5 distant silhouettes.
 - Mobile T3 budget: 12 shoreline rocks / 3 foam rings / 3 shallow-water bands / 3 distant silhouettes.
 - T3 remains presentation-only: no collision, physics, gameplay, race-rule or water-physics writes.
+- Accepted physics/performance baseline remains V0.10.4.
+
+
+## Tropical Arcade T4 release evidence
+
+T4 race-feedback polish is merged to `main`.
+
+- PR #74 — Tropical Arcade T4 Race Feedback Polish — merged as `3ebde1d3ee61dbfa907e111bd5e065a1dade5ff2`.
+- T4 exact head `bf5818fe4d698d919d80fd63b2d1654206805ad4`.
+- V0.11 Race Regression #117 — PASS.
+- V0.11.16 Browser Release QA #83 — PASS.
+- Desktop 1280×720 and mobile 844×390 feedback screenshots — manually inspected.
+- Checkpoint preview proves banner + world-ring burst visibility without mutating race progress.
+- Runtime observes authoritative race/Boost state and adds presentation only; no physics, gameplay, race-rule, Boost-authority, camera or collision writes.
 - Accepted physics/performance baseline remains V0.10.4.
 
 ## Current active work
