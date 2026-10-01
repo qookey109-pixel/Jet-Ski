@@ -173,17 +173,79 @@ jetUnit.position.set(0, 0.48, 1.95);
 jetUnit.castShadow = true;
 ski.add(jetUnit);
 
-const riderMat = new THREE.MeshStandardMaterial({ color: 0x2463eb, roughness: 0.65 });
+// T7 award-quality rider art pass. Visual-only: no craft mass, controls or physics authority.
+const riderMat = new THREE.MeshStandardMaterial({ color: 0x2463eb, roughness: 0.58 });
+const riderSkinMat = new THREE.MeshStandardMaterial({ color: 0xf2c6a0, roughness: 0.72 });
+const riderVestMat = new THREE.MeshStandardMaterial({ color: 0xffd447, roughness: 0.48 });
+const riderVestLightMat = new THREE.MeshStandardMaterial({ color: 0xfff3be, roughness: 0.52 });
+const riderHelmetMat = new THREE.MeshStandardMaterial({ color: 0x173d8f, roughness: 0.36, metalness: 0.03 });
+const riderVisorMat = new THREE.MeshStandardMaterial({ color: 0x162633, roughness: 0.26, metalness: 0.18 });
+
 const riderBody = new THREE.Group();
+riderBody.name = 'V01116PlayerRiderT7';
+riderBody.userData.visualVersion = 'V0.11.16-T7';
+
 const riderTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.38, 0.82, 12), riderMat);
 riderTorso.position.y = 0.10;
-riderTorso.castShadow = true;
-const riderHead = new THREE.Mesh(new THREE.SphereGeometry(0.30, 14, 10), new THREE.MeshStandardMaterial({ color: 0xf2c6a0, roughness: 0.72 }));
+
+const riderVest = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.58, 0.18), riderVestMat);
+riderVest.position.set(0, 0.12, -0.29);
+riderVest.rotation.x = 0.06;
+const riderVestPanel = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.34, 0.035), riderVestLightMat);
+riderVestPanel.position.set(0, 0.13, -0.39);
+
+const riderHead = new THREE.Mesh(new THREE.SphereGeometry(0.30, 14, 10), riderSkinMat);
 riderHead.position.y = 0.72;
-riderHead.castShadow = true;
-riderBody.add(riderTorso, riderHead);
+
+const riderHelmet = new THREE.Mesh(new THREE.SphereGeometry(0.315, 14, 9), riderHelmetMat);
+riderHelmet.position.set(0, 0.82, 0.015);
+riderHelmet.scale.set(1.03, 0.62, 1.04);
+const riderVisor = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.095, 0.055), riderVisorMat);
+riderVisor.position.set(0, 0.76, -0.285);
+riderVisor.rotation.x = -0.05;
+
+const riderHips = new THREE.Mesh(new THREE.BoxGeometry(0.60, 0.24, 0.42), darkMat);
+riderHips.position.set(0, -0.34, 0.04);
+
+const riderArmGeo = new THREE.CylinderGeometry(0.082, 0.098, 0.70, 8);
+const riderLeftArm = new THREE.Mesh(riderArmGeo, riderSkinMat);
+const riderRightArm = new THREE.Mesh(riderArmGeo, riderSkinMat);
+riderLeftArm.position.set(-0.38, 0.04, -0.20);
+riderRightArm.position.set(0.38, 0.04, -0.20);
+riderLeftArm.rotation.set(0.94, 0, -0.54);
+riderRightArm.rotation.set(0.94, 0, 0.54);
+
+const riderHandGeo = new THREE.SphereGeometry(0.105, 8, 6);
+const riderLeftHand = new THREE.Mesh(riderHandGeo, riderSkinMat);
+const riderRightHand = new THREE.Mesh(riderHandGeo, riderSkinMat);
+riderLeftHand.position.set(-0.47, -0.19, -0.52);
+riderRightHand.position.set(0.47, -0.19, -0.52);
+
+const riderThighGeo = new THREE.CylinderGeometry(0.12, 0.145, 0.56, 8);
+const riderLeftThigh = new THREE.Mesh(riderThighGeo, darkMat);
+const riderRightThigh = new THREE.Mesh(riderThighGeo, darkMat);
+riderLeftThigh.position.set(-0.27, -0.48, -0.04);
+riderRightThigh.position.set(0.27, -0.48, -0.04);
+riderLeftThigh.rotation.z = -0.72;
+riderRightThigh.rotation.z = 0.72;
+
+for (const mesh of [
+  riderTorso, riderVest, riderVestPanel, riderHead, riderHelmet, riderVisor,
+  riderHips, riderLeftArm, riderRightArm, riderLeftHand, riderRightHand,
+  riderLeftThigh, riderRightThigh
+]) {
+  mesh.castShadow = true;
+  mesh.receiveShadow = false;
+}
+
+riderBody.add(
+  riderTorso, riderVest, riderVestPanel, riderHead, riderHelmet, riderVisor,
+  riderHips, riderLeftArm, riderRightArm, riderLeftHand, riderRightHand,
+  riderLeftThigh, riderRightThigh
+);
 riderBody.position.set(0, 1.48, 0.15);
 riderBody.rotation.x = -0.16;
+ski.userData.riderVisualVersion = 'V0.11.16-T7';
 ski.add(riderBody);
 
 ski.position.set(0, 0.72, 18);
