@@ -88,6 +88,22 @@
       runtimeScript.src='./src/rendering/tropical-island-runtime.js';
       runtimeScript.async=false;
       runtimeScript.dataset.v01116TropicalIslandRuntime='1';
+      runtimeScript.onload=()=>{
+        if(root.JETSKI_TROPICAL_POLISH||document.querySelector('script[data-v01116-tropical-polish-core]'))return;
+        const polishCore=document.createElement('script');
+        polishCore.src='./src/rendering/tropical-polish-core.js';
+        polishCore.async=false;
+        polishCore.dataset.v01116TropicalPolishCore='1';
+        polishCore.onload=()=>{
+          if(root.JETSKI_TROPICAL_POLISH)return;
+          const polishRuntime=document.createElement('script');
+          polishRuntime.src='./src/rendering/tropical-polish-runtime.js';
+          polishRuntime.async=false;
+          polishRuntime.dataset.v01116TropicalPolishRuntime='1';
+          document.body.appendChild(polishRuntime);
+        };
+        document.body.appendChild(polishCore);
+      };
       document.body.appendChild(runtimeScript);
     };
     document.body.appendChild(coreScript);
@@ -97,5 +113,5 @@
   loadTropicalArcade();
   loadTropicalIslands();
   const versionNode=document.querySelector('#version');if(versionNode)versionNode.textContent=VERSION;document.title=`Swim Ring Racing ${VERSION}`;
-  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true,paletteUpdateHz:10,dressingUpdateMs:2000,tropicalArcadeLoader:true,tropicalIslandLoader:true};
+  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true,paletteUpdateHz:10,dressingUpdateMs:2000,tropicalArcadeLoader:true,tropicalIslandLoader:true,tropicalPolishLoader:true};
 })(typeof window!=='undefined'?window:globalThis);
