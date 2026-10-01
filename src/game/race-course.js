@@ -10,16 +10,16 @@
     worldMode: 'open-sea',
     seaState: 'normal',
     laps: 2,
-    checkpointRadiusM: 14,
+    checkpointRadiusM: 16,
     checkpoints: Object.freeze([
-      Object.freeze({ id: 'start', label: 'START / FINISH', x: 0, z: 82 }),
-      Object.freeze({ id: 'cp1', label: 'GATE 1', x: 58, z: 58 }),
-      Object.freeze({ id: 'cp2', label: 'GATE 2', x: 82, z: 0 }),
-      Object.freeze({ id: 'cp3', label: 'GATE 3', x: 58, z: -58 }),
-      Object.freeze({ id: 'cp4', label: 'GATE 4', x: 0, z: -82 }),
-      Object.freeze({ id: 'cp5', label: 'GATE 5', x: -58, z: -58 }),
-      Object.freeze({ id: 'cp6', label: 'GATE 6', x: -82, z: 0 }),
-      Object.freeze({ id: 'cp7', label: 'GATE 7', x: -58, z: 58 })
+      Object.freeze({ id: 'start', label: 'START / FINISH', x: 0, z: 115 }),
+      Object.freeze({ id: 'cp1', label: 'GATE 1', x: 70, z: 94 }),
+      Object.freeze({ id: 'cp2', label: 'GATE 2', x: 119, z: 34 }),
+      Object.freeze({ id: 'cp3', label: 'GATE 3', x: 106, z: -52 }),
+      Object.freeze({ id: 'cp4', label: 'GATE 4', x: 29, z: -119 }),
+      Object.freeze({ id: 'cp5', label: 'GATE 5', x: -65, z: -106 }),
+      Object.freeze({ id: 'cp6', label: 'GATE 6', x: -121, z: -31 }),
+      Object.freeze({ id: 'cp7', label: 'GATE 7', x: -92, z: 68 })
     ])
   });
 
