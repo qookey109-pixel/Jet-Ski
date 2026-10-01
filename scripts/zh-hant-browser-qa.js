@@ -96,6 +96,34 @@ async function verifyIdentity(page, receipt) {
 async function verifyMenu(page, receipt, engine, profile) {
   const text = await panelText(page, '[data-jr-screen="menu"].show .jr-card');
   recordPanel(receipt, 'menu', text);
+
+  const presentation = await page.evaluate(() => {
+    const hiddenSelectors = ['.hud', '.help', '.physics-controls', '.world-controls', '.sea-controls', '.mobile-controls'];
+    const hidden = Object.fromEntries(hiddenSelectors.map(selector => {
+      const node = document.querySelector(selector);
+      if (!node) return [selector, true];
+      const style = getComputedStyle(node);
+      return [selector, style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0];
+    }));
+    const screen = document.querySelector('[data-jr-screen="menu"].show');
+    const card = screen && screen.querySelector('.jr-card');
+    const rect = card ? card.getBoundingClientRect() : null;
+    return {
+      phase: document.body.dataset.v01114Phase || '',
+      hidden,
+      cardVisible: Boolean(rect && rect.width > 0 && rect.height > 0),
+      cardInsideViewport: Boolean(rect && rect.top >= -1 && rect.left >= -1 &&
+        rect.right <= innerWidth + 1 && rect.bottom <= innerHeight + 1)
+    };
+  });
+  assert(presentation.phase === 'menu', `menu presentation phase mismatch: ${presentation.phase}`);
+  assert(Object.values(presentation.hidden).every(Boolean),
+    `award menu still exposes engineering chrome: ${JSON.stringify(presentation.hidden)}`);
+  assert(presentation.cardVisible, 'award menu card is not visible');
+  if (profile === 'mobile-landscape') {
+    assert(presentation.cardInsideViewport, 'mobile award menu card exceeds first-fold viewport');
+  }
+  receipt.presentation = presentation;
   receipt.screenshots.push(await shot(page, engine, profile, 'menu'));
 }
 
