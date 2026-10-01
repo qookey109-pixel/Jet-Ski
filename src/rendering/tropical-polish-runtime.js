@@ -22,28 +22,29 @@
   scene.add(group);
 
   const rockGeo = new THREE.IcosahedronGeometry(1, 1);
-  const distantGeo = new THREE.ConeGeometry(1, 1.6, 7, 1);
-  const ringGeo = new THREE.RingGeometry(0.72, 1.0, 36, 1);
+  const distantGeo = new THREE.DodecahedronGeometry(1, 0);
+  const shallowRingGeo = new THREE.RingGeometry(0.58, 1.0, 40, 1);
+  const foamRingGeo = new THREE.RingGeometry(0.92, 1.0, 40, 1);
 
   const rockMat = new THREE.MeshStandardMaterial({
     color: 0x465453, roughness: 0.98, metalness: 0, flatShading: true
   });
   const distantMat = new THREE.MeshStandardMaterial({
-    color: 0x27735d, roughness: 0.95, metalness: 0, flatShading: true,
-    transparent: true, opacity: 0.72
+    color: 0x2e7765, roughness: 0.96, metalness: 0, flatShading: true,
+    transparent: true, opacity: 0.58
   });
   const shallowMat = new THREE.MeshBasicMaterial({
-    color: 0x55e7dc, transparent: true, opacity: 0.16,
-    depthWrite: false, side: THREE.DoubleSide
+    color: 0x48e1d5, transparent: true, opacity: 0.11,
+    depthWrite: false, depthTest: true, side: THREE.DoubleSide
   });
   const foamMat = new THREE.MeshBasicMaterial({
-    color: 0xf4fff8, transparent: true, opacity: 0.48,
-    depthWrite: false, side: THREE.DoubleSide
+    color: 0xf8fff5, transparent: true, opacity: 0.34,
+    depthWrite: false, depthTest: true, side: THREE.DoubleSide
   });
 
   const rocks = new THREE.InstancedMesh(rockGeo, rockMat, maxRocks);
-  const shallow = new THREE.InstancedMesh(ringGeo, shallowMat, maxShallow);
-  const foam = new THREE.InstancedMesh(ringGeo, foamMat, maxFoam);
+  const shallow = new THREE.InstancedMesh(shallowRingGeo, shallowMat, maxShallow);
+  const foam = new THREE.InstancedMesh(foamRingGeo, foamMat, maxFoam);
   const distant = new THREE.InstancedMesh(distantGeo, distantMat, maxDistant);
   rocks.name = 'V01116TropicalPolishRocks';
   shallow.name = 'V01116TropicalPolishShallow';
@@ -151,7 +152,7 @@
     for (let i = 0; i < distantSeeds.length; i++) {
       const s = distantSeeds[i];
       const y = getWaveHeight(s.x, s.z, t) - 1.2;
-      compose(distant, i, s.x, y + 7 * s.scale, s.z, 18 * s.scale, 10 * s.scale, 13 * s.scale, 0, s.yaw, 0);
+      compose(distant, i, s.x, y + 5.5 * s.scale, s.z, 22 * s.scale, 7.5 * s.scale, 15 * s.scale, 0, s.yaw, 0);
     }
     distant.count = distantSeeds.length;
 
@@ -176,8 +177,8 @@
     state.speedStrength = strength;
 
     // Presentation-only pulse: shoreline foam becomes slightly brighter at speed.
-    foamMat.opacity = 0.42 + strength * 0.12;
-    shallowMat.opacity = 0.13 + strength * 0.05;
+    foamMat.opacity = 0.30 + strength * 0.10;
+    shallowMat.opacity = 0.10 + strength * 0.035;
 
     if (visible && foam.count) {
       const pulse = 1 + Math.sin(now * 0.0018) * 0.025;
