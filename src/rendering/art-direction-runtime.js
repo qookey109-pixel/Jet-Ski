@@ -100,6 +100,22 @@
           polishRuntime.src='./src/rendering/tropical-polish-runtime.js';
           polishRuntime.async=false;
           polishRuntime.dataset.v01116TropicalPolishRuntime='1';
+          polishRuntime.onload=()=>{
+            if(root.JETSKI_ARCADE_FEEDBACK||document.querySelector('script[data-v01116-arcade-feedback-core]'))return;
+            const feedbackCore=document.createElement('script');
+            feedbackCore.src='./src/rendering/arcade-feedback-core.js';
+            feedbackCore.async=false;
+            feedbackCore.dataset.v01116ArcadeFeedbackCore='1';
+            feedbackCore.onload=()=>{
+              if(root.JETSKI_ARCADE_FEEDBACK)return;
+              const feedbackRuntime=document.createElement('script');
+              feedbackRuntime.src='./src/rendering/arcade-feedback-runtime.js';
+              feedbackRuntime.async=false;
+              feedbackRuntime.dataset.v01116ArcadeFeedbackRuntime='1';
+              document.body.appendChild(feedbackRuntime);
+            };
+            document.body.appendChild(feedbackCore);
+          };
           document.body.appendChild(polishRuntime);
         };
         document.body.appendChild(polishCore);
@@ -113,5 +129,5 @@
   loadTropicalArcade();
   loadTropicalIslands();
   const versionNode=document.querySelector('#version');if(versionNode)versionNode.textContent=VERSION;document.title=`Swim Ring Racing ${VERSION}`;
-  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true,paletteUpdateHz:10,dressingUpdateMs:2000,tropicalArcadeLoader:true,tropicalIslandLoader:true,tropicalPolishLoader:true};
+  root.JETSKI_ART_DIRECTION={version:VERSION,get profile(){return activeProfile;},dressing,visualOnly:true,collisionAdded:false,physicsUntouched:true,paletteUpdateHz:10,dressingUpdateMs:2000,tropicalArcadeLoader:true,tropicalIslandLoader:true,tropicalPolishLoader:true,arcadeFeedbackLoader:true};
 })(typeof window!=='undefined'?window:globalThis);
