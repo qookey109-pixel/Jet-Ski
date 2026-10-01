@@ -79,6 +79,19 @@ async function collect(page) {
     const activeIndex = manager && manager.state ? Number(manager.state.nextCheckpointIndex) : -1;
     const startGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === 0) || null;
     const activeGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === activeIndex) || null;
+    const coursePoints = manager && manager.course && Array.isArray(manager.course.checkpoints)
+      ? manager.course.checkpoints : [];
+    let courseLengthM = 0;
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    for (let i = 0; i < coursePoints.length; i++) {
+      const a = coursePoints[i];
+      const b = coursePoints[(i + 1) % coursePoints.length] || a;
+      courseLengthM += Math.hypot((b.x || 0) - (a.x || 0), (b.z || 0) - (a.z || 0));
+      minX = Math.min(minX, Number(a.x) || 0);
+      maxX = Math.max(maxX, Number(a.x) || 0);
+      minZ = Math.min(minZ, Number(a.z) || 0);
+      maxZ = Math.max(maxZ, Number(a.z) || 0);
+    }
     return {
       phase: manager && manager.state && manager.state.phase,
       version: arcade && arcade.version,
@@ -89,6 +102,10 @@ async function collect(page) {
       boostAuthorityUntouched: arcade && arcade.boostAuthorityUntouched,
       state: arcade && Object.assign({}, arcade.state),
       coreDefaults: core && Object.assign({}, core.DEFAULTS),
+      courseLengthM,
+      courseSpanX: Number.isFinite(minX) && Number.isFinite(maxX) ? maxX - minX : 0,
+      courseSpanZ: Number.isFinite(minZ) && Number.isFinite(maxZ) ? maxZ - minZ : 0,
+      courseCheckpointRadiusM: manager && manager.course ? manager.course.checkpointRadiusM : null,
       rootVisible: Boolean(ringRoot && ringRoot.visible),
       gateChildren: gateLayer ? gateLayer.children.length : -1,
       visibleGateCount: gateLayer ? [...gateLayer.children].filter(gate => gate.visible).length : -1,
@@ -247,6 +264,12 @@ async function main() {
         data.coreDefaults.laneHalfWidth >= 11 && data.coreDefaults.laneHalfWidth <= 12 &&
         data.coreDefaults.buoySpacing >= 16,
         `${profile.name}: T5 widened course defaults outside guarded range`);
+      assert(data.courseLengthM > 700 && data.courseLengthM < 780,
+        `${profile.name}: T6 Open Sea grand-loop length outside guarded range ${data.courseLengthM}`);
+      assert(data.courseSpanX >= 230 && data.courseSpanZ >= 220,
+        `${profile.name}: T6 Open Sea course footprint is still too compact ${data.courseSpanX}x${data.courseSpanZ}`);
+      assert(data.courseCheckpointRadiusM === 16,
+        `${profile.name}: T6 checkpoint radius drifted ${data.courseCheckpointRadiusM}`);
       assert(data.state.lastNearestGateScale >= 0.55 && data.state.lastNearestGateScale <= 0.75,
         `${profile.name}: near gate scale left the guarded readability range ${data.state.lastNearestGateScale}`);
       assert(data.legacyCourseFound === true && data.legacyCourseVisible === false && data.state.legacyGateVisualSuppressed === true,

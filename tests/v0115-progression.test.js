@@ -9,7 +9,13 @@ assert.equal(Core.EVENTS[2].worldMode, 'taiwan-coast');
 const open = Core.buildCourse('open-sea-circuit');
 assert.equal(open.checkpoints.length, 8);
 assert.equal(open.checkpoints[0].x, 0);
-assert.equal(open.checkpoints[0].z, 82);
+assert.equal(open.checkpoints[0].z, 115);
+assert.equal(open.checkpointRadiusM, 16);
+const openLength = open.checkpoints.reduce((sum, cp, i) => {
+  const next = open.checkpoints[(i + 1) % open.checkpoints.length];
+  return sum + Math.hypot(next.x - cp.x, next.z - cp.z);
+}, 0);
+assert(openLength > 700 && openLength < 780, 'Open Sea event should be a larger grand loop');
 
 const anchor = { x: 100, z: -50 };
 const north = Core.buildCourse('waikiki-offshore', anchor, 0);
