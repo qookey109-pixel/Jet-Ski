@@ -94,6 +94,10 @@
 - [x] T5 exact-head Race Regression #119 + Browser Release QA #85 PASS；post-merge #120 / #86 + Pages #81 PASS
 - [x] T6：Open Sea Circuit 改為非對稱 Grand Loop，734.56m/圈、240×234m footprint、checkpoint radius 16m
 - [x] T6 exact-head Race Regression #123 + Browser Release QA #89 PASS；desktop / 844×390 WebKit visual QA 人工驗收完成
+- [x] T7：玩家與 3 名 AI 全部升級完整角色造型（頭盔／面罩／救生背心／手臂手掌／髖部／腿），不改 physics / AI movement authority
+- [x] T7 exact-head Race Regression #125 + Browser Release QA #91 PASS；desktop / 844×390 WebKit visual QA PASS
+- [x] T8：主選單隱藏工程 HUD／物理／世界／海況／駕駛控制層，強化正式投稿版視覺層級
+- [x] T8 exact-head Race Regression #127 + Browser Release QA #93 PASS；desktop / 844×390 繁中選單人工驗收完成
 
 ## 下一階段
 - [ ] **V0.11.16 macOS Safari hands-on acceptance**：完整跑完四場 Championship，確認 Start / race / pause / results / ending / Save / Garage / Challenges / More 流程
