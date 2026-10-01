@@ -90,6 +90,10 @@
 - [x] T3 exact-head Race Regression #113 + Browser Release QA #79 PASS；desktop 1280×720 / mobile 844×390 WebKit screenshots 人工驗收完成
 - [x] Tropical Arcade T4：Checkpoint world-ring + banner、Lap / FINAL LAP、Finish burst、Boost screen pulse；全為 observer/presentation-only
 - [x] T4 exact-head Race Regression #117 + Browser Release QA #83 PASS；desktop 1280×720 / mobile 844×390 feedback screenshots 人工驗收完成
+- [x] T5：視覺賽道總寬約 23m、checkpoint gate radius 7.2m；CORAL / TIDE / MANGO 全部補完整騎手
+- [x] T5 exact-head Race Regression #119 + Browser Release QA #85 PASS；post-merge #120 / #86 + Pages #81 PASS
+- [x] T6：Open Sea Circuit 改為非對稱 Grand Loop，734.56m/圈、240×234m footprint、checkpoint radius 16m
+- [x] T6 exact-head Race Regression #123 + Browser Release QA #89 PASS；desktop / 844×390 WebKit visual QA 人工驗收完成
 
 ## 下一階段
 - [ ] **V0.11.16 macOS Safari hands-on acceptance**：完整跑完四場 Championship，確認 Start / race / pause / results / ending / Save / Garage / Challenges / More 流程

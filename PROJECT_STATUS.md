@@ -9,7 +9,7 @@ Status date: `2026-10-01` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current Tropical Arcade T4 merge tree: `3ebde1d3ee61dbfa907e111bd5e065a1dade5ff2`
+- Current award-quality gameplay tree (T6): `84c578d062f92d352891d2cd64b07d748292af05`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -43,6 +43,8 @@ V0.11 currently includes:
 23. Free cloud visual-asset pipeline: GitHub Actions + Blender headless generates a GLB kit and 1280×720 preview without requiring a local Mac.
 24. Tropical Arcade T3: visual-only shoreline rocks, shallow-water turquoise bands, foam edges and distant tropical silhouettes with mobile/desktop budgets.
 25. Tropical Arcade T4: observer-only checkpoint, lap/final-lap, finish and Boost visual feedback with bounded desktop/mobile burst pools.
+26. T5: widened 23 m visual race corridor, 7.2 m checkpoint gates and full AI rider figures for CORAL / TIDE / MANGO.
+27. T6: redesigned Open Sea Circuit as a 734.56 m-per-lap asymmetric Grand Loop with 240 × 234 m footprint and 16 m checkpoint acceptance radius.
 
 ## V0.11.16 release evidence
 
@@ -128,9 +130,27 @@ T4 race-feedback polish is merged to `main`.
 - Runtime observes authoritative race/Boost state and adds presentation only; no physics, gameplay, race-rule, Boost-authority, camera or collision writes.
 - Accepted physics/performance baseline remains V0.10.4.
 
+
+## T5 / T6 award-quality race redesign evidence
+
+The first award-quality gameplay pass is merged to `main`.
+
+- PR #76 — T5 Wider Course & AI Riders — merged as `57c6d6c32123091cb3e694937186ebf326249bf0`.
+- T5 exact head `23c6b0fd0a05b8452774125e810896da80130b47`.
+- T5 Race Regression #119 — PASS; Browser Release QA #85 — PASS.
+- T5 post-merge Race Regression #120 — PASS; Browser Release QA #86 — PASS; Pages #81 — PASS.
+- T5 visual corridor: 23 m total width; checkpoint gate radius: 7.2 m.
+- All three AI rivals now carry complete rider figures; reduced-order AI/player physics authority is unchanged.
+- PR #77 — T6 Open Sea Grand Loop — merged as `84c578d062f92d352891d2cd64b07d748292af05`.
+- T6 exact head `755f57a2641062ca6666c78d8537d7ed2f3470f0`.
+- T6 Race Regression #123 — PASS; Browser Release QA #89 — PASS.
+- T6 WebKit visual QA measured 734.559 m per lap, 240 m × 234 m footprint and 16 m checkpoint radius on both desktop and 844×390 mobile.
+- T6 desktop/mobile screenshots were manually inspected; HUD, controls, AI riders and T1–T5 presentation remain readable.
+- Accepted physics/performance baseline remains V0.10.4.
+
 ## Current active work
 
-Branch: `feature/v01116-hands-on-acceptance`
+Current focus: **award-quality vertical-slice polish**, while real-device acceptance remains a separate release gate.
 
 Scope is acceptance tooling only:
 
