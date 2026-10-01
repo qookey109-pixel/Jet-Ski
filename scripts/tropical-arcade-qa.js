@@ -21,7 +21,8 @@ async function preparePage(context, viewport) {
   await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForFunction(() => Boolean(
     window.JETSKI_RELEASE && window.JETSKI_RELEASE.version === 'V0.11.16' &&
-    window.JETSKI_RACE_MANAGER && window.JETSKI_TROPICAL_ARCADE && window.JETSKI_TROPICAL_ARCADE_CORE
+    window.JETSKI_RACE_MANAGER && window.JETSKI_TROPICAL_ARCADE && window.JETSKI_TROPICAL_ARCADE_CORE &&
+    window.JETSKI_TROPICAL_ISLANDS && window.JETSKI_TROPICAL_ISLAND_CORE
   ), null, { timeout: 30000 });
   return page;
 }
@@ -37,9 +38,11 @@ async function startOpenSeaRace(page) {
   await page.waitForFunction(() => {
     const manager = window.JETSKI_RACE_MANAGER;
     const arcade = window.JETSKI_TROPICAL_ARCADE;
-    return manager && arcade &&
+    const islands = window.JETSKI_TROPICAL_ISLANDS;
+    return manager && arcade && islands &&
       (manager.state.phase === 'countdown' || manager.state.phase === 'racing') &&
-      arcade.state.gateCount > 0 && arcade.state.buoyCount > 0 && arcade.rootGroup.visible;
+      arcade.state.gateCount > 0 && arcade.state.buoyCount > 0 && arcade.rootGroup.visible &&
+      islands.state.islandCount > 0 && islands.state.palmCount > 0 && islands.group.visible;
   }, null, { timeout: 20000 });
   await page.waitForFunction(() => Boolean(document.querySelector('.v01116-arcade-boost')), null, { timeout: 5000 });
   await page.waitForTimeout(700);
@@ -50,6 +53,8 @@ async function collect(page) {
     const arcade = window.JETSKI_TROPICAL_ARCADE;
     const core = window.JETSKI_TROPICAL_ARCADE_CORE;
     const manager = window.JETSKI_RACE_MANAGER;
+    const islands = window.JETSKI_TROPICAL_ISLANDS;
+    const islandCore = window.JETSKI_TROPICAL_ISLAND_CORE;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -87,7 +92,16 @@ async function collect(page) {
       boostLabel: boost ? (boost.getAttribute('aria-label') || boost.textContent || '').trim() : '',
       fov: typeof camera !== 'undefined' ? camera.fov : null,
       cameraDistance: typeof camera !== 'undefined' && typeof ski !== 'undefined' ? camera.position.distanceTo(ski.position) : null,
-      cameraHeightDelta: typeof camera !== 'undefined' && typeof ski !== 'undefined' ? camera.position.y - ski.position.y : null
+      cameraHeightDelta: typeof camera !== 'undefined' && typeof ski !== 'undefined' ? camera.position.y - ski.position.y : null,
+      islandVersion: islands && islands.version,
+      islandVisualOnly: islands && islands.visualOnly,
+      islandCollisionAdded: islands && islands.collisionAdded,
+      islandPhysicsUntouched: islands && islands.physicsUntouched,
+      islandGameplayUntouched: islands && islands.gameplayUntouched,
+      islandGoogle3DRespected: islands && islands.google3DRespected,
+      islandState: islands && Object.assign({}, islands.state),
+      islandDefaults: islandCore && Object.assign({}, islandCore.DEFAULTS),
+      islandGroupVisible: Boolean(islands && islands.group && islands.group.visible)
     };
   });
 }
@@ -96,7 +110,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade Visual Pass T1',
+    feature: 'Tropical Arcade Visual Pass T1 + T2 Islands',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -166,6 +180,28 @@ async function main() {
       assert(data.hudVisible === true, `${profile.name}: race HUD hidden`);
       assert(data.boostArcadeClass === true && data.state.boostSkinAttached === true,
         `${profile.name}: localization-safe Boost skin not attached`);
+
+      assert(data.islandVersion === 'V0.11.16-T2', `${profile.name}: wrong T2 island version ${data.islandVersion}`);
+      assert(data.islandVisualOnly === true && data.islandCollisionAdded === false &&
+        data.islandPhysicsUntouched === true && data.islandGameplayUntouched === true,
+        `${profile.name}: island authority boundary changed`);
+      assert(data.islandGoogle3DRespected === true && data.islandState.realWorldCoastUntouched === true,
+        `${profile.name}: island dressing no longer respects real-world visual authority`);
+      assert(data.islandState.physicsWrites === false && data.islandState.gameplayWrites === false &&
+        data.islandState.raceRuleWrites === false,
+        `${profile.name}: island layer reports forbidden writes`);
+      assert(data.islandGroupVisible === true && data.islandState.visible === true,
+        `${profile.name}: tropical island group not visible in open-sea race`);
+      assert(data.islandState.islandCount >= 2 && data.islandState.islandCount <= (profile.mobile ? 3 : 4),
+        `${profile.name}: island count outside visual budget ${data.islandState.islandCount}`);
+      assert(data.islandState.palmCount >= data.islandState.islandCount * 2,
+        `${profile.name}: too few palms for readable tropical silhouette ${data.islandState.palmCount}`);
+      assert(data.islandState.frondCount >= data.islandState.palmCount * 6,
+        `${profile.name}: palm frond dressing missing ${data.islandState.frondCount}`);
+      assert(data.islandState.drawSurfaces <= 6,
+        `${profile.name}: tropical island draw-surface budget exceeded ${data.islandState.drawSurfaces}`);
+      assert(data.islandState.minCourseClearance >= data.islandDefaults.minCourseClearance,
+        `${profile.name}: island encroached on guarded race corridor ${data.islandState.minCourseClearance}`);
 
       receipt.profiles.push({ name: profile.name, status: 'PASS', metrics: data });
       await context.close();
