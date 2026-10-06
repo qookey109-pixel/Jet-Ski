@@ -1,0 +1,39 @@
+name: Asset Discovery Pack
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feature/asset-discovery-pack-*"
+    paths:
+      - ".github/workflows/asset-discovery.yml"
+      - "scripts/asset-discovery-pack.js"
+      - "scripts/asset-server-cli.js"
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax check
+        run: |
+          node --check scripts/asset-server-cli.js
+          node --check scripts/asset-discovery-pack.js
+      - name: Query 3d-asset-server
+        env:
+          JETSKI_ASSET_SERVER_URL: https://3d.shep.bot
+        run: node scripts/asset-discovery-pack.js
+      - name: Upload curated candidate report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jet-ski-asset-discovery
+          path: artifacts/asset-discovery/
+          if-no-files-found: error
+          retention-days: 14

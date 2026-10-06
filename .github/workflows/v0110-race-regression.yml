@@ -100,6 +100,9 @@ jobs:
           node --check scripts/preview.js
           node --check scripts/release-smoke.js
           node --check scripts/asset-server-cli.js
+          node --check scripts/asset-discovery-pack.js
+          node --check scripts/asset-intake-pack.js
+          node --check scripts/asset-download-preview.js
           node --check scripts/browser-release-qa.js
           node --check scripts/hands-on-acceptance-qa.js
           node --check scripts/tropical-arcade-qa.js
@@ -151,6 +154,11 @@ jobs:
           test -f dist/src/rendering/wake-spray-runtime.js
           test -f dist/src/rendering/route-landmark-core.js
           test -f dist/src/rendering/route-landmark-runtime.js
+          test -f dist/assets/third-party/kenney-watercraft-kit/boat-speed-f.glb
+          test -f dist/assets/third-party/kenney-watercraft-kit/buoy.glb
+          test -f dist/assets/third-party/kenney-watercraft-kit/buoy-flag.glb
+          test -f dist/assets/third-party/kenney-watercraft-kit/gate-finish.glb
+          test -f dist/assets/third-party/kenney-watercraft-kit/LICENSE-KENNEY.txt
           test -f dist/src/audio/audio-runtime.js
           node scripts/release-smoke.js dist V0.11.16
       - name: Serve production smoke
@@ -180,3 +188,5 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/wake-spray-runtime.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/route-landmark-core.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/route-landmark-runtime.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/assets/third-party/kenney-watercraft-kit/buoy.glb >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/assets/third-party/kenney-watercraft-kit/gate-finish.glb >/dev/null

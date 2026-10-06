@@ -1,0 +1,43 @@
+name: Asset Download Preview
+
+on:
+  push:
+    branches:
+      - "feature/asset-discovery-pack-*"
+    paths:
+      - ".github/workflows/asset-download-preview.yml"
+      - "scripts/asset-download-preview.js"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  download-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Download selected CC0 preview assets
+        env:
+          JETSKI_ASSET_SERVER_URL: https://3d.shep.bot
+        run: node scripts/asset-download-preview.js
+      - name: Inspect downloaded archives
+        run: |
+          mkdir -p artifacts/asset-download-preview/inspection
+          for file in artifacts/asset-download-preview/*.zip; do
+            [ -e "$file" ] || continue
+            echo "### $file" >> artifacts/asset-download-preview/inspection/archive-list.txt
+            unzip -l "$file" >> artifacts/asset-download-preview/inspection/archive-list.txt || true
+          done
+          find artifacts/asset-download-preview -maxdepth 2 -type f -printf '%p %s bytes\n' > artifacts/asset-download-preview/inspection/file-sizes.txt
+      - name: Upload download preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: jet-ski-asset-download-preview
+          path: artifacts/asset-download-preview/
+          if-no-files-found: error
+          retention-days: 7
