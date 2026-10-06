@@ -25,6 +25,7 @@ async function preparePage(context, viewport) {
     window.JETSKI_TROPICAL_ISLANDS && window.JETSKI_TROPICAL_ISLAND_CORE &&
     window.JETSKI_TROPICAL_POLISH && window.JETSKI_TROPICAL_POLISH_CORE &&
     window.JETSKI_ARCADE_FEEDBACK && window.JETSKI_ARCADE_FEEDBACK_CORE &&
+    window.JETSKI_ROUTE_LANDMARKS && window.JETSKI_ROUTE_LANDMARK_CORE &&
     window.JETSKI_RACE_AI
   ), null, { timeout: 30000 });
   return page;
@@ -45,13 +46,15 @@ async function startOpenSeaRace(page) {
     const polish = window.JETSKI_TROPICAL_POLISH;
     const feedback = window.JETSKI_ARCADE_FEEDBACK;
     const staging = window.JETSKI_RACE_STAGING;
-    return manager && arcade && islands && polish && feedback && staging &&
+    const landmarks = window.JETSKI_ROUTE_LANDMARKS;
+    return manager && arcade && islands && polish && feedback && staging && landmarks &&
       (manager.state.phase === 'countdown' || manager.state.phase === 'racing') &&
       arcade.state.gateCount > 0 && arcade.state.buoyCount > 0 && arcade.rootGroup.visible &&
       islands.state.islandCount > 0 && islands.state.palmCount > 0 && islands.group.visible &&
       polish.state.rockCount > 0 && polish.state.foamCount > 0 && polish.state.shallowCount > 0 && polish.group.visible &&
       feedback.visualOnly === true &&
-      staging.state.tileCount > 0 && staging.state.pylonCount === 2 && staging.group.visible;
+      staging.state.tileCount > 0 && staging.state.pylonCount === 2 && staging.group.visible &&
+      landmarks.state.landmarkCount >= 4 && landmarks.state.activeBeaconVisible === true && landmarks.group.visible;
   }, null, { timeout: 20000 });
   await page.waitForFunction(() => Boolean(document.querySelector('.v01116-arcade-boost')), null, { timeout: 5000 });
   await page.waitForTimeout(700);
@@ -77,6 +80,8 @@ async function collect(page) {
     const wakeCore = window.JETSKI_WAKE_CORE;
     const audio = window.JETSKI_AUDIO;
     const audioCore = window.JETSKI_AUDIO_CORE;
+    const landmarks = window.JETSKI_ROUTE_LANDMARKS;
+    const landmarkCore = window.JETSKI_ROUTE_LANDMARK_CORE;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -267,7 +272,20 @@ async function collect(page) {
       audioBoostAuthorityUntouched: audio && audio.boostAuthorityUntouched,
       audioState: audio && Object.assign({}, audio.state),
       audioPrefs: audio && audio.preferences,
-      audioMix: audio && audio.computeCurrentMix ? audio.computeCurrentMix() : null
+      audioMix: audio && audio.computeCurrentMix ? audio.computeCurrentMix() : null,
+      landmarkVersion: landmarks && landmarks.version,
+      landmarkVisualOnly: landmarks && landmarks.visualOnly,
+      landmarkCollisionAdded: landmarks && landmarks.collisionAdded,
+      landmarkPhysicsUntouched: landmarks && landmarks.physicsUntouched,
+      landmarkGameplayUntouched: landmarks && landmarks.gameplayUntouched,
+      landmarkRaceRulesUntouched: landmarks && landmarks.raceRulesUntouched,
+      landmarkCheckpointAuthorityUntouched: landmarks && landmarks.checkpointAuthorityUntouched,
+      landmarkCameraUntouched: landmarks && landmarks.cameraUntouched,
+      landmarkCourseMutation: landmarks && landmarks.courseMutation,
+      landmarkGoogle3DRespected: landmarks && landmarks.google3DRespected,
+      landmarkState: landmarks && Object.assign({}, landmarks.state),
+      landmarkDefaults: landmarkCore && Object.assign({}, landmarkCore.DEFAULTS),
+      landmarkGroupVisible: Boolean(landmarks && landmarks.group && landmarks.group.visible)
     };
   });
 }
@@ -276,7 +294,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade T1-T4 + T5-T13 Award Vertical Slice',
+    feature: 'Tropical Arcade T1-T4 + T5-T14 Award Vertical Slice',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -490,6 +508,28 @@ async function main() {
         data.audioState.gameplayWrites === false && data.audioState.raceRuleWrites === false &&
         data.audioState.boostWrites === false,
         `${profile.name}: T13 audio reports forbidden writes`);
+
+      assert(data.landmarkVersion === 'V0.11.16-T14' && data.landmarkVisualOnly === true &&
+        data.landmarkCollisionAdded === false && data.landmarkPhysicsUntouched === true &&
+        data.landmarkGameplayUntouched === true && data.landmarkRaceRulesUntouched === true &&
+        data.landmarkCheckpointAuthorityUntouched === true && data.landmarkCameraUntouched === true &&
+        data.landmarkCourseMutation === false,
+        `${profile.name}: T14 landmark authority/version boundary changed`);
+      assert(data.landmarkGoogle3DRespected === true && data.landmarkState.realWorldCoastUntouched === true,
+        `${profile.name}: T14 landmarks no longer respect real-world visual authority`);
+      assert(data.landmarkGroupVisible === true && data.landmarkState.visible === true &&
+        data.landmarkState.landmarkCount === 4 && data.landmarkState.uniqueTypes === 4,
+        `${profile.name}: T14 landmark set incomplete ${JSON.stringify(data.landmarkState)}`);
+      assert(data.landmarkState.activeBeaconVisible === true && data.landmarkState.activeIndex === data.activeIndex,
+        `${profile.name}: T14 active checkpoint beacon not synced`);
+      assert(data.landmarkState.physicsWrites === false && data.landmarkState.gameplayWrites === false &&
+        data.landmarkState.raceRuleWrites === false && data.landmarkState.checkpointWrites === false &&
+        data.landmarkState.cameraWrites === false,
+        `${profile.name}: T14 landmark layer reports forbidden writes`);
+      assert(data.landmarkDefaults.landmarkOffset >= data.landmarkDefaults.minLandmarkOffset &&
+        data.landmarkDefaults.landmarkOffset <= data.landmarkDefaults.maxLandmarkOffset &&
+        data.landmarkDefaults.landmarkOffset > data.coreDefaults.laneHalfWidth,
+        `${profile.name}: T14 landmarks drifted into the race corridor`);
 
       assert(data.islandVersion === 'V0.11.16-T2', `${profile.name}: wrong T2 island version ${data.islandVersion}`);
       assert(data.islandVisualOnly === true && data.islandCollisionAdded === false &&
