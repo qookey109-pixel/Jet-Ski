@@ -435,6 +435,10 @@ async function main() {
         data.wakeDefaults.maxSprayInstancesDesktop <= 16 &&
         data.wakeDefaults.maxSprayInstancesMobile <= 12,
         `${profile.name}: T12 wake/spray budget exceeded`);
+      assert(data.wakeDefaults.surfaceOffset >= 0.10 && data.wakeDefaults.surfaceOffset <= 0.20 &&
+        data.wakeDefaults.wakeOpacity >= 0.45 && data.wakeDefaults.wakeOpacity <= 0.70 &&
+        data.wakeDefaults.sprayOpacity >= 0.60 && data.wakeDefaults.sprayOpacity <= 0.82,
+        `${profile.name}: T12 foam/spray readability defaults drifted`);
       assert(data.wakeState.trackedCrafts === 4,
         `${profile.name}: T12 did not track player + 3 AI craft ${data.wakeState.trackedCrafts}`);
       assert(data.wakeState.physicsWrites === false && data.wakeState.gameplayWrites === false &&
