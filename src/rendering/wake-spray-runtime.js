@@ -18,15 +18,7 @@
   group.name = 'V01116WakeSprayT12';
   scene.add(group);
 
-  const wakeGeo = new THREE.BufferGeometry();
-  wakeGeo.setAttribute('position', new THREE.Float32BufferAttribute([
-    -0.50, -0.50, 0,
-     0.50, -0.18, 0,
-     0.50,  0.18, 0,
-    -0.50,  0.50, 0
-  ], 3));
-  wakeGeo.setIndex([0, 1, 2, 0, 2, 3]);
-  wakeGeo.computeVertexNormals();
+  const wakeGeo = new THREE.PlaneGeometry(1, 1);
   const wakeMat = new THREE.MeshBasicMaterial({
     color: 0xe9fdff,
     transparent: true,
@@ -153,7 +145,7 @@
     pos.set(x, waterY(x, z), z);
     euler.set(-Math.PI / 2, -(yaw + side * cfg.wakeSpreadRad), 0, 'YXZ');
     quat.setFromEuler(euler);
-    scale.set(dims.length * dims.scale * 1.10, dims.width * (1.05 + dims.scale * 0.55), 1);
+    scale.set(dims.width * (1.15 + dims.scale * 0.65), dims.length * dims.scale * 1.22, 1);
     matrix.compose(pos, quat, scale);
     wakeMesh.setMatrixAt(index, matrix);
     return index + 1;
@@ -167,15 +159,15 @@
     const forwardX = Math.sin(yaw), forwardZ = Math.cos(yaw);
     const rightX = forwardZ, rightZ = -forwardX;
     const wave = Math.sin(now * 0.013 + particleIndex * 1.73 + index) * 0.5 + 0.5;
-    const back = cfg.sprayBackOffset + particleIndex * (0.36 + 0.20 * strength);
-    const lateral = (particleIndex - 1.5) * 0.19 * (0.5 + strength);
+    const back = cfg.sprayBackOffset + particleIndex * (0.46 + 0.24 * strength);
+    const lateral = (particleIndex - 1.5) * 0.24 * (0.55 + strength);
     const x = tr.source.position.x - forwardX * back + rightX * lateral;
     const z = tr.source.position.z - forwardZ * back + rightZ * lateral;
-    const lift = cfg.sprayBaseLift + cfg.sprayExtraLift * strength * (0.35 + 0.65 * wave);
+    const lift = cfg.sprayBaseLift + cfg.sprayExtraLift * strength * (0.50 + 0.72 * wave);
     pos.set(x, waterY(x, z) + lift, z);
     quat.identity();
-    const s = (0.28 + 0.38 * strength) * (0.75 + 0.25 * wave);
-    scale.set(s * 0.78, s * 1.32, s * 0.92);
+    const s = (0.34 + 0.46 * strength) * (0.78 + 0.28 * wave);
+    scale.set(s * 0.86, s * 1.65, s * 1.08);
     matrix.compose(pos, quat, scale);
     sprayMesh.setMatrixAt(index, matrix);
     return index + 1;
@@ -218,7 +210,7 @@
 
   function preview() {
     if (!trackers.length) rebuildTrackers();
-    previewUntil = performance.now() + 480;
+    previewUntil = performance.now() + 720;
     state.previewCount += 1;
     return renderPreview(performance.now());
   }
