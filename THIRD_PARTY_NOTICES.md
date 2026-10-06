@@ -32,3 +32,16 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+## 3d-asset-server — development tooling integration
+
+Jet-Ski includes a small project-owned HTTP client/adapter for optional development-time use with:
+
+- Project: `arielshad/3d-asset-server`
+- Source: https://github.com/arielshad/3d-asset-server
+- Upstream license: Apache License 2.0
+
+No source code from 3d-asset-server is copied into the Jet-Ski player runtime, and the service is not required by the production website. The integration calls its documented HTTP API/MCP interface only.
+
+Assets discovered through the service are governed by their **individual provider/listing licenses** and are tracked separately in `THIRD_PARTY_ASSETS.md` before shipping.
