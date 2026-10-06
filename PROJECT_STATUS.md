@@ -1,6 +1,6 @@
 # Jet Ski / 泳圈競速 — Project Status
 
-Status date: `2026-10-01` (`Asia/Taipei`)
+Status date: `2026-10-06` (`Asia/Taipei`)
 
 ## Authority
 
@@ -9,7 +9,7 @@ Status date: `2026-10-01` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current award-quality gameplay tree (T8): `e3e4622248bd638e06eb651c05aea764855f40de`
+- Current award-quality gameplay tree (T9): `08e38cd843a0b011dfa1003529658a6ab20414be`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -47,6 +47,7 @@ V0.11 currently includes:
 27. T6: redesigned Open Sea Circuit as a 734.56 m-per-lap asymmetric Grand Loop with 240 × 234 m footprint and 16 m checkpoint acceptance radius.
 28. T7: award-quality player/AI rider character polish with helmets, visors, life vests, articulated arms/hands/hips/legs and matching visual-version QA.
 29. T8: award-presentation menu pass that hides engineering/debug chrome outside active play and strengthens desktop/mobile menu hierarchy.
+30. T9: compact race-event intro and arcade countdown badge that preserve course visibility on desktop and 844 × 390 mobile.
 
 ## V0.11.16 release evidence
 
@@ -165,6 +166,25 @@ The character and public-menu presentation passes are merged to `main`.
 - T8 Race Regression #127 — PASS; Browser Release QA #93 — PASS.
 - Traditional Chinese desktop and 844×390 mobile screenshots were manually inspected.
 - Main menu now hides engineering HUD/help/physics/world/sea/mobile-driving chrome and preserves the compact first-fold primary actions.
+- Accepted physics/performance baseline remains V0.10.4.
+
+
+## T9 start-presentation evidence
+
+The start-sequence polish is merged to `main`.
+
+- PR #82 — T9 Start Grid Presentation Polish — merged as `08e38cd843a0b011dfa1003529658a6ab20414be`.
+- T9 exact head `8fc4ac2cfc3e3354bdca57b39e581efbf2a0c107`.
+- V0.11 Race Regression #130 — PASS.
+- V0.11.16 Browser Release QA #96 — PASS.
+- Chromium + WebKit Championship flow — PASS.
+- Traditional Chinese UI QA — PASS.
+- Query-gated hands-on helper QA — PASS.
+- Tropical Arcade visual QA — PASS.
+- WebKit desktop 1280 × 720 and mobile 844 × 390 screenshots — manually inspected.
+- Desktop intro: 430 × 63.23 px; countdown: 106.72 × 106.72 px.
+- Mobile intro: 360 × 46.89 px; countdown: 79.12 × 79.12 px.
+- T9 presentation is UI-only and does not write gameplay, countdown authority, physics, AI or race rules.
 - Accepted physics/performance baseline remains V0.10.4.
 
 ## Current active work
