@@ -247,7 +247,9 @@ async function collect(page) {
       wakeRaceRulesUntouched: wake && wake.raceRulesUntouched,
       wakeCameraUntouched: wake && wake.cameraUntouched,
       wakeState: wake && Object.assign({}, wake.state),
-      wakeDefaults: wakeCore && Object.assign({}, wakeCore.DEFAULTS)
+      wakeDefaults: wakeCore && Object.assign({}, wakeCore.DEFAULTS),
+      wakeFoamTextureReady: Boolean(wake && wake.foamTexture && wake.foamTexture.image &&
+        wake.foamTexture.image.width === 64 && wake.foamTexture.image.height === 256)
     };
   });
 }
@@ -439,6 +441,8 @@ async function main() {
         data.wakeDefaults.wakeOpacity >= 0.45 && data.wakeDefaults.wakeOpacity <= 0.70 &&
         data.wakeDefaults.sprayOpacity >= 0.60 && data.wakeDefaults.sprayOpacity <= 0.82,
         `${profile.name}: T12 foam/spray readability defaults drifted`);
+      assert(data.wakeFoamTextureReady === true,
+        `${profile.name}: T12 procedural foam texture missing`);
       assert(data.wakeState.trackedCrafts === 4,
         `${profile.name}: T12 did not track player + 3 AI craft ${data.wakeState.trackedCrafts}`);
       assert(data.wakeState.physicsWrites === false && data.wakeState.gameplayWrites === false &&
