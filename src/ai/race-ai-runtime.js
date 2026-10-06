@@ -27,18 +27,24 @@
 
   function makeVisual(config) {
     const g = new THREE.Group();
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(1.25, 0.37, 12, 32),
-      new THREE.MeshStandardMaterial({ color: config.color, roughness: 0.38, metalness: 0.02 })
-    );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.42;
-    ring.scale.z = 1.12;
-    const seat = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.56, 0.62, 0.25, 18),
-      new THREE.MeshStandardMaterial({ color: 0x243142, roughness: 0.68 })
-    );
-    seat.position.y = 0.58;
+    const craftVisual = root.JETSKI_CRAFT_VISUAL && typeof root.JETSKI_CRAFT_VISUAL.build === 'function'
+      ? root.JETSKI_CRAFT_VISUAL.build(g, {
+          kind: 'ai',
+          name: `V01116AICraftT11-${config.id}`,
+          primary: config.color,
+          accent: 0xfff1bd,
+          dark: 0x243142
+        })
+      : null;
+    if (!craftVisual) {
+      const fallback = new THREE.Mesh(
+        new THREE.BoxGeometry(1.38, 0.48, 2.75),
+        new THREE.MeshStandardMaterial({ color: config.color, roughness: 0.42 })
+      );
+      fallback.position.y = 0.42;
+      fallback.name = `T11AIFallback-${config.id}`;
+      g.add(fallback);
+    }
 
     const skinMat = new THREE.MeshStandardMaterial({ color: 0xf2c39c, roughness: 0.78 });
     const vestMat = new THREE.MeshStandardMaterial({
@@ -60,51 +66,51 @@
     rider.userData.visualVersion = 'V0.11.16-T7';
 
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.44, 0.92, 8), vestMat);
-    torso.position.y = 1.34;
-    torso.rotation.x = -0.12;
+    torso.position.y = 1.18;
+    torso.rotation.x = -0.27;
 
     const vestPanel = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.52, 0.14), vestLightMat);
-    vestPanel.position.set(0, 1.35, 0.37);
-    vestPanel.rotation.x = -0.12;
+    vestPanel.position.set(0, 1.18, 0.37);
+    vestPanel.rotation.x = -0.27;
 
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 7), skinMat);
-    head.position.set(0, 1.98, 0.06);
+    head.position.set(0, 1.82, 0.10);
 
     const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.288, 10, 7), helmetMat);
-    helmet.position.set(0, 2.07, 0.075);
+    helmet.position.set(0, 1.91, 0.115);
     helmet.scale.set(1.04, 0.62, 1.05);
 
     const visor = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.08, 0.05), visorMat);
-    visor.position.set(0, 2.00, 0.31);
+    visor.position.set(0, 1.84, 0.35);
     visor.rotation.x = 0.04;
 
     const hips = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.24, 0.40), darkMat);
-    hips.position.set(0, 0.93, 0.03);
+    hips.position.set(0, 0.82, -0.02);
 
     const armGeo = new THREE.CylinderGeometry(0.085, 0.095, 0.72, 7);
     const leftArm = new THREE.Mesh(armGeo, skinMat);
     const rightArm = new THREE.Mesh(armGeo, skinMat);
-    leftArm.position.set(-0.39, 1.34, 0.24);
-    rightArm.position.set(0.39, 1.34, 0.24);
-    leftArm.rotation.set(0.68, 0, -0.58);
-    rightArm.rotation.set(0.68, 0, 0.58);
+    leftArm.position.set(-0.39, 1.19, 0.27);
+    rightArm.position.set(0.39, 1.19, 0.27);
+    leftArm.rotation.set(0.82, 0, -0.58);
+    rightArm.rotation.set(0.82, 0, 0.58);
 
     const handGeo = new THREE.SphereGeometry(0.095, 7, 5);
     const leftHand = new THREE.Mesh(handGeo, skinMat);
     const rightHand = new THREE.Mesh(handGeo, skinMat);
-    leftHand.position.set(-0.48, 1.12, 0.49);
-    rightHand.position.set(0.48, 1.12, 0.49);
+    leftHand.position.set(-0.48, 1.03, 0.51);
+    rightHand.position.set(0.48, 1.03, 0.51);
 
     const thighGeo = new THREE.CylinderGeometry(0.11, 0.14, 0.48, 7);
     const leftThigh = new THREE.Mesh(thighGeo, darkMat);
     const rightThigh = new THREE.Mesh(thighGeo, darkMat);
-    leftThigh.position.set(-0.24, 0.79, 0.02);
-    rightThigh.position.set(0.24, 0.79, 0.02);
+    leftThigh.position.set(-0.24, 0.69, -0.02);
+    rightThigh.position.set(0.24, 0.69, -0.02);
     leftThigh.rotation.z = -0.68;
     rightThigh.rotation.z = 0.68;
 
     const handBar = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.08, 0.08), darkMat);
-    handBar.position.set(0, 1.11, 0.48);
+    handBar.position.set(0, 1.02, 0.51);
 
     for (const mesh of [
       torso, vestPanel, head, helmet, visor, hips, leftArm, rightArm,
@@ -120,7 +126,8 @@
 
     g.userData.rider = rider;
     g.userData.riderVisualVersion = 'V0.11.16-T7';
-    g.add(ring, seat, rider);
+    g.userData.craftVisualVersion = craftVisual ? 'V0.11.16-T11' : 'fallback';
+    g.add(rider);
     return g;
   }
 
@@ -249,6 +256,9 @@
     playerPhysicsRewritten: false,
     riderVisuals: true,
     riderVisualVersion: 'V0.11.16-T7',
-    riderCount: configs.length
+    riderCount: configs.length,
+    craftVisuals: true,
+    craftVisualVersion: 'V0.11.16-T11',
+    craftCount: configs.length
   };
 })(typeof window !== 'undefined' ? window : globalThis);
