@@ -18,29 +18,39 @@
   group.name = 'V01116WakeSprayT12';
   scene.add(group);
 
-  const wakeGeo = new THREE.PlaneGeometry(1, 1);
+  const wakeGeo = new THREE.BufferGeometry();
+  wakeGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+    -0.50, -0.50, 0,
+     0.50, -0.18, 0,
+     0.50,  0.18, 0,
+    -0.50,  0.50, 0
+  ], 3));
+  wakeGeo.setIndex([0, 1, 2, 0, 2, 3]);
+  wakeGeo.computeVertexNormals();
   const wakeMat = new THREE.MeshBasicMaterial({
-    color: 0xd7fbff,
+    color: 0xe9fdff,
     transparent: true,
-    opacity: 0.34,
+    opacity: cfg.wakeOpacity,
     depthWrite: false,
     side: THREE.DoubleSide
   });
   const wakeMesh = new THREE.InstancedMesh(wakeGeo, wakeMat, maxWakeInstances);
   wakeMesh.name = 'V01116WakeFoamT12';
   wakeMesh.frustumCulled = false;
+  wakeMesh.renderOrder = 18;
   group.add(wakeMesh);
 
   const sprayGeo = new THREE.SphereGeometry(0.12, 6, 5);
   const sprayMat = new THREE.MeshBasicMaterial({
     color: 0xedfeff,
     transparent: true,
-    opacity: 0.48,
+    opacity: cfg.sprayOpacity,
     depthWrite: false
   });
   const sprayMesh = new THREE.InstancedMesh(sprayGeo, sprayMat, maxSprayInstances);
   sprayMesh.name = 'V01116JetSprayT12';
   sprayMesh.frustumCulled = false;
+  sprayMesh.renderOrder = 19;
   group.add(sprayMesh);
 
   const trackers = [];
@@ -103,9 +113,9 @@
   function waterY(x, z) {
     if (typeof getWaveHeight === 'function') {
       const t = typeof clock !== 'undefined' ? clock.elapsedTime : performance.now() / 1000;
-      return getWaveHeight(x, z, t) + 0.035;
+      return getWaveHeight(x, z, t) + cfg.surfaceOffset;
     }
-    return 0.035;
+    return cfg.surfaceOffset;
   }
 
   function updateTracker(tr, now) {
@@ -141,9 +151,9 @@
     const x = sample.x - forwardX * back + rightX * lateral;
     const z = sample.z - forwardZ * back + rightZ * lateral;
     pos.set(x, waterY(x, z), z);
-    euler.set(-Math.PI / 2, 0, -(yaw + side * cfg.wakeSpreadRad), 'XYZ');
+    euler.set(-Math.PI / 2, -(yaw + side * cfg.wakeSpreadRad), 0, 'YXZ');
     quat.setFromEuler(euler);
-    scale.set(dims.length * dims.scale, dims.width * (0.72 + dims.scale), 1);
+    scale.set(dims.length * dims.scale * 1.10, dims.width * (1.05 + dims.scale * 0.55), 1);
     matrix.compose(pos, quat, scale);
     wakeMesh.setMatrixAt(index, matrix);
     return index + 1;
@@ -164,8 +174,8 @@
     const lift = cfg.sprayBaseLift + cfg.sprayExtraLift * strength * (0.35 + 0.65 * wave);
     pos.set(x, waterY(x, z) + lift, z);
     quat.identity();
-    const s = (0.22 + 0.28 * strength) * (0.75 + 0.25 * wave);
-    scale.set(s, s * 0.72, s);
+    const s = (0.28 + 0.38 * strength) * (0.75 + 0.25 * wave);
+    scale.set(s * 0.78, s * 1.32, s * 0.92);
     matrix.compose(pos, quat, scale);
     sprayMesh.setMatrixAt(index, matrix);
     return index + 1;
