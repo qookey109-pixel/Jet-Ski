@@ -111,67 +111,30 @@ addIsland(-90, -135, 1.4);
 addIsland(120, -190, 2.0);
 addIsland(160, 80, 1.0);
 
-// V0.4 player craft: a rideable inflatable swim ring instead of a jet ski.
-// Geometry stays procedural so no image/model asset is required.
+// T11 award-quality PWC silhouette. Visual children only; the existing ski group remains
+// the unchanged movement/physics authority.
 const ski = new THREE.Group();
 scene.add(ski);
 
-const inflatableMat = new THREE.MeshStandardMaterial({
-  color: 0xff9f1c, roughness: 0.34, metalness: 0.02
-});
-const stripeMat = new THREE.MeshStandardMaterial({
-  color: 0xfff3d6, roughness: 0.42, metalness: 0.0
-});
 const darkMat = new THREE.MeshStandardMaterial({ color: 0x20242b, roughness: 0.72 });
-
-// Main donut float. Rotate TorusGeometry so its hole faces upward.
-const ring = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.48, 18, 48), inflatableMat);
-ring.rotation.x = Math.PI / 2;
-ring.position.y = 0.46;
-ring.scale.z = 1.17;
-ring.castShadow = true;
-ski.add(ring);
-
-// Bright inflatable bands make the silhouette read clearly as a pool float.
-for (const angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-  const band = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.495, 12, 10, Math.PI / 7), stripeMat);
-  band.rotation.x = Math.PI / 2;
-  band.rotation.z = angle;
-  band.position.y = 0.46;
-  band.scale.z = 1.17;
-  band.castShadow = true;
-  ski.add(band);
+const craftVisual = window.JETSKI_CRAFT_VISUAL && typeof window.JETSKI_CRAFT_VISUAL.build === 'function'
+  ? window.JETSKI_CRAFT_VISUAL.build(ski, {
+      kind: 'player',
+      name: 'V01116PlayerCraftT11',
+      primary: 0xff7a2f,
+      accent: 0xffefb0,
+      dark: 0x17283a
+    })
+  : null;
+if (!craftVisual) {
+  const fallbackCraft = new THREE.Mesh(
+    new THREE.BoxGeometry(1.6, 0.55, 3.2),
+    new THREE.MeshStandardMaterial({ color: 0xff7a2f, roughness: 0.4 })
+  );
+  fallbackCraft.name = 'T11FallbackCraft';
+  fallbackCraft.position.y = 0.48;
+  ski.add(fallbackCraft);
 }
-
-const seat = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.70, 0.74, 0.30, 24),
-  new THREE.MeshStandardMaterial({ color: 0xff6b35, roughness: 0.5 })
-);
-seat.position.set(0, 0.62, 0.10);
-seat.castShadow = true;
-ski.add(seat);
-
-const backrest = new THREE.Mesh(
-  new THREE.BoxGeometry(1.15, 0.85, 0.30),
-  new THREE.MeshStandardMaterial({ color: 0xffb02e, roughness: 0.44 })
-);
-backrest.position.set(0, 1.03, 0.78);
-backrest.rotation.x = -0.16;
-backrest.castShadow = true;
-ski.add(backrest);
-
-// Grab bar at the front of the ring.
-const handle = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.075, 10, 22, Math.PI), darkMat);
-handle.rotation.set(Math.PI / 2, 0, Math.PI);
-handle.position.set(0, 0.98, -1.18);
-ski.add(handle);
-
-// Compact rear jet unit keeps the swim ring driveable while preserving the playful shape.
-const jetUnit = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 0.72, 16), darkMat);
-jetUnit.rotation.x = Math.PI / 2;
-jetUnit.position.set(0, 0.48, 1.95);
-jetUnit.castShadow = true;
-ski.add(jetUnit);
 
 // T7 award-quality rider art pass. Visual-only: no craft mass, controls or physics authority.
 const riderMat = new THREE.MeshStandardMaterial({ color: 0x2463eb, roughness: 0.58 });
@@ -243,9 +206,10 @@ riderBody.add(
   riderHips, riderLeftArm, riderRightArm, riderLeftHand, riderRightHand,
   riderLeftThigh, riderRightThigh
 );
-riderBody.position.set(0, 1.48, 0.15);
-riderBody.rotation.x = -0.16;
+riderBody.position.set(0, 1.42, -0.25);
+riderBody.rotation.set(-0.14, Math.PI, 0);
 ski.userData.riderVisualVersion = 'V0.11.16-T7';
+ski.userData.craftVisualVersion = craftVisual ? 'V0.11.16-T11' : 'fallback';
 ski.add(riderBody);
 
 ski.position.set(0, 0.72, 18);
