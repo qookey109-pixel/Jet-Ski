@@ -99,6 +99,7 @@ jobs:
           node --check scripts/build.js
           node --check scripts/preview.js
           node --check scripts/release-smoke.js
+          node --check scripts/asset-server-cli.js
           node --check scripts/browser-release-qa.js
           node --check scripts/hands-on-acceptance-qa.js
           node --check scripts/tropical-arcade-qa.js
