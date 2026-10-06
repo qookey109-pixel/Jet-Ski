@@ -7,16 +7,21 @@
   const Race = root.JETSKI_RACE_COURSE;
   if (!Core || !Manager || !Race || typeof document === 'undefined') return;
 
-  const VERSION = 'V0.11.13';
+  const VERSION = 'V0.11.16-T9';
   let introTimer = 0;
 
   const style = document.createElement('style');
   style.textContent = `
-    .jr-event-intro{position:fixed;left:50%;top:13%;z-index:34;transform:translate(-50%,-8px);opacity:0;pointer-events:none;min-width:min(520px,80vw);padding:12px 18px;border-radius:18px;border:1px solid rgba(255,255,255,.15);background:rgba(2,18,31,.66);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);text-align:center;color:#fff;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;transition:.22s opacity,.22s transform;box-shadow:0 18px 55px rgba(0,0,0,.24)}
-    .jr-event-intro.show{opacity:1;transform:translate(-50%,0)}.jr-event-intro-name{font-size:clamp(18px,4vw,30px);font-weight:1000;line-height:1.05}.jr-event-intro-meta{font-size:10px;font-weight:850;letter-spacing:.13em;opacity:.68;margin-top:6px;text-transform:uppercase}
+    .jr-event-intro{position:fixed;left:50%;top:72px;z-index:34;transform:translate(-50%,-8px);opacity:0;pointer-events:none;width:min(430px,68vw);padding:8px 15px 9px;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(145deg,rgba(2,18,31,.72),rgba(3,28,43,.58));backdrop-filter:blur(10px) saturate(1.08);-webkit-backdrop-filter:blur(10px) saturate(1.08);text-align:center;color:#fff;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;transition:.18s opacity,.18s transform;box-shadow:0 14px 40px rgba(0,0,0,.20)}
+    .jr-event-intro::before{content:'';position:absolute;left:12%;right:12%;top:-1px;height:2px;border-radius:999px;background:var(--jr-t9-accent,#8fe9ff);box-shadow:0 0 16px var(--jr-t9-glow,rgba(78,210,255,.24))}
+    .jr-event-intro.show{opacity:1;transform:translate(-50%,0)}.jr-event-intro-name{font-size:clamp(17px,2.4vw,25px);font-weight:1000;line-height:1.05;letter-spacing:.01em}.jr-event-intro-meta{font-size:9px;font-weight:850;letter-spacing:.12em;opacity:.68;margin-top:5px;text-transform:uppercase}
+    .jr-countdown{inset:auto!important;left:50%!important;top:52%!important;width:116px!important;height:116px!important;transform:translate(-50%,-50%) scale(.92)!important;border-radius:50%!important;display:none!important;align-items:center!important;justify-content:center!important;font-size:78px!important;line-height:1!important;letter-spacing:-.06em!important;background:radial-gradient(circle at 50% 42%,rgba(8,37,53,.72),rgba(2,17,29,.42) 68%,rgba(2,14,24,.08))!important;border:2px solid rgba(255,238,177,.78)!important;box-shadow:0 0 0 5px rgba(255,255,255,.035),0 18px 54px rgba(0,0,0,.30),0 0 32px rgba(255,211,86,.16)!important;text-shadow:0 6px 22px rgba(0,0,0,.38)!important}
+    .jr-countdown.show{display:flex!important;animation:v01116-t9-countdown .22s ease-out!important}
+    @keyframes v01116-t9-countdown{from{transform:translate(-50%,-50%) scale(.72);opacity:.18}to{transform:translate(-50%,-50%) scale(.92);opacity:1}}
     .jr-result-placement{font-size:clamp(48px,11vw,92px);font-weight:1000;line-height:.85;margin:8px 0 2px;letter-spacing:-.05em}.jr-result-event{font-size:10px;font-weight:900;letter-spacing:.17em;text-transform:uppercase;opacity:.66;margin:6px 0 12px}
     .jr-standings{display:grid;gap:7px;margin:16px 0 20px}.jr-standing-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045)}.jr-standing-row.player{border-color:rgba(143,233,255,.28);background:rgba(74,175,255,.09)}.jr-standing-place{font-size:16px;font-weight:1000}.jr-standing-name{font-size:11px;font-weight:900;letter-spacing:.06em}.jr-standing-status{font-size:10px;font-weight:850;opacity:.64;white-space:nowrap}
-    @media(max-width:720px){.jr-event-intro{top:8%;min-width:76vw}.jr-standing-row{grid-template-columns:34px minmax(0,1fr) auto;padding:8px 9px}.jr-result-placement{font-size:50px}}
+    @media(max-width:720px){.jr-event-intro{top:48px;width:min(360px,66vw);padding:6px 11px 7px;border-radius:13px}.jr-event-intro-name{font-size:18px}.jr-event-intro-meta{font-size:7.5px;margin-top:3px;letter-spacing:.09em}.jr-countdown{width:86px!important;height:86px!important;font-size:58px!important;top:54%!important}.jr-standing-row{grid-template-columns:34px minmax(0,1fr) auto;padding:8px 9px}.jr-result-placement{font-size:50px}}
+    @media(orientation:landscape) and (max-height:520px){.jr-event-intro{top:46px;width:min(360px,66vw);padding:6px 11px 7px;border-radius:13px}.jr-event-intro-name{font-size:18px}.jr-event-intro-meta{font-size:7.5px;margin-top:3px;letter-spacing:.09em}.jr-countdown{width:86px!important;height:86px!important;font-size:58px!important;top:55%!important}}
   `;
   document.head.appendChild(style);
 
@@ -51,7 +56,8 @@
   function applyAccent(identity) {
     const accent = identity && identity.accent || Core.ACCENTS.open;
     intro.style.borderColor = accent.accent;
-    intro.style.boxShadow = `0 18px 55px ${accent.glow}`;
+    intro.style.setProperty('--jr-t9-accent', accent.accent);
+    intro.style.setProperty('--jr-t9-glow', accent.glow);
     placementEl.style.color = accent.accent;
   }
 
@@ -62,7 +68,7 @@
     introName.textContent = identity.name;
     introMeta.textContent = `${identity.laps} LAP${identity.laps === 1 ? '' : 'S'} · 4 RACERS · P1 = 3★${identity.finale ? ' · CHAMPIONSHIP FINAL' : ''}`;
     intro.classList.add('show');
-    introTimer = setTimeout(() => intro.classList.remove('show'), 2250);
+    introTimer = setTimeout(() => intro.classList.remove('show'), 1650);
   }
 
   function formatStatus(entry) {
@@ -128,6 +134,9 @@
     renderResult,
     uiOnly: true,
     observerOnly: true,
-    physicsUntouched: true
+    physicsUntouched: true,
+    startPresentationPolished: true,
+    gameplayUntouched: true,
+    countdownAuthorityUntouched: true
   };
 })(typeof window !== 'undefined' ? window : globalThis);

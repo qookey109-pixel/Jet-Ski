@@ -67,6 +67,7 @@ async function collect(page) {
     const feedback = window.JETSKI_ARCADE_FEEDBACK;
     const feedbackCore = window.JETSKI_ARCADE_FEEDBACK_CORE;
     const ai = window.JETSKI_RACE_AI;
+    const presentation = window.JETSKI_RACE_PRESENTATION;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -81,6 +82,10 @@ async function collect(page) {
     const activeGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === activeIndex) || null;
     const playerRider = typeof ski !== 'undefined' && ski.getObjectByName
       ? ski.getObjectByName('V01116PlayerRiderT7') : null;
+    const eventIntro = document.querySelector('.jr-event-intro.show');
+    const countdown = document.querySelector('.jr-countdown.show');
+    const introRect = eventIntro ? eventIntro.getBoundingClientRect() : null;
+    const countdownRect = countdown ? countdown.getBoundingClientRect() : null;
     const coursePoints = manager && manager.course && Array.isArray(manager.course.checkpoints)
       ? manager.course.checkpoints : [];
     let courseLengthM = 0;
@@ -170,7 +175,18 @@ async function collect(page) {
         ai.racers.every(entry => entry.visual && entry.visual.userData &&
           entry.visual.userData.riderVisualVersion === 'V0.11.16-T7' &&
           entry.visual.userData.rider && entry.visual.userData.rider.userData.visualVersion === 'V0.11.16-T7')),
-      aiPlayerPhysicsRewritten: ai && ai.playerPhysicsRewritten
+      aiPlayerPhysicsRewritten: ai && ai.playerPhysicsRewritten,
+      startPresentationVersion: presentation && presentation.version,
+      startPresentationPolished: presentation && presentation.startPresentationPolished,
+      startPresentationGameplayUntouched: presentation && presentation.gameplayUntouched,
+      startPresentationCountdownAuthorityUntouched: presentation && presentation.countdownAuthorityUntouched,
+      eventIntroVisible: Boolean(eventIntro),
+      eventIntroWidth: introRect ? introRect.width : 0,
+      eventIntroHeight: introRect ? introRect.height : 0,
+      countdownVisible: Boolean(countdown),
+      countdownWidth: countdownRect ? countdownRect.width : 0,
+      countdownHeight: countdownRect ? countdownRect.height : 0,
+      countdownText: countdown ? String(countdown.textContent || '').trim() : ''
     };
   });
 }
@@ -179,7 +195,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade T1-T4 + T5 Wider Course / AI Riders',
+    feature: 'Tropical Arcade T1-T4 + T5-T9 Award Vertical Slice',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -295,6 +311,21 @@ async function main() {
       assert(data.hudVisible === true, `${profile.name}: race HUD hidden`);
       assert(data.boostArcadeClass === true && data.state.boostSkinAttached === true,
         `${profile.name}: localization-safe Boost skin not attached`);
+
+      assert(data.startPresentationVersion === 'V0.11.16-T9' &&
+        data.startPresentationPolished === true &&
+        data.startPresentationGameplayUntouched === true &&
+        data.startPresentationCountdownAuthorityUntouched === true,
+        `${profile.name}: T9 presentation boundary/version missing`);
+      assert(data.eventIntroVisible === true && data.eventIntroHeight > 0 &&
+        data.eventIntroHeight <= (profile.mobile ? 72 : 78),
+        `${profile.name}: T9 event intro still blocks too much race view ${data.eventIntroWidth}x${data.eventIntroHeight}`);
+      assert(data.countdownVisible === true &&
+        data.countdownWidth <= (profile.mobile ? 92 : 122) &&
+        data.countdownHeight <= (profile.mobile ? 92 : 122),
+        `${profile.name}: T9 countdown remains oversized ${data.countdownWidth}x${data.countdownHeight}`);
+      assert(/^(3|2|1|GO)$/.test(data.countdownText),
+        `${profile.name}: T9 countdown text unexpected ${data.countdownText}`);
 
       assert(data.islandVersion === 'V0.11.16-T2', `${profile.name}: wrong T2 island version ${data.islandVersion}`);
       assert(data.islandVisualOnly === true && data.islandCollisionAdded === false &&
