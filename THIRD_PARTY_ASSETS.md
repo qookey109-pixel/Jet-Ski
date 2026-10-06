@@ -51,6 +51,21 @@ Jet Ski may use `arielshad/3d-asset-server` during development to search multipl
 
 The server's Apache-2.0 license covers the server software, **not the assets returned by third-party providers**. Every selected asset must be reviewed under its own listing/provider license before it may ship.
 
+### Shipped CC0 intake — Kenney Watercraft Kit subset
+
+Reviewed and vendored on 2026-10-07:
+
+| Repository file | Provider ID | Source | License | Commercial use | Attribution | Intended role |
+|---|---|---|---|---|---|---|
+| `assets/third-party/kenney-watercraft-kit/boat-speed-f.glb` | `kenney:watercraft-kit` | Kenney Watercraft Kit 2.1 | CC0 1.0 | Allowed | Not required | visual-only PWC/venue candidate |
+| `assets/third-party/kenney-watercraft-kit/buoy.glb` | `kenney:watercraft-kit` | Kenney Watercraft Kit 2.1 | CC0 1.0 | Allowed | Not required | visual-only race/venue dressing |
+| `assets/third-party/kenney-watercraft-kit/buoy-flag.glb` | `kenney:watercraft-kit` | Kenney Watercraft Kit 2.1 | CC0 1.0 | Allowed | Not required | visual-only race/venue dressing |
+| `assets/third-party/kenney-watercraft-kit/gate-finish.glb` | `kenney:watercraft-kit` | Kenney Watercraft Kit 2.1 | CC0 1.0 | Allowed | Not required | visual-only start/finish dressing |
+
+Source page: `https://kenney.nl/assets/watercraft-kit`
+
+The original Kenney license text is retained at `assets/third-party/kenney-watercraft-kit/LICENSE-KENNEY.txt`, with source metadata and SHA-256 hashes beside the assets. These files are presentation assets only and do not carry collision, physics, checkpoint, race-rule or AI authority.
+
 The user's AI Resource Hub may also be used to discover future sources such as Meshy AI, SoundShockAudio, ElevenLabs or other tools. Discovery does not authorize redistribution.
 
 Before any generated/downloaded asset enters the repository, record:
