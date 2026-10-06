@@ -1,6 +1,6 @@
 # Third-Party Assets
 
-Status: **V0.11.15 current game release**.
+Status: **V0.11.16 current game release**.
 
 This file tracks distributable art/audio/model assets separately from third-party code notices.
 
@@ -38,7 +38,20 @@ V0.11.10 Garage liveries recolor existing procedural craft materials and add onl
 
 ## Candidate asset-production sources — NOT yet shipped
 
-The user's AI Resource Hub may be used to discover future sources such as Meshy AI, SoundShockAudio, ElevenLabs or other tools. Discovery does not authorize redistribution.
+### 3d-asset-server discovery integration
+
+Jet Ski may use `arielshad/3d-asset-server` during development to search multiple asset providers through its HTTP API or MCP interface.
+
+- Upstream: `https://github.com/arielshad/3d-asset-server`
+- Server code license: Apache-2.0
+- Default public discovery endpoint: `https://3d.shep.bot`
+- Shipped server code: **none**
+- Shipped assets obtained through this source: **none at integration time**
+- Production runtime dependency: **none**
+
+The server's Apache-2.0 license covers the server software, **not the assets returned by third-party providers**. Every selected asset must be reviewed under its own listing/provider license before it may ship.
+
+The user's AI Resource Hub may also be used to discover future sources such as Meshy AI, SoundShockAudio, ElevenLabs or other tools. Discovery does not authorize redistribution.
 
 Before any generated/downloaded asset enters the repository, record:
 
