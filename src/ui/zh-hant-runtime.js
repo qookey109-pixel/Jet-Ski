@@ -1,4 +1,4 @@
-// Traditional Chinese UI localization layer for Swim Ring Racing.
+// Traditional Chinese UI localization layer for Jet Ski Racing.
 // UI-only: no gameplay, physics, save schema, progression, or race authority changes.
 (function (root) {
   'use strict';
@@ -6,8 +6,10 @@
   const VERSION = 'zh-Hant-TW-v3';
 
   const EXACT = Object.freeze({
-    'SWIM RING RACING': '泳圈競速',
-    'SWIM RING': '泳圈',
+    'JET SKI RACING': '水上摩托競速',
+    'JET SKI': '水上摩托',
+    'SWIM RING RACING': '水上摩托競速',
+    'SWIM RING': '水上摩托',
     'RACING': '競速',
     '🏁 Race': '🏁 比賽',
     'Start Race': '開始比賽',
@@ -193,7 +195,7 @@
     [/\bMEDIUM\b/g, '中'],
     [/\bHIGH\b/g, '高'],
     [/\bULTRA\b/g, '極高'],
-    [/Two laps through eight ocean gates\. Read the water, carry momentum, and keep the ring planted through rough sections\./g, '穿越八個海上檢查點完成兩圈。判讀浪況、保持速度，並在洶湧海面穩住泳圈。'],
+    [/Two laps through eight ocean gates\. Read the water, carry momentum, and keep the craft planted through rough sections\./g, '穿越八個海上檢查點完成兩圈。判讀浪況、保持速度，並在洶湧海面穩住水上摩托。'],
     [/W \/ ↑ Gas · S \/ ↓ Brake \/ Reverse · A D \/ ← → Steer · ESC Pause/g, 'W / ↑ 加速 · S / ↓ 煞車 / 倒車 · A D / ← → 轉向 · ESC 暫停'],
     [/Mouse \/ Touch Drag/g, '滑鼠 / 觸控拖曳'],
     [/\bCamera\b/g, '鏡頭'],
@@ -207,7 +209,7 @@
     [/\bPause\b/g, '暫停'],
     [/Pass the glowing gate in order\. Open Sea \/ Normal \/ 9-Point\+ is locked during an active race for a stable baseline\./g, '依序通過發光檢查點。比賽進行時會鎖定「外海 / 一般海況 / 9-Point+」以維持穩定基準。'],
     [/Follow the glowing gates, keep momentum through the waves, use Boost deliberately, and chase stars, PB ghosts and Challenge Medals\./g, '跟隨發光檢查點，在浪中保持速度，適時使用瞬間加速，並蒐集星星、個人最佳幽靈與挑戰獎牌。'],
-    [/Swim Ring Racing is designed mobile-landscape first\. Rotate your device for clear race HUD, steering and throttle space\./g, '泳圈競速以手機橫向畫面為優先設計。請旋轉裝置，以取得清楚的賽事資訊、轉向與油門操作空間。'],
+    [/Jet Ski Racing is designed mobile-landscape first\. Rotate your device for clear race HUD, steering and throttle space\./g, '水上摩托競速以手機橫向畫面為優先設計。請旋轉裝置，以取得清楚的賽事資訊、轉向與油門操作空間。'],
     [/Back up Championship progress, PB Ghosts, Garage rewards, Challenges and local preferences\. Importing never includes your Google Maps Platform API key\./g, '備份冠軍賽進度、個人最佳幽靈、塗裝車庫獎勵、挑戰與本機偏好。匯入內容永遠不會包含你的 Google Maps Platform API 金鑰。'],
     [/Stored only in this browser unless you export a backup\. Graphics\/audio preferences are preserved by Reset Progress\. Sensitive keys and credentials are excluded from backup policy\./g, '除非匯出備份，資料只會儲存在這個瀏覽器。重設進度時會保留畫面與音效偏好；敏感金鑰與憑證不會納入備份。'],
     [/Left stick · steer \/ throttle/g, '左搖桿 · 轉向 / 油門'],
@@ -388,7 +390,7 @@
     if (observer) return observer;
     document.documentElement.lang = 'zh-Hant-TW';
     const version = String((root.JETSKI_RELEASE && root.JETSKI_RELEASE.version) || (document.querySelector('#version') && document.querySelector('#version').textContent) || '').trim();
-    document.title = `泳圈競速 ${version}`.trim();
+    document.title = `水上摩托競速 ${version}`.trim();
     translateTree(document.body);
 
     observer = new MutationObserver(records => {
