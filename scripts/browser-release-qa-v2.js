@@ -82,7 +82,8 @@ async function ready(page) {
   await page.waitForFunction(() => Boolean(
     window.THREE && window.JETSKI_RELEASE && window.JETSKI_RACE_MANAGER &&
     window.JETSKI_PROGRESSION && window.JETSKI_RACE_AI && window.JETSKI_BOOST &&
-    window.JETSKI_AUDIO && window.JETSKI_MOBILE_UX && window.JETSKI_SAVE_RECOVERY
+    window.JETSKI_AUDIO && window.JETSKI_MOBILE_UX && window.JETSKI_SAVE_RECOVERY &&
+    window.JETSKI_VENDOR_VENUE
   ), null, { timeout: 30000 });
   await page.waitForTimeout(800);
 }
@@ -104,7 +105,14 @@ async function bootCheck(page, r) {
       canvas: canvas ? [canvas.width, canvas.height] : null,
       menu: Boolean(document.querySelector('[data-jr-screen="menu"].show')),
       bootError: Boolean(document.querySelector('#boot-error:not([hidden])')),
-      render
+      render,
+      vendorVenue: window.JETSKI_VENDOR_VENUE ? {
+        version: window.JETSKI_VENDOR_VENUE.version,
+        visualOnly: window.JETSKI_VENDOR_VENUE.visualOnly,
+        runtimeLoaderAdded: window.JETSKI_VENDOR_VENUE.runtimeLoaderAdded,
+        source: window.JETSKI_VENDOR_VENUE.state && window.JETSKI_VENDOR_VENUE.state.geometrySource,
+        networkAssetFetches: window.JETSKI_VENDOR_VENUE.state && window.JETSKI_VENDOR_VENUE.state.networkAssetFetches
+      } : null
     };
   });
   assert(boot.version === VERSION && boot.release === VERSION, `Version mismatch: ${JSON.stringify(boot)}`);
@@ -114,6 +122,10 @@ async function bootCheck(page, r) {
   pass(r, 'boot/version', boot.version);
   pass(r, 'boot/canvas', boot.canvas);
   pass(r, 'boot/start-menu', true);
+  assert(boot.vendorVenue && boot.vendorVenue.version === 'V0.11.16-T15', `T15 vendored venue missing: ${JSON.stringify(boot.vendorVenue)}`);
+  assert(boot.vendorVenue.visualOnly === true && boot.vendorVenue.runtimeLoaderAdded === false, `T15 authority/runtime-loader boundary failed: ${JSON.stringify(boot.vendorVenue)}`);
+  assert(boot.vendorVenue.networkAssetFetches === 0, `T15 must not fetch runtime assets: ${JSON.stringify(boot.vendorVenue)}`);
+  pass(r, 'venue/t15-offline-geometry', boot.vendorVenue);
   info(r, 'renderer/info', boot.render);
 }
 
