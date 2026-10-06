@@ -9,7 +9,7 @@ Status date: `2026-10-06` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current award-quality gameplay tree (T9): `08e38cd843a0b011dfa1003529658a6ab20414be`
+- Current award-quality gameplay tree (T10): `03fe274d06d2efd49910cc0e05ff62ff9008bc3d`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -48,6 +48,7 @@ V0.11 currently includes:
 28. T7: award-quality player/AI rider character polish with helmets, visors, life vests, articulated arms/hands/hips/legs and matching visual-version QA.
 29. T8: award-presentation menu pass that hides engineering/debug chrome outside active play and strengthens desktop/mobile menu hierarchy.
 30. T9: compact race-event intro and arcade countdown badge that preserve course visibility on desktop and 844 × 390 mobile.
+31. T10: visual-only race venue staging with a striped start/finish water line, two side pylons and six countdown lights linked to the existing countdown.
 
 ## V0.11.16 release evidence
 
@@ -185,6 +186,22 @@ The start-sequence polish is merged to `main`.
 - Desktop intro: 430 × 63.23 px; countdown: 106.72 × 106.72 px.
 - Mobile intro: 360 × 46.89 px; countdown: 79.12 × 79.12 px.
 - T9 presentation is UI-only and does not write gameplay, countdown authority, physics, AI or race rules.
+- Accepted physics/performance baseline remains V0.10.4.
+
+
+## T10 race-venue staging evidence
+
+The race-venue staging pass is merged to `main`.
+
+- PR #84 — T10 Race Venue Staging — merged as `03fe274d06d2efd49910cc0e05ff62ff9008bc3d`.
+- T10 exact head `872b182784cc476baa952421f556f874039ffa64`.
+- V0.11 Race Regression #132 — PASS.
+- V0.11.16 Browser Release QA #98 — PASS.
+- WebKit desktop 1280 × 720 and mobile 844 × 390 screenshots — manually inspected.
+- Desktop venue budget: 12 striped water-line tiles / 2 side pylons / 6 countdown lights.
+- Mobile venue budget: 10 striped water-line tiles / 2 side pylons / 6 countdown lights.
+- Countdown stage is presentation-only and observes the existing countdown; it does not own countdown timing or race state.
+- T10 reports no collision, physics, gameplay, checkpoint or race-rule writes.
 - Accepted physics/performance baseline remains V0.10.4.
 
 ## Current active work
