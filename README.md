@@ -80,6 +80,18 @@ The V0.11 gameplay layer continues to use the existing validated water/world arc
 
 Google Photorealistic 3D remains **visual-only**. OSM coastline/collision and the custom ocean remain gameplay authority.
 
+## 3D Asset Discovery
+
+Development tooling includes an optional integration with `arielshad/3d-asset-server` for searching 3D models, materials, textures and HDRIs across multiple providers.
+
+```bash
+npm run asset:search -- "low poly tropical island" --type model --free true
+npm run asset:search -- "stylized jet ski" --type model --free true --downloadable true
+npm run asset:providers
+```
+
+The asset server is **not** a game runtime dependency. Search results are candidates only; every asset must pass the license/attribution gate in `THIRD_PARTY_ASSETS.md` before shipping. See `docs/3D_ASSET_SERVER.md`.
+
 ## Installation
 
 Requirements:
