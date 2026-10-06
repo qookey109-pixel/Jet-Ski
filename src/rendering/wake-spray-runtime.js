@@ -19,8 +19,41 @@
   scene.add(group);
 
   const wakeGeo = new THREE.PlaneGeometry(1, 1);
+
+  function makeFoamTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    const image = ctx.createImageData(canvas.width, canvas.height);
+    for (let y = 0; y < canvas.height; y++) {
+      const v = y / (canvas.height - 1);
+      const along = Math.pow(Math.sin(Math.PI * v), 0.58) * Math.pow(1 - v * 0.72, 0.55);
+      for (let x = 0; x < canvas.width; x++) {
+        const u = x / (canvas.width - 1);
+        const edge = Math.max(0, 1 - Math.pow(Math.abs(u - 0.5) / 0.5, 1.55));
+        const ripple = 0.86 + 0.14 * Math.sin(v * 42 + u * 11);
+        const alpha = Math.max(0, Math.min(1, edge * along * ripple));
+        const i = (y * canvas.width + x) * 4;
+        image.data[i] = 236;
+        image.data[i + 1] = 253;
+        image.data[i + 2] = 255;
+        image.data[i + 3] = Math.round(alpha * 255);
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  const foamTexture = makeFoamTexture();
   const wakeMat = new THREE.MeshBasicMaterial({
-    color: 0xe9fdff,
+    color: 0xf3feff,
+    map: foamTexture,
     transparent: true,
     opacity: cfg.wakeOpacity,
     depthWrite: false,
@@ -37,7 +70,8 @@
     color: 0xedfeff,
     transparent: true,
     opacity: cfg.sprayOpacity,
-    depthWrite: false
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
   });
   const sprayMesh = new THREE.InstancedMesh(sprayGeo, sprayMat, maxSprayInstances);
   sprayMesh.name = 'V01116JetSprayT12';
@@ -273,6 +307,7 @@
     group,
     wakeMesh,
     sprayMesh,
+    foamTexture,
     rebuildTrackers,
     preview,
     visualOnly: true,
