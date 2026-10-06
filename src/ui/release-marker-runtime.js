@@ -4,7 +4,7 @@
   const VERSION = 'V0.11.16';
   const versionNode = document.querySelector('#version');
   if (versionNode) versionNode.textContent = VERSION;
-  document.title = `Swim Ring Racing ${VERSION}`;
+  document.title = `Jet Ski Racing ${VERSION}`;
   root.JETSKI_RELEASE = Object.freeze({
     version: VERSION,
     browserQa: 'chromium-webkit',
