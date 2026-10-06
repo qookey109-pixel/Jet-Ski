@@ -18,8 +18,11 @@
     wakeWidth: 0.26,
     wakeSpreadRad: 0.42,
     sprayBackOffset: 1.8,
-    sprayBaseLift: 0.20,
-    sprayExtraLift: 0.75
+    sprayBaseLift: 0.28,
+    sprayExtraLift: 0.92,
+    surfaceOffset: 0.14,
+    wakeOpacity: 0.58,
+    sprayOpacity: 0.72
   });
 
   function finite(v, fallback) {
