@@ -63,8 +63,11 @@
     sprayInstances: 0,
     lastMaxSpeedEstimate: 0,
     mobileBudget: mobileLike,
-    frameCount: 0
+    frameCount: 0,
+    previewCount: 0,
+    previewActive: false
   };
+  let previewUntil = 0;
 
   function phase() {
     const m = root.JETSKI_RACE_MANAGER;
@@ -168,11 +171,60 @@
     return index + 1;
   }
 
+  function renderPreview(now) {
+    const tr = trackers[0];
+    if (!tr) return false;
+    const yaw = tr.source.rotation.y || 0;
+    const fakeSpeed = 16;
+    let wi = 0;
+    let si = 0;
+    for (let i = 0; i < trailSamples; i++) {
+      const age01 = trailSamples <= 1 ? 0 : i / (trailSamples - 1);
+      const fx = Math.sin(yaw), fz = Math.cos(yaw);
+      const sample = {
+        x: tr.source.position.x - fx * i * 1.4,
+        z: tr.source.position.z - fz * i * 1.4,
+        yaw,
+        speedMps: fakeSpeed
+      };
+      wi = composeWake(wi, sample, -1, age01);
+      wi = composeWake(wi, sample, 1, age01);
+    }
+    const previousSpeed = tr.speedMps;
+    tr.speedMps = fakeSpeed;
+    for (let i = 0; i < 4; i++) si = composeSpray(si, tr, i, now);
+    tr.speedMps = previousSpeed;
+
+    wakeMesh.count = wi;
+    sprayMesh.count = si;
+    wakeMesh.instanceMatrix.needsUpdate = true;
+    sprayMesh.instanceMatrix.needsUpdate = true;
+    state.wakeInstances = wi;
+    state.sprayInstances = si;
+    state.previewActive = true;
+    group.visible = true;
+    return true;
+  }
+
+  function preview() {
+    if (!trackers.length) rebuildTrackers();
+    previewUntil = performance.now() + 480;
+    state.previewCount += 1;
+    return renderPreview(performance.now());
+  }
+
   function update() {
     const now = performance.now();
     const p = phase();
 
     if (!trackers.length || trackers.some(t => !t.source.parent)) rebuildTrackers();
+    if (now < previewUntil) {
+      renderPreview(now);
+      state.frameCount += 1;
+      root.requestAnimationFrame(update);
+      return;
+    }
+    state.previewActive = false;
     state.lastMaxSpeedEstimate = 0;
 
     for (const tr of trackers) {
@@ -220,6 +272,7 @@
     wakeMesh,
     sprayMesh,
     rebuildTrackers,
+    preview,
     visualOnly: true,
     collisionAdded: false,
     physicsUntouched: true,
