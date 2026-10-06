@@ -43,3 +43,17 @@ Swim Ring Racing（Repository: Jet-Ski）是獨立 3D Web 水上競速遊戲，�
 - 保持桌面與手機控制同時可用。
 - 保持 classic scripts direct-launch，不恢復本機 ES-module 依賴。
 - 每次改動先延續最新 GitHub `main`，避免覆蓋已驗證成果。
+
+
+## 3D asset discovery — 3d-asset-server
+
+- Optional development-time discovery source: `arielshad/3d-asset-server`.
+- Default remote API/MCP service: `https://3d.shep.bot`; override with `JETSKI_ASSET_SERVER_URL` for self-hosting.
+- This service is **not** a player-facing runtime dependency and must never become required for GitHub Pages, game startup or deterministic CI.
+- Prefer free, clearly commercial-use-compatible assets; CC0 is preferred.
+- A search result is only a candidate. Before an asset enters `main`, record source/provider, exact asset ID, author, license, commercial-use terms, attribution, date checked, modifications and final repository path in `THIRD_PARTY_ASSETS.md`.
+- Do not assume the Apache-2.0 license of the server applies to assets returned by providers. Each asset keeps its own license.
+- Do not commit `ASSET_SERVER_API_KEY` or any provider key/token.
+- Imported models/materials/HDRIs are visual content only unless a separate gameplay-authority change is explicitly approved.
+- Keep external assets optimized for mobile WebGL; prefer glTF/GLB and 1K–2K textures unless higher resolution is justified.
+- See `docs/3D_ASSET_SERVER.md`.
