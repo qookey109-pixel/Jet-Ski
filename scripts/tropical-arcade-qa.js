@@ -44,12 +44,14 @@ async function startOpenSeaRace(page) {
     const islands = window.JETSKI_TROPICAL_ISLANDS;
     const polish = window.JETSKI_TROPICAL_POLISH;
     const feedback = window.JETSKI_ARCADE_FEEDBACK;
-    return manager && arcade && islands && polish && feedback &&
+    const staging = window.JETSKI_RACE_STAGING;
+    return manager && arcade && islands && polish && feedback && staging &&
       (manager.state.phase === 'countdown' || manager.state.phase === 'racing') &&
       arcade.state.gateCount > 0 && arcade.state.buoyCount > 0 && arcade.rootGroup.visible &&
       islands.state.islandCount > 0 && islands.state.palmCount > 0 && islands.group.visible &&
       polish.state.rockCount > 0 && polish.state.foamCount > 0 && polish.state.shallowCount > 0 && polish.group.visible &&
-      feedback.visualOnly === true;
+      feedback.visualOnly === true &&
+      staging.state.tileCount > 0 && staging.state.pylonCount === 2 && staging.group.visible;
   }, null, { timeout: 20000 });
   await page.waitForFunction(() => Boolean(document.querySelector('.v01116-arcade-boost')), null, { timeout: 5000 });
   await page.waitForTimeout(700);
@@ -68,6 +70,7 @@ async function collect(page) {
     const feedbackCore = window.JETSKI_ARCADE_FEEDBACK_CORE;
     const ai = window.JETSKI_RACE_AI;
     const presentation = window.JETSKI_RACE_PRESENTATION;
+    const staging = window.JETSKI_RACE_STAGING;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -186,7 +189,16 @@ async function collect(page) {
       countdownVisible: Boolean(countdown),
       countdownWidth: countdownRect ? countdownRect.width : 0,
       countdownHeight: countdownRect ? countdownRect.height : 0,
-      countdownText: countdown ? String(countdown.textContent || '').trim() : ''
+      countdownText: countdown ? String(countdown.textContent || '').trim() : '',
+      stagingVersion: staging && staging.version,
+      stagingVisualOnly: staging && staging.visualOnly,
+      stagingCollisionAdded: staging && staging.collisionAdded,
+      stagingPhysicsUntouched: staging && staging.physicsUntouched,
+      stagingGameplayUntouched: staging && staging.gameplayUntouched,
+      stagingRaceRulesUntouched: staging && staging.raceRulesUntouched,
+      stagingCheckpointAuthorityUntouched: staging && staging.checkpointAuthorityUntouched,
+      stagingState: staging && Object.assign({}, staging.state),
+      stagingVisible: Boolean(staging && staging.group && staging.group.visible)
     };
   });
 }
@@ -195,7 +207,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade T1-T4 + T5-T9 Award Vertical Slice',
+    feature: 'Tropical Arcade T1-T4 + T5-T10 Award Vertical Slice',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -326,6 +338,23 @@ async function main() {
         `${profile.name}: T9 countdown remains oversized ${data.countdownWidth}x${data.countdownHeight}`);
       assert(/^(3|2|1|GO)$/.test(data.countdownText),
         `${profile.name}: T9 countdown text unexpected ${data.countdownText}`);
+
+      assert(data.stagingVersion === 'V0.11.16-T10' && data.stagingVisualOnly === true &&
+        data.stagingCollisionAdded === false && data.stagingPhysicsUntouched === true &&
+        data.stagingGameplayUntouched === true && data.stagingRaceRulesUntouched === true &&
+        data.stagingCheckpointAuthorityUntouched === true,
+        `${profile.name}: T10 staging authority/version boundary changed`);
+      assert(data.stagingVisible === true && data.stagingState.visible === true,
+        `${profile.name}: T10 race venue not visible at start`);
+      assert(data.stagingState.tileCount >= (profile.mobile ? 10 : 12) &&
+        data.stagingState.pylonCount === 2 && data.stagingState.lightCount === 6,
+        `${profile.name}: T10 race venue geometry budget missing ${JSON.stringify(data.stagingState)}`);
+      assert(['red','amber','green','ready'].includes(data.stagingState.countdownStage),
+        `${profile.name}: T10 start lights not linked to countdown ${data.stagingState.countdownStage}`);
+      assert(data.stagingState.physicsWrites === false && data.stagingState.gameplayWrites === false &&
+        data.stagingState.raceRuleWrites === false && data.stagingState.checkpointWrites === false &&
+        data.stagingState.realWorldCoastUntouched === true,
+        `${profile.name}: T10 staging reports forbidden writes`);
 
       assert(data.islandVersion === 'V0.11.16-T2', `${profile.name}: wrong T2 island version ${data.islandVersion}`);
       assert(data.islandVisualOnly === true && data.islandCollisionAdded === false &&
