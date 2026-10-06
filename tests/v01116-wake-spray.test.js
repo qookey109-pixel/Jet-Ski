@@ -29,6 +29,9 @@ assert(Wake.DEFAULTS.maxWakeInstancesDesktop <= 32);
 assert(Wake.DEFAULTS.maxWakeInstancesMobile <= 24);
 assert(Wake.DEFAULTS.maxSprayInstancesDesktop <= 16);
 assert(Wake.DEFAULTS.maxSprayInstancesMobile <= 12);
+assert(Wake.DEFAULTS.surfaceOffset >= 0.10 && Wake.DEFAULTS.surfaceOffset <= 0.20);
+assert(Wake.DEFAULTS.wakeOpacity >= 0.45 && Wake.DEFAULTS.wakeOpacity <= 0.70);
+assert(Wake.DEFAULTS.sprayOpacity >= 0.60 && Wake.DEFAULTS.sprayOpacity <= 0.82);
 
 for (let i=0;i<20000;i++) {
   const s=Wake.speedStrength((i%50)-10);
