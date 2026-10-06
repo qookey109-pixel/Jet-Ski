@@ -71,6 +71,8 @@ async function collect(page) {
     const ai = window.JETSKI_RACE_AI;
     const presentation = window.JETSKI_RACE_PRESENTATION;
     const staging = window.JETSKI_RACE_STAGING;
+    const craftCore = window.JETSKI_CRAFT_CORE;
+    const craftVisual = window.JETSKI_CRAFT_VISUAL;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -85,6 +87,23 @@ async function collect(page) {
     const activeGate = [...gates].find(gate => gate.userData && gate.userData.courseIndex === activeIndex) || null;
     const playerRider = typeof ski !== 'undefined' && ski.getObjectByName
       ? ski.getObjectByName('V01116PlayerRiderT7') : null;
+    const playerCraft = typeof ski !== 'undefined' && ski.getObjectByName
+      ? ski.getObjectByName('V01116PlayerCraftT11') : null;
+    let playerLegacyTorusCount = 0;
+    if (typeof ski !== 'undefined' && ski.traverse) {
+      ski.traverse(node => {
+        if (node && node.geometry && node.geometry.type === 'TorusGeometry') playerLegacyTorusCount += 1;
+      });
+    }
+    let aiLegacyTorusCount = 0;
+    if (ai && Array.isArray(ai.racers)) {
+      for (const entry of ai.racers) {
+        if (!entry.visual || !entry.visual.traverse) continue;
+        entry.visual.traverse(node => {
+          if (node && node.geometry && node.geometry.type === 'TorusGeometry') aiLegacyTorusCount += 1;
+        });
+      }
+    }
     const eventIntro = document.querySelector('.jr-event-intro.show');
     const countdown = document.querySelector('.jr-countdown.show');
     const introRect = eventIntro ? eventIntro.getBoundingClientRect() : null;
@@ -198,7 +217,25 @@ async function collect(page) {
       stagingRaceRulesUntouched: staging && staging.raceRulesUntouched,
       stagingCheckpointAuthorityUntouched: staging && staging.checkpointAuthorityUntouched,
       stagingState: staging && Object.assign({}, staging.state),
-      stagingVisible: Boolean(staging && staging.group && staging.group.visible)
+      stagingVisible: Boolean(staging && staging.group && staging.group.visible),
+      craftCoreVersion: craftCore && craftCore.VERSION,
+      craftCoreVisualOnly: craftCore && craftCore.visualOnly,
+      craftCoreCollisionAdded: craftCore && craftCore.collisionAdded,
+      craftCorePhysicsUntouched: craftCore && craftCore.physicsUntouched,
+      craftCoreGameplayUntouched: craftCore && craftCore.gameplayUntouched,
+      craftBuilderVersion: craftVisual && craftVisual.version,
+      playerCraftVisualVersion: typeof ski !== 'undefined' && ski.userData ? ski.userData.craftVisualVersion : null,
+      playerCraftPresent: Boolean(playerCraft),
+      playerCraftMeshCount: playerCraft && playerCraft.userData ? playerCraft.userData.meshCount : 0,
+      playerLegacyTorusCount,
+      aiCraftVisuals: ai && ai.craftVisuals,
+      aiCraftVisualVersion: ai && ai.craftVisualVersion,
+      aiCraftCount: ai && ai.craftCount,
+      aiCraftVersionsMatch: Boolean(ai && Array.isArray(ai.racers) && ai.racers.length === 3 &&
+        ai.racers.every(entry => entry.visual && entry.visual.userData &&
+          entry.visual.userData.craftVisualVersion === 'V0.11.16-T11' &&
+          entry.visual.getObjectByName && entry.visual.getObjectByName(`V01116AICraftT11-${entry.config.id}`))),
+      aiLegacyTorusCount
     };
   });
 }
@@ -207,7 +244,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade T1-T4 + T5-T10 Award Vertical Slice',
+    feature: 'Tropical Arcade T1-T4 + T5-T11 Award Vertical Slice',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -355,6 +392,21 @@ async function main() {
         data.stagingState.raceRuleWrites === false && data.stagingState.checkpointWrites === false &&
         data.stagingState.realWorldCoastUntouched === true,
         `${profile.name}: T10 staging reports forbidden writes`);
+
+      assert(data.craftCoreVersion === 'V0.11.16-T11' && data.craftBuilderVersion === 'V0.11.16-T11' &&
+        data.craftCoreVisualOnly === true && data.craftCoreCollisionAdded === false &&
+        data.craftCorePhysicsUntouched === true && data.craftCoreGameplayUntouched === true,
+        `${profile.name}: T11 craft authority/version boundary changed`);
+      assert(data.playerCraftVisualVersion === 'V0.11.16-T11' && data.playerCraftPresent === true &&
+        data.playerCraftMeshCount >= 11 && data.playerCraftMeshCount <= 16,
+        `${profile.name}: T11 player Jet Ski craft incomplete ${data.playerCraftMeshCount}`);
+      assert(data.playerLegacyTorusCount === 0,
+        `${profile.name}: legacy player swim-ring geometry remains visible ${data.playerLegacyTorusCount}`);
+      assert(data.aiCraftVisuals === true && data.aiCraftVisualVersion === 'V0.11.16-T11' &&
+        data.aiCraftCount === 3 && data.aiCraftVersionsMatch === true,
+        `${profile.name}: T11 AI Jet Ski craft visuals missing`);
+      assert(data.aiLegacyTorusCount === 0,
+        `${profile.name}: legacy AI swim-ring geometry remains visible ${data.aiLegacyTorusCount}`);
 
       assert(data.islandVersion === 'V0.11.16-T2', `${profile.name}: wrong T2 island version ${data.islandVersion}`);
       assert(data.islandVisualOnly === true && data.islandCollisionAdded === false &&
