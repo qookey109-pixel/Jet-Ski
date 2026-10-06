@@ -176,7 +176,7 @@
 
   const versionNode = document.querySelector('#version');
   if (versionNode) versionNode.textContent = VERSION;
-  document.title = `Swim Ring Racing ${VERSION}`;
+  document.title = `Jet Ski Racing ${VERSION}`;
 
   root.JETSKI_COSMETICS = {
     version: VERSION,
