@@ -1,6 +1,6 @@
-# Swim Ring Racing — V0.11.16
+# Jet Ski Racing — V0.11.16
 
-Mobile-landscape-first 3D Web water racing game built with Three.js. The player drives a procedural swim-ring craft across an irregular ocean, real-world coast modes and a four-event Pacific championship.
+Mobile-landscape-first 3D Web water racing game built with Three.js. The player races a procedural PWC / Jet Ski craft across an irregular ocean, real-world coast modes and a four-event Pacific championship.
 
 - Repository: `qookey109-pixel/Jet-Ski`
 - GitHub Pages: `https://qookey109-pixel.github.io/Jet-Ski/`
