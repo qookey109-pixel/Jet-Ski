@@ -121,6 +121,10 @@
   }
 
   function ensureAudio() {
+    if (root.JETSKI_AUDIO && root.JETSKI_AUDIO.handlesBoostAudio) {
+      root.JETSKI_AUDIO.ensureAudio();
+      return null;
+    }
     if (audio) return audio;
     const AudioCtx = root.AudioContext || root.webkitAudioContext;
     if (!AudioCtx) return null;
@@ -172,6 +176,12 @@
   }
 
   function updateAudio(speedRatio, active, enabled) {
+    if (root.JETSKI_AUDIO && root.JETSKI_AUDIO.handlesBoostAudio) {
+      if (audio && audio.master && audio.context) {
+        audio.master.gain.setTargetAtTime(0.0001, audio.context.currentTime, 0.04);
+      }
+      return;
+    }
     const a = audio;
     if (!a) return;
     try {

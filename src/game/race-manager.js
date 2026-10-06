@@ -30,6 +30,7 @@
   const seaButtonsLocal = [...document.querySelectorAll('[data-sea]')];
 
   function tone(frequency, duration, gain, offset) {
+    if (root.JETSKI_AUDIO && root.JETSKI_AUDIO.handlesRaceCues) return;
     try {
       if (!audioContext) audioContext = new (root.AudioContext || root.webkitAudioContext)();
       if (audioContext.state === 'suspended') audioContext.resume();

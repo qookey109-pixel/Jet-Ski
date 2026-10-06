@@ -75,6 +75,8 @@ async function collect(page) {
     const craftVisual = window.JETSKI_CRAFT_VISUAL;
     const wake = window.JETSKI_WAKE_SPRAY;
     const wakeCore = window.JETSKI_WAKE_CORE;
+    const audio = window.JETSKI_AUDIO;
+    const audioCore = window.JETSKI_AUDIO_CORE;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -249,7 +251,23 @@ async function collect(page) {
       wakeState: wake && Object.assign({}, wake.state),
       wakeDefaults: wakeCore && Object.assign({}, wakeCore.DEFAULTS),
       wakeFoamTextureReady: Boolean(wake && wake.foamTexture && wake.foamTexture.image &&
-        wake.foamTexture.image.width === 64 && wake.foamTexture.image.height === 256)
+        wake.foamTexture.image.width === 64 && wake.foamTexture.image.height === 256),
+      audioVersion: audio && audio.version,
+      audioCoreVersion: audioCore && audioCore.VERSION,
+      audioProceduralOnly: audio && audio.proceduralOnly,
+      audioExternalAssets: audio && audio.externalAssets,
+      audioCentralizedMix: audio && audio.centralizedMix,
+      audioHandlesRaceCues: audio && audio.handlesRaceCues,
+      audioHandlesBoostAudio: audio && audio.handlesBoostAudio,
+      audioEngineAudio: audio && audio.engineAudio,
+      audioWaterRushAudio: audio && audio.waterRushAudio,
+      audioPhysicsUntouched: audio && audio.physicsUntouched,
+      audioGameplayUntouched: audio && audio.gameplayUntouched,
+      audioRaceRulesUntouched: audio && audio.raceRulesUntouched,
+      audioBoostAuthorityUntouched: audio && audio.boostAuthorityUntouched,
+      audioState: audio && Object.assign({}, audio.state),
+      audioPrefs: audio && audio.preferences,
+      audioMix: audio && audio.computeCurrentMix ? audio.computeCurrentMix() : null
     };
   });
 }
@@ -258,7 +276,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade T1-T4 + T5-T12 Award Vertical Slice',
+    feature: 'Tropical Arcade T1-T4 + T5-T13 Award Vertical Slice',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -317,16 +335,19 @@ async function main() {
       await page.evaluate(() => {
         window.JETSKI_ARCADE_FEEDBACK.preview('checkpoint');
         window.JETSKI_WAKE_SPRAY.preview();
+        window.JETSKI_AUDIO.previewCue('checkpoint');
       });
       await page.waitForTimeout(70);
       const feedbackPreview = await page.evaluate(() => {
         const manager = window.JETSKI_RACE_MANAGER;
         const feedback = window.JETSKI_ARCADE_FEEDBACK;
         const wake = window.JETSKI_WAKE_SPRAY;
+        const audio = window.JETSKI_AUDIO;
         const banner = document.querySelector('.v01116-feedback-banner');
         return {
           state: feedback && Object.assign({}, feedback.state),
           wakeState: wake && Object.assign({}, wake.state),
+          audioState: audio && Object.assign({}, audio.state),
           bannerText: banner ? banner.textContent : '',
           bannerVisible: banner ? banner.classList.contains('show') && Number(getComputedStyle(banner).opacity) > 0 : false,
           race: manager ? {
@@ -450,6 +471,26 @@ async function main() {
         data.wakeState.cameraWrites === false,
         `${profile.name}: T12 wake/spray reports forbidden writes`);
 
+      assert(data.audioVersion === 'V0.11.16-T13' && data.audioCoreVersion === 'V0.11.16-T13' &&
+        data.audioProceduralOnly === true && data.audioExternalAssets === false &&
+        data.audioCentralizedMix === true && data.audioHandlesRaceCues === true &&
+        data.audioHandlesBoostAudio === true && data.audioEngineAudio === true &&
+        data.audioWaterRushAudio === true,
+        `${profile.name}: T13 centralized audio identity missing`);
+      assert(data.audioPhysicsUntouched === true && data.audioGameplayUntouched === true &&
+        data.audioRaceRulesUntouched === true && data.audioBoostAuthorityUntouched === true,
+        `${profile.name}: T13 audio authority boundary changed`);
+      assert(data.audioPrefs && Number.isFinite(data.audioPrefs.effects) &&
+        data.audioPrefs.effects >= 0 && data.audioPrefs.effects <= 1,
+        `${profile.name}: T13 effects preference missing`);
+      assert(data.audioMix && Number.isFinite(data.audioMix.engine) &&
+        Number.isFinite(data.audioMix.waterRush) && Number.isFinite(data.audioMix.sfx),
+        `${profile.name}: T13 engine/water/SFX mix missing`);
+      assert(data.audioState && data.audioState.physicsWrites === false &&
+        data.audioState.gameplayWrites === false && data.audioState.raceRuleWrites === false &&
+        data.audioState.boostWrites === false,
+        `${profile.name}: T13 audio reports forbidden writes`);
+
       assert(data.islandVersion === 'V0.11.16-T2', `${profile.name}: wrong T2 island version ${data.islandVersion}`);
       assert(data.islandVisualOnly === true && data.islandCollisionAdded === false &&
         data.islandPhysicsUntouched === true && data.islandGameplayUntouched === true,
@@ -514,6 +555,9 @@ async function main() {
         feedbackPreview.wakeState.wakeInstances >= (profile.mobile ? 6 : 8) &&
         feedbackPreview.wakeState.sprayInstances >= 4,
         `${profile.name}: T12 wake/spray visual preview did not render ${JSON.stringify(feedbackPreview.wakeState)}`);
+      assert(feedbackPreview.audioState && feedbackPreview.audioState.previewCueCount >= 1 &&
+        feedbackPreview.audioState.lastCue === 'checkpoint',
+        `${profile.name}: T13 procedural cue preview did not fire`);
       assert(feedbackPreview.state.activeWorldBursts >= 1,
         `${profile.name}: T4 checkpoint world burst not active`);
       assert(feedbackPreview.bannerVisible === true && feedbackPreview.bannerText === 'CHECKPOINT',

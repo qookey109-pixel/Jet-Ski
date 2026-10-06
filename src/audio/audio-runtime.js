@@ -1,21 +1,50 @@
-// V0.11.7 procedural atmosphere/music runtime. No external audio assets or gameplay writes.
+// V0.11.16 T13 centralized procedural race-audio runtime.
+// No external audio assets. Reads game state for sound only; never writes gameplay/physics authority.
 (function (root) {
   'use strict';
+
   const Core = root.JETSKI_AUDIO_CORE;
   const Manager = root.JETSKI_RACE_MANAGER;
   if (!Core || !Manager || typeof document === 'undefined') return;
 
-  const VERSION = 'V0.11.7';
+  const VERSION = 'V0.11.16-T13';
   const STORAGE = 'swimRing.audio.v0117';
   let preferences = Core.sanitizePreferences(null);
   try { preferences = Core.sanitizePreferences(JSON.parse(localStorage.getItem(STORAGE) || 'null')); } catch (_) {}
 
   let audio = null;
   let lastMixAt = 0;
-  let lastPhase = '';
+  let lastPhase = Manager.state && Manager.state.phase || 'menu';
   let lastEventId = '';
+  let lastLap = Manager.state && Manager.state.lap || 1;
+  let lastCheckpoint = Manager.state && Manager.state.nextCheckpointIndex || 1;
+  let lastCountdownText = '';
+  let lastBoostActivationCount = 0;
 
-  function persist() { try { localStorage.setItem(STORAGE, JSON.stringify(preferences)); } catch (_) {} }
+  const state = {
+    centralMix: true,
+    engineLoopReady: false,
+    waterRushReady: false,
+    unlocked: false,
+    cueCount: 0,
+    previewCueCount: 0,
+    boostCueCount: 0,
+    lastCue: '',
+    lastEngineHz: 0,
+    lastEngineGain: 0,
+    lastWaterGain: 0,
+    raceCueDetection: true,
+    boostCueDetection: true,
+    physicsWrites: false,
+    gameplayWrites: false,
+    raceRuleWrites: false,
+    boostWrites: false
+  };
+
+  function persist() {
+    try { localStorage.setItem(STORAGE, JSON.stringify(preferences)); } catch (_) {}
+  }
+
   function makeNoiseBuffer(context, seconds) {
     const length = Math.max(1, Math.floor(context.sampleRate * seconds));
     const buffer = context.createBuffer(1, length, context.sampleRate);
@@ -32,49 +61,138 @@
   function ensureAudio() {
     if (audio) {
       if (audio.context.state === 'suspended') audio.context.resume().catch(() => {});
+      state.unlocked = true;
       return audio;
     }
+
     const AudioCtx = root.AudioContext || root.webkitAudioContext;
     if (!AudioCtx) return null;
+
     try {
       const context = new AudioCtx();
       const master = context.createGain();
       const ambienceBus = context.createGain();
       const musicBus = context.createGain();
+      const effectsBus = context.createGain();
+      const sfxBus = context.createGain();
+
       const windGain = context.createGain();
       const oceanGain = context.createGain();
       const windFilter = context.createBiquadFilter();
       const oceanFilter = context.createBiquadFilter();
       const wind = context.createBufferSource();
       const ocean = context.createBufferSource();
+
       const padA = context.createOscillator();
       const padB = context.createOscillator();
       const padGain = context.createGain();
       const musicFilter = context.createBiquadFilter();
 
+      const engineA = context.createOscillator();
+      const engineB = context.createOscillator();
+      const engineGain = context.createGain();
+      const engineFilter = context.createBiquadFilter();
+
+      const waterRush = context.createBufferSource();
+      const waterGain = context.createGain();
+      const waterFilter = context.createBiquadFilter();
+
       master.gain.value = 0.0001;
-      ambienceBus.gain.value = 0.0001;
-      musicBus.gain.value = 0.0001;
+      ambienceBus.gain.value = 1;
+      musicBus.gain.value = 1;
+      effectsBus.gain.value = 1;
+      sfxBus.gain.value = 1;
       windGain.gain.value = 0.0001;
       oceanGain.gain.value = 0.0001;
       padGain.gain.value = 0.0001;
-      windFilter.type = 'bandpass'; windFilter.frequency.value = 700; windFilter.Q.value = 0.55;
-      oceanFilter.type = 'lowpass'; oceanFilter.frequency.value = 460; oceanFilter.Q.value = 0.35;
-      musicFilter.type = 'lowpass'; musicFilter.frequency.value = 1200; musicFilter.Q.value = 0.35;
-      wind.buffer = makeNoiseBuffer(context, 3.7); wind.loop = true;
-      ocean.buffer = makeNoiseBuffer(context, 5.3); ocean.loop = true;
-      padA.type = 'sine'; padB.type = 'triangle';
-      padA.frequency.value = 110; padB.frequency.value = 164.81;
+      engineGain.gain.value = 0.0001;
+      waterGain.gain.value = 0.0001;
 
-      wind.connect(windFilter); windFilter.connect(windGain); windGain.connect(ambienceBus);
-      ocean.connect(oceanFilter); oceanFilter.connect(oceanGain); oceanGain.connect(ambienceBus);
-      padA.connect(padGain); padB.connect(padGain); padGain.connect(musicFilter); musicFilter.connect(musicBus);
-      ambienceBus.connect(master); musicBus.connect(master); master.connect(context.destination);
-      wind.start(); ocean.start(); padA.start(); padB.start();
-      audio = { context, master, ambienceBus, musicBus, windGain, oceanGain, windFilter, oceanFilter, padA, padB, padGain, musicFilter };
+      windFilter.type = 'bandpass';
+      windFilter.frequency.value = 700;
+      windFilter.Q.value = 0.55;
+      oceanFilter.type = 'lowpass';
+      oceanFilter.frequency.value = 460;
+      oceanFilter.Q.value = 0.35;
+      musicFilter.type = 'lowpass';
+      musicFilter.frequency.value = 1200;
+      musicFilter.Q.value = 0.35;
+      engineFilter.type = 'lowpass';
+      engineFilter.frequency.value = 900;
+      engineFilter.Q.value = 0.65;
+      waterFilter.type = 'bandpass';
+      waterFilter.frequency.value = 1250;
+      waterFilter.Q.value = 0.42;
+
+      wind.buffer = makeNoiseBuffer(context, 3.7);
+      wind.loop = true;
+      ocean.buffer = makeNoiseBuffer(context, 5.3);
+      ocean.loop = true;
+      waterRush.buffer = makeNoiseBuffer(context, 2.9);
+      waterRush.loop = true;
+
+      padA.type = 'sine';
+      padB.type = 'triangle';
+      padA.frequency.value = 110;
+      padB.frequency.value = 164.81;
+
+      engineA.type = 'sawtooth';
+      engineB.type = 'triangle';
+      engineA.frequency.value = 58;
+      engineB.frequency.value = 108;
+
+      wind.connect(windFilter);
+      windFilter.connect(windGain);
+      windGain.connect(ambienceBus);
+
+      ocean.connect(oceanFilter);
+      oceanFilter.connect(oceanGain);
+      oceanGain.connect(ambienceBus);
+
+      padA.connect(padGain);
+      padB.connect(padGain);
+      padGain.connect(musicFilter);
+      musicFilter.connect(musicBus);
+
+      engineA.connect(engineFilter);
+      engineB.connect(engineFilter);
+      engineFilter.connect(engineGain);
+      engineGain.connect(effectsBus);
+
+      waterRush.connect(waterFilter);
+      waterFilter.connect(waterGain);
+      waterGain.connect(effectsBus);
+
+      sfxBus.connect(effectsBus);
+      ambienceBus.connect(master);
+      musicBus.connect(master);
+      effectsBus.connect(master);
+      master.connect(context.destination);
+
+      wind.start();
+      ocean.start();
+      waterRush.start();
+      padA.start();
+      padB.start();
+      engineA.start();
+      engineB.start();
+
+      audio = {
+        context, master, ambienceBus, musicBus, effectsBus, sfxBus,
+        windGain, oceanGain, windFilter, oceanFilter,
+        padA, padB, padGain, musicFilter,
+        engineA, engineB, engineGain, engineFilter,
+        waterRush, waterGain, waterFilter
+      };
+
+      state.engineLoopReady = true;
+      state.waterRushReady = true;
+      state.unlocked = true;
       if (context.state === 'suspended') context.resume().catch(() => {});
       return audio;
-    } catch (_) { return null; }
+    } catch (_) {
+      return null;
+    }
   }
 
   function currentContext() {
@@ -82,77 +200,254 @@
     const phase = Manager.state && Manager.state.phase || 'menu';
     const worldMode = root.V097_WORLD_MODES && root.V097_WORLD_MODES.mode || event.worldMode || 'open-sea';
     const maxSpeed = typeof physics !== 'undefined' && physics.maxSpeed ? physics.maxSpeed : 36;
-    const speedRatio = typeof speed === 'number' ? Math.max(0, Math.min(1, speed / Math.max(0.1, maxSpeed))) : 0;
+    const speedRatio = typeof speed === 'number'
+      ? Math.max(0, Math.min(1, speed / Math.max(0.1, maxSpeed)))
+      : 0;
+    const throttleRatio = typeof throttleValue === 'number'
+      ? Core.clamp01(throttleValue)
+      : (typeof input !== 'undefined' && input && input.gas ? 1 : 0);
     const boostActive = Boolean(root.JETSKI_BOOST && root.JETSKI_BOOST.state && root.JETSKI_BOOST.state.active);
-    return { preferences, worldMode, eventId: event.id || '', phase, speedRatio, boostActive };
+    return { preferences, worldMode, eventId: event.id || '', phase, speedRatio, throttleRatio, boostActive };
   }
 
-  function applyMix(mix, contextInfo) {
-    const a = audio; if (!a || a.context.state === 'closed') return;
+  function applyMix(mix, info) {
+    const a = audio;
+    if (!a || a.context.state === 'closed') return;
     const now = a.context.currentTime;
-    const t = 0.18;
+    const t = 0.16;
+
     a.master.gain.setTargetAtTime(Math.max(0.0001, mix.master), now, t);
-    a.windGain.gain.setTargetAtTime(Math.max(0.0001, mix.wind * 0.14), now, t);
-    a.oceanGain.gain.setTargetAtTime(Math.max(0.0001, mix.ocean * 0.18), now, t);
-    a.musicBus.gain.setTargetAtTime(Math.max(0.0001, mix.music * 0.15), now, 0.35);
-    a.padGain.gain.setTargetAtTime(Math.max(0.0001, mix.music * 0.22), now, 0.35);
-    a.windFilter.frequency.setTargetAtTime(500 + mix.intensity * 900, now, 0.25);
-    a.oceanFilter.frequency.setTargetAtTime(320 + mix.intensity * 520, now, 0.25);
-    a.musicFilter.frequency.setTargetAtTime(720 + mix.warmth * 1150 + mix.intensity * 420, now, 0.35);
-    const final = contextInfo.eventId === 'pacific-crown-final';
-    const base = final ? 98 : contextInfo.worldMode === 'hawaii-coast' ? 123.47 : contextInfo.worldMode === 'taiwan-coast' ? 110 : 116.54;
-    a.padA.frequency.setTargetAtTime(base, now, 0.5);
-    a.padB.frequency.setTargetAtTime(base * (final ? 1.5 : mix.warmth > 0.65 ? 1.4983 : 1.3333), now, 0.5);
+    a.windGain.gain.setTargetAtTime(Math.max(0.0001, mix.wind * 0.16), now, t);
+    a.oceanGain.gain.setTargetAtTime(Math.max(0.0001, mix.ocean * 0.20), now, t);
+    a.musicBus.gain.setTargetAtTime(Math.max(0.0001, mix.music), now, 0.30);
+    a.padGain.gain.setTargetAtTime(Math.max(0.0001, mix.music * 0.16), now, 0.32);
+
+    a.windFilter.frequency.setTargetAtTime(500 + mix.intensity * 900, now, 0.22);
+    a.oceanFilter.frequency.setTargetAtTime(320 + mix.intensity * 520, now, 0.22);
+    a.musicFilter.frequency.setTargetAtTime(720 + mix.warmth * 1150 + mix.intensity * 420, now, 0.32);
+
+    const final = info.eventId === 'pacific-crown-final';
+    const base = final
+      ? 98
+      : info.worldMode === 'hawaii-coast'
+        ? 123.47
+        : info.worldMode === 'taiwan-coast'
+          ? 110
+          : 116.54;
+    a.padA.frequency.setTargetAtTime(base, now, 0.45);
+    a.padB.frequency.setTargetAtTime(base * (final ? 1.5 : mix.warmth > 0.65 ? 1.4983 : 1.3333), now, 0.45);
+
+    const engine = Core.engineProfile(info.speedRatio, info.throttleRatio, info.boostActive);
+    const engineGain = mix.engine * engine.engineGain * 0.13;
+    const waterGain = mix.waterRush * engine.waterGain * 0.11;
+    a.engineA.frequency.setTargetAtTime(engine.fundamentalHz, now, 0.055);
+    a.engineB.frequency.setTargetAtTime(engine.fundamentalHz * engine.harmonicRatio, now, 0.055);
+    a.engineFilter.frequency.setTargetAtTime(engine.filterHz, now, 0.075);
+    a.engineGain.gain.setTargetAtTime(Math.max(0.0001, engineGain), now, 0.07);
+    a.waterFilter.frequency.setTargetAtTime(820 + info.speedRatio * 1600 + (info.boostActive ? 520 : 0), now, 0.09);
+    a.waterGain.gain.setTargetAtTime(Math.max(0.0001, waterGain), now, 0.09);
+
+    state.lastEngineHz = engine.fundamentalHz;
+    state.lastEngineGain = engineGain;
+    state.lastWaterGain = waterGain;
+  }
+
+  function playCue(type) {
+    state.lastCue = String(type || 'checkpoint');
+    state.cueCount += 1;
+
+    const a = audio;
+    if (!a || a.context.state === 'closed') return false;
+
+    const cue = Core.cueProfile(type);
+    const mix = Core.computeMix(currentContext());
+    const cueGain = Math.max(0.0001, cue.gain * mix.sfx);
+    const now = a.context.currentTime;
+
+    try {
+      if (cue.sweep) {
+        const osc = a.context.createOscillator();
+        const gain = a.context.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(cue.tones[0], now);
+        osc.frequency.exponentialRampToValueAtTime(cue.tones[cue.tones.length - 1], now + cue.duration);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(cueGain, now + 0.022);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + cue.duration);
+        osc.connect(gain);
+        gain.connect(a.sfxBus);
+        osc.start(now);
+        osc.stop(now + cue.duration + 0.03);
+      } else {
+        cue.tones.forEach((frequency, index) => {
+          const start = now + index * (cue.spacing || 0);
+          const osc = a.context.createOscillator();
+          const gain = a.context.createGain();
+          osc.type = type === 'finish' || type === 'final-lap' ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(frequency, start);
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(cueGain, start + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + cue.duration);
+          osc.connect(gain);
+          gain.connect(a.sfxBus);
+          osc.start(start);
+          osc.stop(start + cue.duration + 0.03);
+        });
+      }
+      if (type === 'boost') state.boostCueCount += 1;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function previewCue(type) {
+    state.previewCueCount += 1;
+    return playCue(type || 'checkpoint');
+  }
+
+  function syncRaceState() {
+    const race = Manager.state || {};
+    lastPhase = race.phase || 'menu';
+    lastLap = race.lap || 1;
+    lastCheckpoint = race.nextCheckpointIndex == null ? 1 : race.nextCheckpointIndex;
+    lastCountdownText = '';
+  }
+
+  function detectRaceCues() {
+    const race = Manager.state || {};
+    const phase = race.phase || 'menu';
+
+    const countdown = document.querySelector('.jr-countdown.show');
+    const countdownText = countdown ? String(countdown.textContent || '').trim().toUpperCase() : '';
+    if (countdownText && countdownText !== lastCountdownText) {
+      if (/^[321]$/.test(countdownText)) playCue('countdown');
+      else if (countdownText === 'GO') playCue('go');
+      lastCountdownText = countdownText;
+    } else if (!countdownText) {
+      lastCountdownText = '';
+    }
+
+    if (phase === 'racing') {
+      const lap = race.lap || 1;
+      const checkpoint = race.nextCheckpointIndex == null ? 1 : race.nextCheckpointIndex;
+      if (lap > lastLap) {
+        playCue(lap >= (race.totalLaps || 1) ? 'final-lap' : 'lap');
+      } else if (lastPhase === 'racing' && checkpoint !== lastCheckpoint) {
+        playCue('checkpoint');
+      }
+      lastLap = lap;
+      lastCheckpoint = checkpoint;
+    }
+
+    const boost = root.JETSKI_BOOST && root.JETSKI_BOOST.state;
+    const activationCount = boost && Number.isFinite(boost.activationCount) ? boost.activationCount : 0;
+    if (activationCount > lastBoostActivationCount) playCue('boost');
+    lastBoostActivationCount = activationCount;
+    lastPhase = phase;
   }
 
   function tick(nowMs) {
-    if (audio && nowMs - lastMixAt >= 100) {
+    if (audio && nowMs - lastMixAt >= 80) {
       const info = currentContext();
       const mix = Core.computeMix(info);
       applyMix(mix, info);
+      detectRaceCues();
       lastMixAt = nowMs;
-      lastPhase = info.phase; lastEventId = info.eventId;
+      lastEventId = info.eventId;
     }
     root.requestAnimationFrame(tick);
   }
 
   const panel = document.createElement('div');
   panel.style.cssText = 'position:fixed;inset:0;z-index:75;display:none;align-items:center;justify-content:center;background:rgba(1,8,16,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-family:Inter,-apple-system,sans-serif;color:#fff';
-  panel.innerHTML = `<div style="width:min(500px,88vw);padding:26px;border:1px solid rgba(255,255,255,.18);border-radius:22px;background:rgba(3,20,34,.96)"><div style="font-size:11px;font-weight:900;letter-spacing:.22em;color:#8fe9ff">AUDIO</div><h2 style="margin:8px 0 18px">Sound & Atmosphere</h2><div data-audio-controls></div><div style="margin-top:20px;display:flex;justify-content:flex-end"><button data-audio-close class="jr-btn primary">Done</button></div></div>`;
+  panel.innerHTML = '<div style="width:min(500px,88vw);padding:26px;border:1px solid rgba(255,255,255,.18);border-radius:22px;background:rgba(3,20,34,.96)"><div style="font-size:11px;font-weight:900;letter-spacing:.22em;color:#8fe9ff">AUDIO</div><h2 style="margin:8px 0 18px">聲音與氛圍</h2><div data-audio-controls></div><div style="margin-top:20px;display:flex;justify-content:flex-end"><button data-audio-close class="jr-btn primary">完成</button></div></div>';
   document.body.appendChild(panel);
   const controls = panel.querySelector('[data-audio-controls]');
 
   function addSlider(key, label) {
-    const row = document.createElement('label'); row.style.cssText='display:block;margin:14px 0;font-size:12px;font-weight:800';
-    row.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>${label}</span><span data-audio-value>${Math.round(preferences[key]*100)}%</span></div><input type="range" min="0" max="1" step="0.05" value="${preferences[key]}" style="width:100%">`;
-    const input = row.querySelector('input'), value = row.querySelector('[data-audio-value]');
-    input.addEventListener('input', () => { preferences[key] = Core.clamp01(input.value); value.textContent=`${Math.round(preferences[key]*100)}%`; persist(); ensureAudio(); });
+    const row = document.createElement('label');
+    row.style.cssText = 'display:block;margin:14px 0;font-size:12px;font-weight:800';
+    row.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>' + label + '</span><span data-audio-value>' + Math.round(preferences[key] * 100) + '%</span></div><input type="range" min="0" max="1" step="0.05" value="' + preferences[key] + '" style="width:100%">';
+    const input = row.querySelector('input');
+    const value = row.querySelector('[data-audio-value]');
+    input.addEventListener('input', () => {
+      preferences[key] = Core.clamp01(input.value);
+      value.textContent = Math.round(preferences[key] * 100) + '%';
+      persist();
+      ensureAudio();
+    });
     controls.appendChild(row);
   }
-  addSlider('master','Master'); addSlider('music','Music'); addSlider('ambience','Ocean / Wind');
-  panel.querySelector('[data-audio-close]').addEventListener('click',()=>panel.style.display='none');
-  panel.addEventListener('click',event=>{if(event.target===panel)panel.style.display='none';});
 
-  function openPanel() { ensureAudio(); panel.style.display='flex'; }
+  addSlider('master', '主音量');
+  addSlider('music', '音樂');
+  addSlider('ambience', '海洋／風聲');
+  addSlider('effects', '引擎／賽事音效');
+
+  panel.querySelector('[data-audio-close]').addEventListener('click', () => panel.style.display = 'none');
+  panel.addEventListener('click', event => { if (event.target === panel) panel.style.display = 'none'; });
+
+  function openPanel() {
+    ensureAudio();
+    panel.style.display = 'flex';
+  }
+
   function installButtons() {
     for (const actions of document.querySelectorAll('[data-jr-screen="menu"] .jr-actions,[data-jr-screen="pause"] .jr-actions')) {
       if (actions.querySelector('[data-audio-open]')) continue;
-      const button=document.createElement('button'); button.type='button'; button.className='jr-btn'; button.dataset.audioOpen='1'; button.textContent='Audio'; button.addEventListener('click',openPanel); actions.appendChild(button);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'jr-btn';
+      button.dataset.audioOpen = '1';
+      button.textContent = '音效';
+      button.addEventListener('click', openPanel);
+      actions.appendChild(button);
     }
   }
 
   const unlock = () => ensureAudio();
-  root.addEventListener('pointerdown', unlock, { once:true, passive:true });
-  root.addEventListener('keydown', unlock, { once:true });
+  root.addEventListener('pointerdown', unlock, { once: true, passive: true });
+  root.addEventListener('keydown', unlock, { once: true });
   root.addEventListener('visibilitychange', () => {
     if (!audio) return;
-    if (document.hidden) audio.context.suspend().catch(()=>{}); else audio.context.resume().catch(()=>{});
+    if (document.hidden) audio.context.suspend().catch(() => {});
+    else audio.context.resume().catch(() => {});
   });
 
-  installButtons();
-  root.requestAnimationFrame(tick);
-  const versionNode=document.querySelector('#version'); if(versionNode)versionNode.textContent=VERSION;
-  document.title=`Swim Ring Racing ${VERSION}`;
+  root.addEventListener('jetski:race-ready', syncRaceState);
+  root.addEventListener('jetski:race-finished', () => playCue('finish'));
+  root.addEventListener('jetski:race-selected', syncRaceState);
 
-  root.JETSKI_AUDIO = { version:VERSION, get preferences(){return Object.assign({},preferences);}, openPanel, ensureAudio, computeCurrentMix(){return Core.computeMix(currentContext());}, proceduralOnly:true, externalAssets:false, physicsUntouched:true, get lastPhase(){return lastPhase;}, get lastEventId(){return lastEventId;} };
+  installButtons();
+  syncRaceState();
+  root.requestAnimationFrame(tick);
+
+  const versionNode = document.querySelector('#version');
+  if (versionNode) versionNode.textContent = VERSION;
+  document.title = `Swim Ring Racing ${VERSION}`;
+
+  root.JETSKI_AUDIO = {
+    version: VERSION,
+    state,
+    get preferences() { return Object.assign({}, preferences); },
+    openPanel,
+    ensureAudio,
+    playCue,
+    previewCue,
+    computeCurrentMix() { return Core.computeMix(currentContext()); },
+    proceduralOnly: true,
+    externalAssets: false,
+    centralizedMix: true,
+    handlesRaceCues: true,
+    handlesBoostAudio: true,
+    engineAudio: true,
+    waterRushAudio: true,
+    physicsUntouched: true,
+    gameplayUntouched: true,
+    raceRulesUntouched: true,
+    boostAuthorityUntouched: true,
+    get lastPhase() { return lastPhase; },
+    get lastEventId() { return lastEventId; }
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
