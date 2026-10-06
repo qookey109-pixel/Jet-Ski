@@ -50,34 +50,34 @@
 
     const hull = mark(new THREE.Mesh(new THREE.SphereGeometry(1, 18, 10), primaryDark));
     hull.name = 'T11Hull';
-    hull.scale.set(0.92 * s, 0.31 * s, 1.43 * s);
-    hull.position.set(0, 0.38 * s, -0.18 * s);
+    hull.scale.set(0.88 * s, 0.25 * s, 1.55 * s);
+    hull.position.set(0, 0.34 * s, -0.22 * s);
 
     const bow = mark(new THREE.Mesh(
-      new THREE.CylinderGeometry(0.18 * s, 0.82 * s, 1.86 * s, 4, 1, false),
+      new THREE.CylinderGeometry(0.08 * s, 0.70 * s, 1.78 * s, 8, 1, false),
       primary
     ));
     bow.name = 'T11Bow';
     bow.rotation.x = Math.PI / 2;
-    bow.position.set(0, 0.42 * s, 1.48 * s);
+    bow.position.set(0, 0.34 * s, 1.52 * s);
 
     const deck = mark(new THREE.Mesh(new THREE.SphereGeometry(1, 16, 9), primary));
     deck.name = 'T11Deck';
-    deck.scale.set(0.76 * s, 0.26 * s, 0.92 * s);
-    deck.position.set(0, 0.72 * s, 0.42 * s);
+    deck.scale.set(0.70 * s, 0.22 * s, 0.98 * s);
+    deck.position.set(0, 0.64 * s, 0.46 * s);
 
-    const rearDeck = mark(new THREE.Mesh(new THREE.BoxGeometry(1.34 * s, 0.22 * s, 1.08 * s), primary));
+    const rearDeck = mark(new THREE.Mesh(new THREE.BoxGeometry(1.22 * s, 0.18 * s, 1.12 * s), primary));
     rearDeck.name = 'T11RearDeck';
-    rearDeck.position.set(0, 0.61 * s, -1.10 * s);
+    rearDeck.position.set(0, 0.53 * s, -1.10 * s);
 
-    const seat = mark(new THREE.Mesh(new THREE.BoxGeometry(0.78 * s, 0.24 * s, 1.02 * s), dark));
+    const seat = mark(new THREE.Mesh(new THREE.BoxGeometry(0.72 * s, 0.20 * s, 1.08 * s), dark));
     seat.name = 'T11Seat';
-    seat.position.set(0, 0.88 * s, -0.52 * s);
+    seat.position.set(0, 0.78 * s, -0.50 * s);
     seat.rotation.x = -0.06;
 
     const seatBack = mark(new THREE.Mesh(new THREE.BoxGeometry(0.86 * s, 0.28 * s, 0.36 * s), dark));
     seatBack.name = 'T11SeatBack';
-    seatBack.position.set(0, 0.93 * s, -1.05 * s);
+    seatBack.position.set(0, 0.84 * s, -1.07 * s);
     seatBack.rotation.x = -0.10;
 
     const column = mark(new THREE.Mesh(
@@ -85,16 +85,16 @@
       trim
     ));
     column.name = 'T11SteeringColumn';
-    column.position.set(0, 1.16 * s, 0.48 * s);
+    column.position.set(0, 1.02 * s, 0.51 * s);
     column.rotation.x = -0.18;
 
     const handlebar = mark(new THREE.Mesh(new THREE.BoxGeometry(0.86 * s, 0.085 * s, 0.09 * s), trim));
     handlebar.name = 'T11Handlebar';
-    handlebar.position.set(0, 1.49 * s, 0.59 * s);
+    handlebar.position.set(0, 1.31 * s, 0.60 * s);
 
     const windshield = mark(new THREE.Mesh(new THREE.BoxGeometry(0.68 * s, 0.34 * s, 0.055 * s), glass));
     windshield.name = 'T11Windshield';
-    windshield.position.set(0, 1.10 * s, 0.98 * s);
+    windshield.position.set(0, 0.94 * s, 1.02 * s);
     windshield.rotation.x = -0.34;
 
     const railGeo = new THREE.BoxGeometry(0.11 * s, 0.10 * s, 2.12 * s);
@@ -102,12 +102,12 @@
     const rightRail = mark(new THREE.Mesh(railGeo, accent));
     leftRail.name = 'T11LeftRail';
     rightRail.name = 'T11RightRail';
-    leftRail.position.set(-0.73 * s, 0.56 * s, -0.08 * s);
-    rightRail.position.set(0.73 * s, 0.56 * s, -0.08 * s);
+    leftRail.position.set(-0.69 * s, 0.49 * s, -0.08 * s);
+    rightRail.position.set(0.69 * s, 0.49 * s, -0.08 * s);
 
     const noseStripe = mark(new THREE.Mesh(new THREE.BoxGeometry(0.58 * s, 0.08 * s, 0.78 * s), accent));
     noseStripe.name = 'T11NoseStripe';
-    noseStripe.position.set(0, 0.76 * s, 0.96 * s);
+    noseStripe.position.set(0, 0.67 * s, 1.02 * s);
     noseStripe.rotation.x = -0.16;
 
     const nozzle = mark(new THREE.Mesh(
@@ -116,15 +116,25 @@
     ));
     nozzle.name = 'T11JetNozzle';
     nozzle.rotation.x = Math.PI / 2;
-    nozzle.position.set(0, 0.34 * s, -1.67 * s);
+    nozzle.position.set(0, 0.29 * s, -1.74 * s);
 
     const bumper = mark(new THREE.Mesh(new THREE.BoxGeometry(0.56 * s, 0.14 * s, 0.18 * s), trim));
     bumper.name = 'T11BowBumper';
-    bumper.position.set(0, 0.39 * s, 2.22 * s);
+    bumper.position.set(0, 0.30 * s, 2.25 * s);
+
+    const sponsonGeo = new THREE.BoxGeometry(0.18 * s, 0.10 * s, 1.34 * s);
+    const leftSponson = mark(new THREE.Mesh(sponsonGeo, primaryDark));
+    const rightSponson = mark(new THREE.Mesh(sponsonGeo, primaryDark));
+    leftSponson.name = 'T11LeftSponson';
+    rightSponson.name = 'T11RightSponson';
+    leftSponson.position.set(-0.82 * s, 0.34 * s, -0.56 * s);
+    rightSponson.position.set(0.82 * s, 0.34 * s, -0.56 * s);
+    leftSponson.rotation.z = -0.07;
+    rightSponson.rotation.z = 0.07;
 
     const meshes = [
       hull, bow, deck, rearDeck, seat, seatBack, column, handlebar,
-      windshield, leftRail, rightRail, noseStripe, nozzle, bumper
+      windshield, leftRail, rightRail, noseStripe, nozzle, bumper, leftSponson, rightSponson
     ];
     for (const mesh of meshes) g.add(mesh);
 
