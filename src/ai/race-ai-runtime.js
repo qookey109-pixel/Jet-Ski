@@ -27,18 +27,24 @@
 
   function makeVisual(config) {
     const g = new THREE.Group();
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(1.25, 0.37, 12, 32),
-      new THREE.MeshStandardMaterial({ color: config.color, roughness: 0.38, metalness: 0.02 })
-    );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.42;
-    ring.scale.z = 1.12;
-    const seat = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.56, 0.62, 0.25, 18),
-      new THREE.MeshStandardMaterial({ color: 0x243142, roughness: 0.68 })
-    );
-    seat.position.y = 0.58;
+    const craftVisual = root.JETSKI_CRAFT_VISUAL && typeof root.JETSKI_CRAFT_VISUAL.build === 'function'
+      ? root.JETSKI_CRAFT_VISUAL.build(g, {
+          kind: 'ai',
+          name: `V01116AICraftT11-${config.id}`,
+          primary: config.color,
+          accent: 0xfff1bd,
+          dark: 0x243142
+        })
+      : null;
+    if (!craftVisual) {
+      const fallback = new THREE.Mesh(
+        new THREE.BoxGeometry(1.38, 0.48, 2.75),
+        new THREE.MeshStandardMaterial({ color: config.color, roughness: 0.42 })
+      );
+      fallback.position.y = 0.42;
+      fallback.name = `T11AIFallback-${config.id}`;
+      g.add(fallback);
+    }
 
     const skinMat = new THREE.MeshStandardMaterial({ color: 0xf2c39c, roughness: 0.78 });
     const vestMat = new THREE.MeshStandardMaterial({
@@ -120,7 +126,8 @@
 
     g.userData.rider = rider;
     g.userData.riderVisualVersion = 'V0.11.16-T7';
-    g.add(ring, seat, rider);
+    g.userData.craftVisualVersion = craftVisual ? 'V0.11.16-T11' : 'fallback';
+    g.add(rider);
     return g;
   }
 
@@ -249,6 +256,9 @@
     playerPhysicsRewritten: false,
     riderVisuals: true,
     riderVisualVersion: 'V0.11.16-T7',
-    riderCount: configs.length
+    riderCount: configs.length,
+    craftVisuals: true,
+    craftVisualVersion: 'V0.11.16-T11',
+    craftCount: configs.length
   };
 })(typeof window !== 'undefined' ? window : globalThis);
