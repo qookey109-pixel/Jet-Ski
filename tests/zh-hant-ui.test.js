@@ -12,7 +12,7 @@ assert.strictEqual(I18N.gameplayRulesUntouched, true);
 assert.strictEqual(I18N.highFrequencyNumericFastPath, true);
 
 const samples = new Map([
-  ['SWIM RING', '泳圈'],
+  ['JET SKI', '水上摩托'],
   ['RACING', '競速'],
   ['PACIFIC', '太平洋'],
   ['CROWN', '皇冠'],
@@ -56,7 +56,8 @@ assert(I18N.stats.fastSkipped >= beforeFastSkip + 2, 'numeric HUD values should 
 const root = path.resolve(__dirname, '..');
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 assert(index.includes('<html lang="zh-Hant-TW">'), 'index must declare zh-Hant-TW');
-assert(index.includes('<title>泳圈競速 V0.11.16</title>'), 'Traditional Chinese title missing');
+assert(index.includes('<title>水上摩托競速 V0.11.16</title>'), 'Traditional Chinese Jet Ski title missing');
+assert(!index.includes('<title>泳圈競速'), 'legacy swim-ring title must not return');
 assert(index.includes('./src/ui/zh-hant-runtime.js'), 'localization runtime not loaded');
 assert(index.includes('瞬間加速'), 'static control help should be Traditional Chinese');
 assert(index.includes('煞車 / 倒車'), 'mobile brake label should be Traditional Chinese');
