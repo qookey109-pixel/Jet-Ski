@@ -22,10 +22,37 @@
   try { selectedId = Core.sanitizeSelection(localStorage.getItem(STORAGE), totalStars()); } catch (_) {}
   let previousUnlockedCount = Core.unlockedLiveries(totalStars()).length;
 
-  // main.js defines these as classic-script lexical bindings. Recolor the existing
-  // craft materials directly so liveries do not add a second overlapping ring mesh.
-  const craftPrimaryMaterial = typeof inflatableMat !== 'undefined' ? inflatableMat : null;
-  const craftAccentMaterial = typeof stripeMat !== 'undefined' ? stripeMat : null;
+  // T14: target the T11 Jet Ski visual first. Keep legacy material lookup only as a
+  // compatibility fallback so existing saved livery selections survive the craft migration.
+  const t11Craft = ski.getObjectByName && ski.getObjectByName('V01116PlayerCraftT11');
+  const legacyPrimaryMaterial = typeof inflatableMat !== 'undefined' ? inflatableMat : null;
+  const legacyAccentMaterial = typeof stripeMat !== 'undefined' ? stripeMat : null;
+
+  function materialFor(name) {
+    const mesh = t11Craft && t11Craft.getObjectByName ? t11Craft.getObjectByName(name) : null;
+    return mesh && mesh.material ? mesh.material : null;
+  }
+
+  function uniqueMaterials(names) {
+    const seen = new Set();
+    const out = [];
+    for (const name of names) {
+      const material = materialFor(name);
+      if (material && !seen.has(material)) {
+        seen.add(material);
+        out.push(material);
+      }
+    }
+    return out;
+  }
+
+  const craftPrimaryMaterials = t11Craft
+    ? uniqueMaterials(['T11Bow','T11Deck','T11RearDeck'])
+    : [legacyPrimaryMaterial].filter(Boolean);
+  const craftHullMaterial = t11Craft ? materialFor('T11Hull') : legacyPrimaryMaterial;
+  const craftAccentMaterials = t11Craft
+    ? uniqueMaterials(['T11LeftRail','T11RightRail','T11NoseStripe'])
+    : [legacyAccentMaterial].filter(Boolean);
 
   // A tiny badge is the only additional craft geometry. It appears only for the
   // championship livery and has no collision/shadow/gameplay role.
@@ -69,8 +96,14 @@
     const livery = currentLivery();
     const crown = livery.id === 'pacific-crown';
 
-    applyMaterial(craftPrimaryMaterial, livery.primary, livery.emissive, crown ? 0.26 : 0.08);
-    applyMaterial(craftAccentMaterial, livery.accent, livery.emissive, crown ? 0.18 : 0.04);
+    for (const material of craftPrimaryMaterials) {
+      applyMaterial(material, livery.primary, livery.emissive, crown ? 0.26 : 0.08);
+    }
+    const hullColor = new THREE.Color(livery.primary).multiplyScalar(0.72).getHex();
+    applyMaterial(craftHullMaterial, hullColor, livery.emissive, crown ? 0.20 : 0.05);
+    for (const material of craftAccentMaterials) {
+      applyMaterial(material, livery.accent, livery.emissive, crown ? 0.18 : 0.04);
+    }
     crownMaterial.color.setHex(livery.accent);
     crownMaterial.emissive.setHex(livery.emissive);
     crownBadge.visible = crown;
@@ -191,6 +224,9 @@
     collisionAdded: false,
     massChanged: false,
     cgChanged: false,
-    physicsUntouched: true
+    physicsUntouched: true,
+    t11CraftLivery: Boolean(t11Craft),
+    legacyMaterialFallback: !t11Craft,
+    liveryTargetCount: craftPrimaryMaterials.length + craftAccentMaterials.length + (craftHullMaterial ? 1 : 0)
   };
 })(typeof window !== 'undefined' ? window : globalThis);
