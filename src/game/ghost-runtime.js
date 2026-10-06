@@ -43,35 +43,46 @@
 
   const ghostGroup = new THREE.Group();
   ghostGroup.name = 'V0119PersonalBestGhost';
-  const ghostRing = new THREE.Mesh(
-    new THREE.TorusGeometry(1.55, 0.46, 12, 32),
-    new THREE.MeshStandardMaterial({
-      color: 0x7de8ff,
-      emissive: 0x2fc9ff,
-      emissiveIntensity: 0.85,
-      roughness: 0.34,
-      metalness: 0,
-      transparent: true,
-      opacity: 0.34,
-      depthWrite: false
-    })
-  );
-  ghostRing.rotation.x = Math.PI / 2;
-  ghostRing.position.y = 0.46;
-  ghostRing.scale.z = 1.17;
-  const ghostSeat = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.68, 0.72, 0.28, 18),
-    new THREE.MeshStandardMaterial({
-      color: 0xbff7ff,
-      emissive: 0x4cd8ff,
-      emissiveIntensity: 0.35,
-      transparent: true,
-      opacity: 0.24,
-      depthWrite: false
-    })
-  );
-  ghostSeat.position.set(0, 0.62, 0.1);
-  ghostGroup.add(ghostRing, ghostSeat);
+
+  // T14: the PB ghost now uses the same Jet Ski visual language as the player.
+  const ghostCraft = root.JETSKI_CRAFT_VISUAL && typeof root.JETSKI_CRAFT_VISUAL.build === 'function'
+    ? root.JETSKI_CRAFT_VISUAL.build(ghostGroup, {
+        kind: 'ai',
+        name: 'V01116GhostCraftT14',
+        scale: 0.78,
+        primary: 0x70e4ff,
+        accent: 0xe4fdff,
+        dark: 0x3a9fbd
+      })
+    : null;
+
+  if (ghostCraft) {
+    ghostCraft.traverse(node => {
+      if (!node || !node.material) return;
+      node.material.transparent = true;
+      node.material.opacity = node.name === 'T11Windshield' ? 0.14 : 0.25;
+      node.material.depthWrite = false;
+      if (node.material.emissive && typeof node.material.emissive.setHex === 'function') {
+        node.material.emissive.setHex(0x27bfe8);
+        node.material.emissiveIntensity = 0.24;
+      }
+      node.material.needsUpdate = true;
+    });
+  } else {
+    const fallback = new THREE.Mesh(
+      new THREE.BoxGeometry(1.25, 0.38, 2.65),
+      new THREE.MeshBasicMaterial({
+        color: 0x7de8ff,
+        transparent: true,
+        opacity: 0.24,
+        depthWrite: false
+      })
+    );
+    fallback.name = 'V01116GhostCraftFallbackT14';
+    fallback.position.y = 0.46;
+    ghostGroup.add(fallback);
+  }
+
   ghostGroup.visible = false;
   scene.add(ghostGroup);
 
@@ -283,6 +294,9 @@
     sampleIntervalMs: SAMPLE_INTERVAL_MS,
     visualOnly: true,
     collisionAdded: false,
-    physicsUntouched: true
+    physicsUntouched: true,
+    craftVisualVersion: ghostCraft ? 'V0.11.16-T11' : 'fallback',
+    t14JetSkiGhost: true,
+    legacyRingVisual: false
   };
 })(typeof window !== 'undefined' ? window : globalThis);
