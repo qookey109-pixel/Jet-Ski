@@ -73,6 +73,8 @@ async function collect(page) {
     const staging = window.JETSKI_RACE_STAGING;
     const craftCore = window.JETSKI_CRAFT_CORE;
     const craftVisual = window.JETSKI_CRAFT_VISUAL;
+    const wake = window.JETSKI_WAKE_SPRAY;
+    const wakeCore = window.JETSKI_WAKE_CORE;
     const ringRoot = arcade && arcade.rootGroup;
     const gateLayer = arcade && arcade.gateLayer;
     const buoyMesh = arcade && arcade.buoyMesh;
@@ -235,7 +237,19 @@ async function collect(page) {
         ai.racers.every(entry => entry.visual && entry.visual.userData &&
           entry.visual.userData.craftVisualVersion === 'V0.11.16-T11' &&
           entry.visual.getObjectByName && entry.visual.getObjectByName(`V01116AICraftT11-${entry.config.id}`))),
-      aiLegacyTorusCount
+      aiLegacyTorusCount,
+      wakeVersion: wake && wake.version,
+      wakeVisualOnly: wake && wake.visualOnly,
+      wakeCollisionAdded: wake && wake.collisionAdded,
+      wakePhysicsUntouched: wake && wake.physicsUntouched,
+      wakeGameplayUntouched: wake && wake.gameplayUntouched,
+      wakeAiMovementUntouched: wake && wake.aiMovementUntouched,
+      wakeRaceRulesUntouched: wake && wake.raceRulesUntouched,
+      wakeCameraUntouched: wake && wake.cameraUntouched,
+      wakeState: wake && Object.assign({}, wake.state),
+      wakeDefaults: wakeCore && Object.assign({}, wakeCore.DEFAULTS),
+      wakeFoamTextureReady: Boolean(wake && wake.foamTexture && wake.foamTexture.image &&
+        wake.foamTexture.image.width === 64 && wake.foamTexture.image.height === 256)
     };
   });
 }
@@ -244,7 +258,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const receipt = {
     release: 'V0.11.16',
-    feature: 'Tropical Arcade T1-T4 + T5-T11 Award Vertical Slice',
+    feature: 'Tropical Arcade T1-T4 + T5-T12 Award Vertical Slice',
     status: 'RUNNING',
     generatedAt: new Date().toISOString(),
     profiles: [],
@@ -300,14 +314,19 @@ async function main() {
           elapsedMs: manager.state.elapsedMs
         } : null;
       });
-      await page.evaluate(() => window.JETSKI_ARCADE_FEEDBACK.preview('checkpoint'));
+      await page.evaluate(() => {
+        window.JETSKI_ARCADE_FEEDBACK.preview('checkpoint');
+        window.JETSKI_WAKE_SPRAY.preview();
+      });
       await page.waitForTimeout(70);
       const feedbackPreview = await page.evaluate(() => {
         const manager = window.JETSKI_RACE_MANAGER;
         const feedback = window.JETSKI_ARCADE_FEEDBACK;
+        const wake = window.JETSKI_WAKE_SPRAY;
         const banner = document.querySelector('.v01116-feedback-banner');
         return {
           state: feedback && Object.assign({}, feedback.state),
+          wakeState: wake && Object.assign({}, wake.state),
           bannerText: banner ? banner.textContent : '',
           bannerVisible: banner ? banner.classList.contains('show') && Number(getComputedStyle(banner).opacity) > 0 : false,
           race: manager ? {
@@ -408,6 +427,29 @@ async function main() {
       assert(data.aiLegacyTorusCount === 0,
         `${profile.name}: legacy AI swim-ring geometry remains visible ${data.aiLegacyTorusCount}`);
 
+      assert(data.wakeVersion === 'V0.11.16-T12' && data.wakeVisualOnly === true &&
+        data.wakeCollisionAdded === false && data.wakePhysicsUntouched === true &&
+        data.wakeGameplayUntouched === true && data.wakeAiMovementUntouched === true &&
+        data.wakeRaceRulesUntouched === true && data.wakeCameraUntouched === true,
+        `${profile.name}: T12 wake/spray authority/version boundary changed`);
+      assert(data.wakeDefaults.maxWakeInstancesDesktop <= 32 &&
+        data.wakeDefaults.maxWakeInstancesMobile <= 24 &&
+        data.wakeDefaults.maxSprayInstancesDesktop <= 16 &&
+        data.wakeDefaults.maxSprayInstancesMobile <= 12,
+        `${profile.name}: T12 wake/spray budget exceeded`);
+      assert(data.wakeDefaults.surfaceOffset >= 0.10 && data.wakeDefaults.surfaceOffset <= 0.20 &&
+        data.wakeDefaults.wakeOpacity >= 0.45 && data.wakeDefaults.wakeOpacity <= 0.70 &&
+        data.wakeDefaults.sprayOpacity >= 0.60 && data.wakeDefaults.sprayOpacity <= 0.82,
+        `${profile.name}: T12 foam/spray readability defaults drifted`);
+      assert(data.wakeFoamTextureReady === true,
+        `${profile.name}: T12 procedural foam texture missing`);
+      assert(data.wakeState.trackedCrafts === 4,
+        `${profile.name}: T12 did not track player + 3 AI craft ${data.wakeState.trackedCrafts}`);
+      assert(data.wakeState.physicsWrites === false && data.wakeState.gameplayWrites === false &&
+        data.wakeState.aiMovementWrites === false && data.wakeState.raceRuleWrites === false &&
+        data.wakeState.cameraWrites === false,
+        `${profile.name}: T12 wake/spray reports forbidden writes`);
+
       assert(data.islandVersion === 'V0.11.16-T2', `${profile.name}: wrong T2 island version ${data.islandVersion}`);
       assert(data.islandVisualOnly === true && data.islandCollisionAdded === false &&
         data.islandPhysicsUntouched === true && data.islandGameplayUntouched === true,
@@ -467,6 +509,11 @@ async function main() {
         `${profile.name}: T4 world-burst pool exceeded budget`);
       assert(feedbackPreview.state.previewCount >= 1 && feedbackPreview.state.lastType === 'checkpoint',
         `${profile.name}: T4 visual preview did not fire`);
+      assert(feedbackPreview.wakeState && feedbackPreview.wakeState.previewCount >= 1 &&
+        feedbackPreview.wakeState.previewActive === true &&
+        feedbackPreview.wakeState.wakeInstances >= (profile.mobile ? 6 : 8) &&
+        feedbackPreview.wakeState.sprayInstances >= 4,
+        `${profile.name}: T12 wake/spray visual preview did not render ${JSON.stringify(feedbackPreview.wakeState)}`);
       assert(feedbackPreview.state.activeWorldBursts >= 1,
         `${profile.name}: T4 checkpoint world burst not active`);
       assert(feedbackPreview.bannerVisible === true && feedbackPreview.bannerText === 'CHECKPOINT',
