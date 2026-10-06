@@ -99,6 +99,9 @@
 - [x] T8：主選單隱藏工程 HUD／物理／世界／海況／駕駛控制層，強化正式投稿版視覺層級
 - [x] T8 exact-head Race Regression #127 + Browser Release QA #93 PASS；desktop / 844×390 繁中選單人工驗收完成
 
+- [x] T9：起跑賽事標題縮小、停留時間縮短；倒數改為 compact arcade badge，844×390 不再遮住大面積賽道
+- [x] T9 exact-head Race Regression #130 + Browser Release QA #96 PASS；desktop / 844×390 WebKit 起跑截圖人工驗收完成
+
 ## 下一階段
 - [ ] **V0.11.16 macOS Safari hands-on acceptance**：完整跑完四場 Championship，確認 Start / race / pause / results / ending / Save / Garage / Challenges / More 流程
 - [ ] **V0.11.16 actual-phone mobile acceptance**：橫向 safe-area、觸控 steering / GAS / BRAKE / BOOST、844×390 類似短螢幕 first-fold 與直向旋轉提示
