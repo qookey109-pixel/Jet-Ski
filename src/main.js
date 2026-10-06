@@ -206,8 +206,8 @@ riderBody.add(
   riderHips, riderLeftArm, riderRightArm, riderLeftHand, riderRightHand,
   riderLeftThigh, riderRightThigh
 );
-riderBody.position.set(0, 1.42, -0.25);
-riderBody.rotation.set(-0.14, Math.PI, 0);
+riderBody.position.set(0, 1.24, -0.18);
+riderBody.rotation.set(-0.30, Math.PI, 0);
 ski.userData.riderVisualVersion = 'V0.11.16-T7';
 ski.userData.craftVisualVersion = craftVisual ? 'V0.11.16-T11' : 'fallback';
 ski.add(riderBody);
