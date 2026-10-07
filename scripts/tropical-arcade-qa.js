@@ -495,7 +495,8 @@ async function main() {
       assert(data.vendorPwcAiCount === 3 && data.vendorPwcHiddenPlayerShellParts === 6 &&
         data.vendorPwcState && data.vendorPwcState.aiApplied === 3 &&
         data.vendorPwcState.meshCount === 4 && data.vendorPwcState.playerApplied === true,
-        `${profile.name}: T16 player/AI PWC shell installation incomplete ${JSON.stringify(data.vendorPwcState)}`);
+        `${profile.name}: T16 player/AI PWC shell installation incomplete ` +
+        JSON.stringify({aiMeshes: data.vendorPwcAiCount, hiddenPlayerShellParts: data.vendorPwcHiddenPlayerShellParts, runtime: data.vendorPwcState}));
       assert(data.vendorPwcState.runtimeLoaderAdded === false &&
         data.vendorPwcState.realTimeAssetFetches === 0 &&
         data.vendorPwcState.physicsWrites === false && data.vendorPwcState.gameplayWrites === false &&
