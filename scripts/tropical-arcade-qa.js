@@ -76,6 +76,8 @@ async function collect(page) {
     const staging = window.JETSKI_RACE_STAGING;
     const craftCore = window.JETSKI_CRAFT_CORE;
     const craftVisual = window.JETSKI_CRAFT_VISUAL;
+    const vendorPwc = window.JETSKI_VENDOR_PWC;
+    const vendorPwcData = window.JETSKI_VENDOR_PWC_GEOMETRY;
     const wake = window.JETSKI_WAKE_SPRAY;
     const wakeCore = window.JETSKI_WAKE_CORE;
     const audio = window.JETSKI_AUDIO;
@@ -98,6 +100,14 @@ async function collect(page) {
       ? ski.getObjectByName('V01116PlayerRiderT7') : null;
     const playerCraft = typeof ski !== 'undefined' && ski.getObjectByName
       ? ski.getObjectByName('V01116PlayerCraftT11') : null;
+    const playerVendorPwc = playerCraft && playerCraft.getObjectByName('V01116KenneyPWCShellT16');
+    const hiddenPlayerShellParts = playerCraft
+      ? ['T11Hull','T11Bow','T11Deck','T11RearDeck','T11NoseStripe','T11BowBumper']
+        .filter(name => { const mesh = playerCraft.getObjectByName(name); return mesh && !mesh.visible; }).length
+      : 0;
+    const aiVendorPwcCount = ai && Array.isArray(ai.racers)
+      ? ai.racers.filter(entry => Boolean(entry && entry.visual && entry.visual.getObjectByName('V01116KenneyPWCShellT16'))).length
+      : 0;
     let playerLegacyTorusCount = 0;
     if (typeof ski !== 'undefined' && ski.traverse) {
       ski.traverse(node => {
@@ -236,6 +246,21 @@ async function collect(page) {
       playerCraftVisualVersion: typeof ski !== 'undefined' && ski.userData ? ski.userData.craftVisualVersion : null,
       playerCraftPresent: Boolean(playerCraft),
       playerCraftMeshCount: playerCraft && playerCraft.userData ? playerCraft.userData.meshCount : 0,
+      vendorPwcVersion: vendorPwc && vendorPwc.version,
+      vendorPwcVisualOnly: vendorPwc && vendorPwc.visualOnly,
+      vendorPwcCollisionAdded: vendorPwc && vendorPwc.collisionAdded,
+      vendorPwcPhysicsUntouched: vendorPwc && vendorPwc.physicsUntouched,
+      vendorPwcGameplayUntouched: vendorPwc && vendorPwc.gameplayUntouched,
+      vendorPwcAiUntouched: vendorPwc && vendorPwc.aiMovementUntouched,
+      vendorPwcRaceRulesUntouched: vendorPwc && vendorPwc.raceRulesUntouched,
+      vendorPwcSaveUntouched: vendorPwc && vendorPwc.saveUntouched,
+      vendorPwcDataVertexCount: vendorPwcData && vendorPwcData.vertexCount,
+      vendorPwcDataTriangleCount: vendorPwcData && vendorPwcData.triangleCount,
+      vendorPwcPlayerPresent: Boolean(playerVendorPwc && playerVendorPwc.visible),
+      vendorPwcPlayerGeometryVertices: playerVendorPwc && playerVendorPwc.geometry && playerVendorPwc.geometry.attributes.position.count,
+      vendorPwcAiCount: aiVendorPwcCount,
+      vendorPwcHiddenPlayerShellParts: hiddenPlayerShellParts,
+      vendorPwcState: vendorPwc && Object.assign({}, vendorPwc.state),
       playerLegacyTorusCount,
       aiCraftVisuals: ai && ai.craftVisuals,
       aiCraftVisualVersion: ai && ai.craftVisualVersion,
@@ -458,6 +483,27 @@ async function main() {
       assert(data.playerCraftVisualVersion === 'V0.11.16-T11' && data.playerCraftPresent === true &&
         data.playerCraftMeshCount >= 11 && data.playerCraftMeshCount <= 16,
         `${profile.name}: T11 player Jet Ski craft incomplete ${data.playerCraftMeshCount}`);
+
+      assert(data.vendorPwcVersion === 'V0.11.16-T16' && data.vendorPwcVisualOnly === true &&
+        data.vendorPwcCollisionAdded === false && data.vendorPwcPhysicsUntouched === true &&
+        data.vendorPwcGameplayUntouched === true && data.vendorPwcAiUntouched === true &&
+        data.vendorPwcRaceRulesUntouched === true && data.vendorPwcSaveUntouched === true,
+        `${profile.name}: T16 Kenney PWC authority boundary changed`);
+      assert(data.vendorPwcDataVertexCount === 398 && data.vendorPwcDataTriangleCount === 234 &&
+        data.vendorPwcPlayerPresent === true && data.vendorPwcPlayerGeometryVertices === 398,
+        `${profile.name}: T16 player PWC model missing`);
+      assert(data.vendorPwcAiCount === 3 && data.vendorPwcHiddenPlayerShellParts === 6 &&
+        data.vendorPwcState && data.vendorPwcState.aiApplied === 3 &&
+        data.vendorPwcState.meshCount === 4 && data.vendorPwcState.playerApplied === true,
+        `${profile.name}: T16 player/AI PWC shell installation incomplete ${JSON.stringify(data.vendorPwcState)}`);
+      assert(data.vendorPwcState.runtimeLoaderAdded === false &&
+        data.vendorPwcState.realTimeAssetFetches === 0 &&
+        data.vendorPwcState.physicsWrites === false && data.vendorPwcState.gameplayWrites === false &&
+        data.vendorPwcState.raceRuleWrites === false && data.vendorPwcState.checkpointWrites === false &&
+        data.vendorPwcState.aiMovementWrites === false && data.vendorPwcState.cameraWrites === false &&
+        data.vendorPwcState.saveWrites === false,
+        `${profile.name}: T16 PWC reports forbidden writes`);
+
       assert(data.playerLegacyTorusCount === 0,
         `${profile.name}: legacy player swim-ring geometry remains visible ${data.playerLegacyTorusCount}`);
       assert(data.aiCraftVisuals === true && data.aiCraftVisualVersion === 'V0.11.16-T11' &&
