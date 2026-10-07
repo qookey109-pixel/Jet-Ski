@@ -1,6 +1,6 @@
-# Jet Ski / 泳圈競速 — Project Status
+# Jet Ski Racing / 水上摩托競速 — Project Status
 
-Status date: `2026-10-06` (`Asia/Taipei`)
+Status date: `2026-10-07` (`Asia/Taipei`)
 
 ## Authority
 
@@ -9,7 +9,7 @@ Status date: `2026-10-06` (`Asia/Taipei`)
 - Current product / engineering release: **V0.11.16**
 - Current player UI locale: **Traditional Chinese (`zh-Hant-TW`)**
 - Accepted physics / performance baseline: **V0.10.4**
-- Current award-quality gameplay tree (T10): `03fe274d06d2efd49910cc0e05ff62ff9008bc3d`
+- Current award-quality gameplay baseline (T16): `665b3fc49a171a147da2691bc3a174120b009b7b`
 - Repository `main` is authoritative over older chat summaries or stale documentation.
 
 The product release and accepted physics baseline are intentionally separate. V0.11.x adds game systems and delivery/UI work without silently promoting unverified physics migrations.
@@ -49,6 +49,12 @@ V0.11 currently includes:
 29. T8: award-presentation menu pass that hides engineering/debug chrome outside active play and strengthens desktop/mobile menu hierarchy.
 30. T9: compact race-event intro and arcade countdown badge that preserve course visibility on desktop and 844 × 390 mobile.
 31. T10: visual-only race venue staging with a striped start/finish water line, two side pylons and six countdown lights linked to the existing countdown.
+32. T11: player/AI PWC silhouettes replace the legacy inflatable-ring vehicle presentation without changing movement authority.
+33. T12: bounded visual-only V-wake and stern spray dynamics for the player and three AI racers.
+34. T13: centralized race-audio identity for engine, water rush, countdown, checkpoint, lap, finish and Boost feedback.
+35. T14: four Open Sea course landmarks plus active-checkpoint beacon for route readability.
+36. T15: reviewed Kenney CC0 finish gate / flag buoy / course buoy geometry baked into the Open Sea presentation layer with no runtime GLTF dependency.
+37. T16: reviewed Kenney CC0 `boat-speed-f.glb` baked into lightweight PWC visual shells for the player and all three AI rivals; AI roster-reset lifecycle bug fixed before merge.
 
 ## V0.11.16 release evidence
 
@@ -204,23 +210,36 @@ The race-venue staging pass is merged to `main`.
 - T10 reports no collision, physics, gameplay, checkpoint or race-rule writes.
 - Accepted physics/performance baseline remains V0.10.4.
 
+## T11–T16 final production evidence
+
+The late award-quality production passes are merged to `main` through T16.
+
+- PR #86 — T11 Jet Ski Craft Silhouettes — merged as `367bdaa7d4c116eab050886d075aa95b4e45e102`.
+- PR #87 — T12 Wake & Spray Dynamics — merged as `4a1c8b1e77880dc75cdc302caf7be83428e5ef24`.
+- PR #88 — T13 Race Audio Identity — merged as `ece55df6c6791a8bdba93ab5d457ea33528e79bf`.
+- PR #89 — T14 Course Landmarks & Route Readability — merged as `24406480a4941ee5dd449e03658a63310a740336`.
+- PR #90 — optional `3d-asset-server` discovery tooling — merged as `8da9e8fefc0f387af606639df2672abccf10deac`.
+- PR #91 — first reviewed Kenney Watercraft Kit CC0 intake — merged as `135e542eadb678a4b404d4e3747537c697735442`.
+- PR #92 — T15 vendored Open Sea venue geometry — merged as `4525303d708c8e95c40b53609977f39126b5771b`.
+- PR #93 — T16 Kenney CC0 PWC craft shells — merged as `665b3fc49a171a147da2691bc3a174120b009b7b`.
+- T16 exact-head V0.11 Race Regression #160 — PASS.
+- T16 exact-head V0.11.16 Browser Release QA #126 — PASS.
+- Chromium + WebKit desktop/mobile release flow — PASS.
+- Traditional Chinese player UI and 844 × 390 first-fold QA — PASS.
+- T16 keeps Ocean, physics, collision, Boost, race rules, AI movement, camera and save authority unchanged.
+
 ## Current active work
 
-Current focus: **award-quality vertical-slice polish**, while real-device acceptance remains a separate release gate.
+Current focus: **final submission polish**, while real-device acceptance remains a separate release gate.
 
-Scope is acceptance tooling only:
+Cloud-side finishing scope is intentionally narrow:
 
-- add an observer-only real-device helper gated behind `?accept=1`;
-- reuse existing `V09931_SAFARI_PERFORMANCE` FPS / p95 / long-frame telemetry rather than creating a second timing authority;
-- record device context and explicit human observations;
-- produce a copyable receipt whose best automated result is `CANDIDATE_PASS`, never formal acceptance;
-- keep the helper inactive on normal player URLs and existing `?qa=` Browser Release QA;
-- on mobile, auto-collapse the helper while recording so it does not cover steering / throttle / race HUD;
-- add pure regression plus WebKit tool-QA/screenshots for query gating and panel interference.
+- remove remaining legacy swim-ring player-facing branding and align the public identity to Jet Ski Racing / 水上摩托競速;
+- reduce the vendored Open Sea start/finish arch obstruction while preserving the 23 m race-corridor and checkpoint authority;
+- rerun full Race Regression plus Chromium/WebKit desktop/mobile, Traditional Chinese and Tropical Arcade visual QA;
+- retain the existing `?accept=1` real-device helper for later hands-on Safari / actual-phone acceptance.
 
-This work does **not** mark Safari or actual-phone acceptance PASS. Formal acceptance still requires a real-device user report.
-
-No gameplay / physics migration is authorized by this work.
+No gameplay / physics migration is authorized by this work. Formal real-device acceptance still requires a human report.
 
 ## Accepted baseline — do not redo
 
