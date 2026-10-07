@@ -1,6 +1,6 @@
 # Jet Ski Racing — V0.11.16
 
-Mobile-landscape-first 3D Web water racing game built with Three.js. The player drives a procedural swim-ring craft across an irregular ocean, real-world coast modes and a four-event Pacific championship.
+Mobile-landscape-first 3D Web water racing game built with Three.js. The player drives a stylized PWC / watercraft across an irregular ocean, real-world coast modes and a four-event Pacific championship.
 
 - Repository: `qookey109-pixel/Jet-Ski`
 - GitHub Pages: `https://qookey109-pixel.github.io/Jet-Ski/`
@@ -64,6 +64,11 @@ Waikīkī and Qixingtan race routes are materialized relative to the existing OS
 - **V0.11.16 T6 Open Sea Grand Loop** — first event redesigned into a 734.56 m asymmetric course per lap with a 240 × 234 m footprint and 16 m checkpoint acceptance radius.
 - **V0.11.16 T7 Racer Character Polish** — player and all three AI rivals use complete stylized rider silhouettes with helmets, visors, life vests, arms/hands, hips and legs.
 - **V0.11.16 T8 Award Presentation** — public menu hides engineering/debug chrome and uses a cleaner desktop/mobile presentation while retaining first-fold accessibility.
+- **V0.11.16 T9–T10 Start / Venue Presentation** — compact race intro/countdown plus a staged start/finish water line, pylons and countdown lights.
+- **V0.11.16 T11 PWC Craft Silhouettes** — player and AI vehicle presentation is a Jet Ski / PWC silhouette rather than the legacy inflatable-ring visual.
+- **V0.11.16 T12–T14 Motion / Audio / Readability** — visual wakes and spray, centralized race audio identity, course landmarks and active-checkpoint beacon.
+- **V0.11.16 T15 Vendored Venue Geometry** — reviewed Kenney Watercraft Kit CC0 buoy / flag / finish-gate geometry is offline-baked into Open Sea presentation.
+- **V0.11.16 T16 Vendored PWC Shells** — reviewed Kenney CC0 `boat-speed-f.glb` is offline-baked into lightweight visual shells for the player and three AI rivals; no GLTF runtime loader is required.
 
 ## Existing Ocean / World Stack
 
@@ -357,7 +362,7 @@ Playwright WebKit is a Safari-engine compatibility signal only; it is not a subs
 
 ## Asset / License Policy
 
-Current player craft, rivals, gates, VFX and most environment dressing are procedural Three.js geometry/code. Audio is generated with Web Audio; no third-party music track is bundled.
+Most environment dressing, VFX, riders and supporting craft detail remain procedural Three.js geometry/code. The Open Sea venue and PWC outer shells also use a reviewed Kenney Watercraft Kit CC0 subset that is offline-baked into repository geometry; no runtime GLTF loader is required. Audio is generated with Web Audio; no third-party music track is bundled.
 
 See:
 
