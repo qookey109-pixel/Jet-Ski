@@ -89,6 +89,8 @@ jobs:
           node --check src/rendering/vendor-watercraft-geometry.js
           node --check src/rendering/vendor-venue-core.js
           node --check src/rendering/vendor-venue-runtime.js
+          node --check src/rendering/vendor-pwc-geometry.js
+          node --check src/rendering/vendor-pwc-runtime.js
           node --check src/rendering/racer-craft-core.js
           node --check src/rendering/racer-craft-visual.js
           node --check src/rendering/wake-spray-core.js
@@ -154,6 +156,8 @@ jobs:
           test -f dist/src/rendering/vendor-watercraft-geometry.js
           test -f dist/src/rendering/vendor-venue-core.js
           test -f dist/src/rendering/vendor-venue-runtime.js
+          test -f dist/src/rendering/vendor-pwc-geometry.js
+          test -f dist/src/rendering/vendor-pwc-runtime.js
           test -f dist/src/rendering/racer-craft-core.js
           test -f dist/src/rendering/racer-craft-visual.js
           test -f dist/src/rendering/wake-spray-core.js
@@ -191,6 +195,8 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/vendor-watercraft-geometry.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/vendor-venue-core.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/vendor-venue-runtime.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/vendor-pwc-geometry.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/vendor-pwc-runtime.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/racer-craft-core.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/racer-craft-visual.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/src/rendering/wake-spray-core.js >/dev/null

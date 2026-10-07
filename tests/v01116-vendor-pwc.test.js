@@ -1,0 +1,20 @@
+const assert=require('assert');
+const Data=require('../src/rendering/vendor-pwc-geometry.js');
+
+assert.equal(Data.version,'V0.11.16-T16');
+assert.equal(Data.sourceSha256,'fdcfc255038cbb7bbd18ef4e6b709043c83aa1ad0810e012c82d358b1bc41b55');
+assert.equal(Data.vertexCount,398);
+assert.equal(Data.triangleCount,234);
+assert.equal(Data.positions.length,Data.vertexCount*3);
+assert.equal(Data.normals.length,Data.positions.length);
+assert.equal(Data.uvs.length,Data.vertexCount*2);
+assert.equal(Data.indices.length,Data.triangleCount*3);
+assert(Data.positions.every(Number.isFinite));
+assert(Data.normals.every(Number.isFinite));
+assert(Data.indices.every(i=>i>=0&&i<Data.vertexCount));
+assert(Data.positions.some((_,i)=>i%3===2&&Data.positions[i]>1.4));
+assert(Data.positions.some((_,i)=>i%3===2&&Data.positions[i]<-1.4));
+assert.equal(Data.visualOnly,true);
+assert.equal(Data.collisionAdded,false);
+assert.equal(Data.runtimeLoaderAdded,false);
+console.log('V0.11.16 T16 Kenney PWC offline geometry PASS');
