@@ -11,6 +11,10 @@ assert.equal(Core.raceRulesUntouched,true);
 assert.equal(Core.checkpointAuthorityUntouched,true);
 assert.equal(Core.aiUntouched,true);
 assert.equal(Core.saveUntouched,true);
+assert(Core.DEFAULTS.finishForwardOffset>=8&&Core.DEFAULTS.finishForwardOffset<=10,'finish arch should sit ahead of the start grid');
+assert(Core.DEFAULTS.finishScaleX>=2.4&&Core.DEFAULTS.finishScaleX<=2.7,'finish arch width should stay presentation-scale');
+assert(Core.DEFAULTS.finishScaleY>=0.9&&Core.DEFAULTS.finishScaleY<=1.05,'finish arch height should not block the chase view');
+assert(Core.DEFAULTS.finishScaleZ<=0.9,'finish arch depth should remain visually light');
 
 for(const key of ['buoy','buoyFlag','finishGate']){
   const a=Data.assets[key];

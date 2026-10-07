@@ -8,7 +8,7 @@ This file tracks distributable art/audio/model assets separately from third-part
 
 ### Procedural in-repository content
 
-The current player craft, AI rivals, race gates/buoys, ocean geometry, particles, distant dressing, PB Ghost visual and most race UI are generated from project-owned HTML/CSS/JavaScript and Three.js primitives. They are not imported game assets.
+Most rider detail, supporting craft parts, ocean geometry, particles, distant dressing, PB Ghost visuals and race UI are generated from project-owned HTML/CSS/JavaScript and Three.js primitives. T15/T16 additionally ship a reviewed Kenney Watercraft Kit CC0 subset for the Open Sea venue and the player/AI PWC outer shells; those assets are documented below and offline-baked into repository geometry.
 
 ### Procedural audio
 

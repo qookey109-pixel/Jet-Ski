@@ -8,6 +8,7 @@
   if (!Core || !Manager || !Race || typeof document === 'undefined') return;
 
   const VERSION = 'V0.11.6';
+  const PUBLIC_RELEASE = 'V0.11.16';
   const PROFILE_KEY = 'swimRing.progression.v0115';
   const SELECTED_KEY = 'swimRing.progression.selectedEvent';
   let profile = Core.createProfile();
@@ -111,7 +112,7 @@
 
   function updateSelectedCopy() {
     const event = Core.getEvent(selectedId);
-    if (kicker) kicker.textContent = `${VERSION} · ${event.name}`;
+    if (kicker) kicker.textContent = `${PUBLIC_RELEASE} · ${event.name}`;
     if (subtitle) subtitle.textContent = `${event.subtitle}. ${event.laps} lap${event.laps === 1 ? '' : 's'} against three rivals. Finish to progress; place higher to earn more stars.`;
   }
 
@@ -243,8 +244,8 @@
   renderCards();
 
   const versionNode = document.querySelector('#version');
-  if (versionNode) versionNode.textContent = VERSION;
-  document.title = `Swim Ring Racing ${VERSION}`;
+  if (versionNode) versionNode.textContent = PUBLIC_RELEASE;
+  document.title = `Jet Ski Racing ${PUBLIC_RELEASE}`;
 
   root.JETSKI_PROGRESSION = {
     version: VERSION,

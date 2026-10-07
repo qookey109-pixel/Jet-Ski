@@ -73,7 +73,7 @@
   const rotateOverlay = document.createElement('div');
   rotateOverlay.className = 'v01114-rotate';
   rotateOverlay.setAttribute('aria-live', 'polite');
-  rotateOverlay.innerHTML = '<div class="v01114-rotate-card"><div class="v01114-rotate-icon">↻</div><div class="v01114-rotate-title">Rotate to Landscape</div><div class="v01114-rotate-copy">Swim Ring Racing is designed mobile-landscape first. Rotate your device for clear race HUD, steering and throttle space.</div></div>';
+  rotateOverlay.innerHTML = '<div class="v01114-rotate-card"><div class="v01114-rotate-icon">↻</div><div class="v01114-rotate-title">Rotate to Landscape</div><div class="v01114-rotate-copy">Jet Ski Racing is designed mobile-landscape first. Rotate your device for clear race HUD, steering and throttle space.</div></div>';
   document.body.appendChild(rotateOverlay);
 
   function coarsePointer() {
@@ -187,7 +187,7 @@
 
   const versionNode = document.querySelector('#version');
   if (versionNode) versionNode.textContent = VERSION;
-  document.title = `Swim Ring Racing ${VERSION}`;
+  document.title = `Jet Ski Racing ${VERSION}`;
 
   root.JETSKI_MOBILE_UX = {
     version: VERSION,

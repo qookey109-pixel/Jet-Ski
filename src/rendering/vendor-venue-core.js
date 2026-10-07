@@ -8,10 +8,10 @@ const DEFAULTS=Object.freeze({
   buoySpacing:42,
   maxBuoysDesktop:18,
   maxBuoysMobile:10,
-  finishForwardOffset:5.2,
-  finishScaleX:3.45,
-  finishScaleY:1.35,
-  finishScaleZ:1.1,
+  finishForwardOffset:9.0,
+  finishScaleX:2.55,
+  finishScaleY:1.0,
+  finishScaleZ:0.85,
   flagSideOffset:10.8,
   flagForwardOffset:2.5
 });
