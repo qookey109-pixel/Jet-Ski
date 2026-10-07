@@ -46,9 +46,9 @@
     uiRoot.innerHTML = `
       <div class="jr-screen show" data-jr-screen="menu">
         <div class="jr-card">
-          <div class="jr-kicker">V0.11.0 · Open Sea Circuit</div>
-          <h1 class="jr-title">SWIM RING<br>RACING</h1>
-          <div class="jr-sub">Two laps through eight ocean gates. Read the water, carry momentum, and keep the ring planted through rough sections.</div>
+          <div class="jr-kicker">V0.11.16 · Open Sea Circuit</div>
+          <h1 class="jr-title">JET SKI<br>RACING</h1>
+          <div class="jr-sub">Two laps through eight ocean gates. Read the water, carry momentum, and keep the craft planted through rough sections.</div>
           <div class="jr-actions">
             <button class="jr-btn primary" data-jr-action="start">Start Race</button>
             <button class="jr-btn" data-jr-action="free">Free Ride</button>
