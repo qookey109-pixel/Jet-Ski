@@ -228,18 +228,36 @@ The late award-quality production passes are merged to `main` through T16.
 - Traditional Chinese player UI and 844 × 390 first-fold QA — PASS.
 - T16 keeps Ocean, physics, collision, Boost, race rules, AI movement, camera and save authority unchanged.
 
+## Final submission polish evidence
+
+Cloud-side submission polish is complete.
+
+- PR #94 — Jet Ski identity + start venue framing — merged as `d17e0408166b2ebc8d19d5ace9ab0cb7941d00f9`.
+- PR #94 exact head `b4cf3d658f1ae592f97ca93d654bed211f6c7f5b`.
+- V0.11 Race Regression #164 — PASS.
+- V0.11.16 Browser Release QA #130 — PASS.
+- Chromium + WebKit desktop/mobile release flow — PASS.
+- Traditional Chinese desktop/mobile UI QA — PASS.
+- 844 × 390 first-fold menu QA — PASS.
+- Tropical Arcade WebKit desktop/mobile screenshots — manually inspected.
+- Public identity is now `Jet Ski Racing` / `水上摩托競速`.
+- The vendored Open Sea finish arch is moved farther ahead and reduced in scale so it no longer dominates the chase camera or countdown view.
+- Existing save/localStorage keys remain unchanged for backward compatibility.
+- Ocean, physics, collision, Boost, race rules, AI movement, camera and progression authority remain unchanged.
+
 ## Current active work
 
-Current focus: **final submission polish**, while real-device acceptance remains a separate release gate.
+Current focus: **real-device release acceptance only**.
 
-Cloud-side finishing scope is intentionally narrow:
+The current cloud code/release scope is complete. Remaining acceptance requires hands-on hardware or real external services and is intentionally separate from CI:
 
-- remove remaining legacy swim-ring player-facing branding and align the public identity to Jet Ski Racing / 水上摩托競速;
-- reduce the vendored Open Sea start/finish arch obstruction while preserving the 23 m race-corridor and checkpoint authority;
-- rerun full Race Regression plus Chromium/WebKit desktop/mobile, Traditional Chinese and Tropical Arcade visual QA;
-- retain the existing `?accept=1` real-device helper for later hands-on Safari / actual-phone acceptance.
+- full macOS Safari Championship playthrough using `?accept=1`;
+- actual-phone landscape touch / safe-area feel;
+- perceived audio mix / listening quality;
+- real Waikīkī / Qixingtan geography loading and route feel;
+- optional Google Photorealistic 3D visual/memory/performance review.
 
-No gameplay / physics migration is authorized by this work. Formal real-device acceptance still requires a human report.
+No additional gameplay / physics migration is authorized by this status.
 
 ## Accepted baseline — do not redo
 
@@ -280,9 +298,10 @@ Synthetic coast Browser QA verifies deterministic product flow only and does not
 
 ## Next actions
 
-1. Validate the query-gated hands-on helper without changing normal Browser Release QA behavior.
-2. Inspect helper screenshots for desktop and 844 × 390 mobile, including the collapsed recording state.
-3. After helper delivery is stable, perform real macOS Safari full-Championship hands-on acceptance using `?accept=1`.
-4. Perform actual-phone mobile landscape touch / safe-area acceptance using `?accept=1`.
-5. Perform real Waikīkī / Qixingtan coastline acceptance and audio listening review.
-6. Keep V0.10.5 Sway and Natural Disaster EXP acceptance separate from the accepted V0.10.4 baseline.
+1. Perform real macOS Safari full-Championship hands-on acceptance using `?accept=1`.
+2. Perform actual-phone mobile landscape touch / safe-area acceptance using `?accept=1`.
+3. Perform real Waikīkī / Qixingtan coastline acceptance and audio listening review.
+4. Optionally validate Google Photorealistic 3D visual alignment / memory / performance on supported hardware.
+5. Keep V0.10.5 Sway and Natural Disaster EXP acceptance separate from the accepted V0.10.4 baseline.
+
+No further cloud code changes are required for the current submission-polish scope unless real-device acceptance finds a concrete issue.
