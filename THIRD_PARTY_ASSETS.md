@@ -64,6 +64,8 @@ Reviewed and vendored on 2026-10-07:
 
 Source page: `https://kenney.nl/assets/watercraft-kit`
 
+T16 promotes the already-vendored `boat-speed-f.glb` into a **visual-only offline-baked hull shell** for the player and three AI racers (`src/rendering/vendor-pwc-geometry.js` and `vendor-pwc-runtime.js`). Original CC0 asset, license and SHA-256 provenance are retained. No collision, mass, buoyancy, AI movement, checkpoints or scoring are derived from this model.
+
 The original Kenney license text is retained at `assets/third-party/kenney-watercraft-kit/LICENSE-KENNEY.txt`, with source metadata and SHA-256 hashes beside the assets. These files are presentation assets only and do not carry collision, physics, checkpoint, race-rule or AI authority.
 
 The user's AI Resource Hub may also be used to discover future sources such as Meshy AI, SoundShockAudio, ElevenLabs or other tools. Discovery does not authorize redistribution.
