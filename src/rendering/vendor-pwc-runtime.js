@@ -102,34 +102,64 @@ function attach(parent,craftName,paintHex,scale){
   mesh.scale.set(0.84*scale,0.75*scale,1.28*scale);
   mesh.position.set(0,0.07*scale,0);
   craft.add(mesh);
-  const hidden=hideOldHull(craft);
+  hideOldHull(craft);
   craft.userData.vendoredPWCShell=Data.version;
   craft.userData.vendoredPWCSource=mesh.userData.source;
-  state.hiddenLegacyShellParts+=hidden;
-  state.meshCount+=1;
   return true;
 }
 
+function countHiddenOldHull(parent,craftName){
+  if(!parent||!parent.getObjectByName)return 0;
+  const craft=parent.getObjectByName(craftName);
+  if(!craft)return 0;
+  return OLD_HULL_PARTS.filter(name=>{
+    const mesh=craft.getObjectByName(name);
+    return Boolean(mesh&&mesh.visible===false);
+  }).length;
+}
+
 function install(){
-  if(typeof ski!=='undefined' && !state.playerApplied){
-    state.playerApplied=attach(ski,'V01116PlayerCraftT11',0xff8a2b,1)||
-      Boolean(ski.getObjectByName('V01116KenneyPWCShellT16'));
-  }
+  const player=typeof ski!=='undefined'&&ski&&ski.getObjectByName?ski:null;
+  if(player)attach(player,'V01116PlayerCraftT11',0xff8a2b,1);
+  state.playerApplied=Boolean(player&&player.getObjectByName('V01116KenneyPWCShellT16'));
+  let hidden=countHiddenOldHull(player,'V01116PlayerCraftT11');
+
   const ai=root.JETSKI_RACE_AI;
+  state.aiApplied=0;
   if(ai&&Array.isArray(ai.racers)){
     for(const entry of ai.racers){
       if(!entry||!entry.visual||!entry.config)continue;
       const id=entry.config.id;
-      attach(entry.visual,`V01116AICraftT11-${id}`,entry.config.color||0xff6b6b,0.86);
+      const craftName=`V01116AICraftT11-${id}`;
+      attach(entry.visual,craftName,entry.config.color||0xff6b6b,0.86);
+      hidden+=countHiddenOldHull(entry.visual,craftName);
     }
     state.aiApplied=ai.racers.filter(entry=>Boolean(entry&&entry.visual&&
       entry.visual.getObjectByName('V01116KenneyPWCShellT16'))).length;
   }
+  // Report active craft, not meshes from AI generations discarded by resetAll().
+  state.meshCount=Number(state.playerApplied)+state.aiApplied;
+  state.hiddenLegacyShellParts=hidden;
 }
 
+// race-ai-runtime resets/recreates all AI visuals in its first countdown tick,
+// *after* jetski:race-ready. A same-event install attaches to the stale roster.
+// Install after the existing AI update, without changing AI movement authority.
+let needsPostAIInstall=false;
 install();
-root.addEventListener('jetski:race-ready',install);
-root.addEventListener('jetski:race-selected',install);
+root.addEventListener('jetski:race-ready',()=>{needsPostAIInstall=true;});
+root.addEventListener('jetski:race-selected',()=>{needsPostAIInstall=true;});
+if(typeof updateJetSki==='function'){
+  const previousUpdateJetSki=updateJetSki;
+  updateJetSki=function v01116T16VisualSyncAfterAI(dt,t){
+    previousUpdateJetSki(dt,t);
+    if(!needsPostAIInstall)return;
+    install();
+    const currentAI=root.JETSKI_RACE_AI;
+    if(currentAI&&Array.isArray(currentAI.racers)&&currentAI.racers.length>0&&
+       state.aiApplied===currentAI.racers.length)needsPostAIInstall=false;
+  };
+}
 
 root.JETSKI_VENDOR_PWC={
   version:Data.version,state,install,bounds,visualOnly:true,
