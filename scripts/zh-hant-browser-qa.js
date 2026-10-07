@@ -87,7 +87,7 @@ async function verifyIdentity(page, receipt) {
     fastPath: Boolean(window.JETSKI_ZH_HANT && window.JETSKI_ZH_HANT.highFrequencyNumericFastPath)
   }));
   assert(identity.lang === 'zh-Hant-TW', `Unexpected lang: ${identity.lang}`);
-  assert(identity.title === '泳圈競速 V0.11.16', `Unexpected title: ${identity.title}`);
+  assert(identity.title === '水上摩托競速 V0.11.16', `Unexpected title: ${identity.title}`);
   assert(identity.release === VERSION && identity.locale === LOCALE_VERSION, `Version mismatch: ${JSON.stringify(identity)}`);
   assert(identity.fastPath, 'Localization numeric fast path is not active');
   receipt.identity = identity;
